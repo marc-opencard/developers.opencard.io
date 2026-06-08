@@ -1,0 +1,14 @@
+{
+  "name": "developers.opencard.io",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OpenCard developer documentation (Mintlify)",
+  "scripts": {
+    "dev": "mintlify dev",
+    "build": "mintlify build",
+    "sync-openapi": "bash scripts/sync-openapi.sh"
+  },
+  "devDependencies": {
+    "mintlify": "latest"
+  }
+}

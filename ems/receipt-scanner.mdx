@@ -1,0 +1,27 @@
+---
+title: Receipt Scanner (OCR)
+description: Scan photo receipts via API. Your EMS uploads, OpenCard extracts.
+---
+
+Your EMS can scan photo receipts directly — no webhook needed, synchronous API call.
+
+```
+POST /accounts/{accountId}/receipts/scan
+Scope: receipts-write
+```
+
+```json
+{
+  "receipt": "base64_encoded_image_here",
+  "include": ["line_items", "environmental_impact"]
+}
+```
+
+| Field | Notes |
+|-------|-------|
+| `receipt` | Base64 image. Recommended width ~800px. |
+| `include` | Optional: `line_items`, `environmental_impact` |
+
+Returns structured OCR data — merchant, amounts, dates, line items, optional CO₂ estimate.
+
+Use case: employee uploads photo of paper receipt in your expense app → you call this API → get structured data back instantly. 📸

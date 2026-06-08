@@ -1,0 +1,62 @@
+---
+title: Data Model
+description: Every entity, every relationship. Text diagram, no images.
+---
+
+```
+Account (you)
+├── OAuth Clients
+├── Users (your team)
+├── Billings
+├── Card Issuers (enabled list)
+├── TPAs
+│   ├── Signatories (email → eID sign)
+│   ├── Legal Text (snapshot)
+│   └── Signed Document (PDF)
+└── Organizations
+    ├── reference_id ← YOUR ID
+    ├── Webhooks
+    │   ├── Headers (custom)
+    │   ├── Groups (buyer-party filter)
+    │   └── Events (delivery log)
+    └── Card Holders
+        ├── reference_id ← YOUR ID
+        ├── PDPC (email → eID consent)
+        └── Cards (from issuer)
+            └── Transactions
+                ├── TransactionStates
+                ├── Receipts
+                ├── TrueVAT
+                ├── LineItems
+                └── EnvironmentalImpact
+```
+
+## Entity details
+
+### Account
+Your partner account. Created at registration. Contains billing, OAuth clients, enabled issuers.
+
+### Organization
+One of your clients. Links to a TPA. Has its own webhook config.
+
+**Key fields:** `id`, `reference_id`, `tpa_id`, `account_id`, `name`
+
+### Card Holder
+A person. Links to organization. Has PDPC consent.
+
+**Key fields:** `id`, `reference_id`, `organization_id`, `meta.signed`, `meta.pdpc_url`
+
+### TPA
+Legal agreement per client company + card issuer combo.
+
+**Statuses:** `pending-signatures` → `pending-approval` → `pending-activation` → `activated`
+
+### Webhook
+Per-organization event subscription. Must pass challenge before `active=true`.
+
+**Key fields:** `url`, `secret`, `active`, `enabled`, event boolean flags, `authentication_type`
+
+### Transaction
+One purchase. Same `id` across all states.
+
+**Comes via webhook**, not primarily via API query.

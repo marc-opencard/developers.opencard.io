@@ -1,0 +1,295 @@
+---
+title: Quickstart — Zero to First Webhook
+description: Complete integration walkthrough. Every API call. No gaps.
+---
+
+This is the full path: register → TPA signed → org live → cardholder consented → webhook firing.
+
+Grab coffee. ☕ Let's go.
+
+---
+
+## Step 0: Register (sandbox)
+
+👉 [sandbox-api.opencard.io/register](https://sandbox-api.opencard.io/register)
+
+You get an **Account** + admin user. Verify email. Log in.
+
+Your `accountId` is in the dashboard URL or API responses.
+
+---
+
+## Step 1: Create an OAuth client
+
+```bash
+# After login, create via dashboard OR API once you have a session token.
+# Typically done in dashboard: Account → OAuth Clients → Create
+
+# Then get a token:
+curl -X POST https://sandbox-api.opencard.io/oauth/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=YOUR_CLIENT_ID" \
+  -d "client_secret=YOUR_CLIENT_SECRET" \
+  -d "scope=account-tpas-write account-tpas-read account-tpa-signatories-write organizations-write organizations-read card-holders-write webhooks-write webhooks-read public-records-read account-card-issuers-read account-card-issuers-write"
+```
+
+Save the `access_token`. All subsequent calls:
+
+```
+Authorization: Bearer {access_token}
+```
+
+<Note>
+  Scopes are space-separated. Request only what you need. Full list in [Authentication](/getting-started/authentication).
+</Note>
+
+---
+
+## Step 2: Enable a card issuer
+
+```bash
+# List available issuers
+curl https://sandbox-api.opencard.io/api/v1/application/cardissuers \
+  -H "Authorization: Bearer $TOKEN"
+
+# Attach one to your account (use the cardIssuerId from above)
+curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/cardissuers/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+## Step 3: Lookup company (optional but smart)
+
+Before creating a TPA, check the public registry for signing combinations:
+
+```bash
+curl "https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/publicrecords?country=SE&organization_number=5561234567" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Response includes `signature_combinations` — who can legally sign for this company. You'll add those people as TPA signatories next.
+
+---
+
+## Step 4: Create TPA
+
+TPA = Transaction Processing Authorization. Legal permission for transaction data to flow.
+
+```bash
+curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/tpas \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "card_issuer_id": 1,
+    "name": "Acme AB",
+    "country": "SE",
+    "organization_number": "5561234567",
+    "language": "sv"
+  }'
+```
+
+**What happens server-side:**
+1. Fetches company info from public registry (Roaring API in prod, test data in sandbox)
+2. Overrides `name` with registry name if found
+3. Creates TPA record with status `pending-signatures`
+4. Generates legal text snapshot from latest `tpa` template in that language
+5. Links card issuer + creates client record
+
+**Org number formats:**
+
+| Country | Format | Example |
+|---------|--------|---------|
+| 🇸🇪 SE | 10 digits | `5561234567` |
+| 🇳🇴 NO | 9 digits | `123456789` |
+| 🇩🇰 DK | 8 digits | `12345678` |
+| 🇫🇮 FI | `XXXXXXX-X` | `1234567-8` |
+
+Response → save `tpaId`.
+
+---
+
+## Step 5: Add signatories → email goes out 📧
+
+Each signatory = someone authorized to sign for the company.
+
+```bash
+curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/tpas/$TPA_ID/signatories \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "ceo@acme.se",
+    "name": "Anna Andersson"
+  }'
+```
+
+**What happens:**
+1. Server generates a 40-char `token` for this signatory
+2. **Email is queued immediately** with subject: `Authorise TPA for Acme AB`
+3. Email contains signing link:
+
+```
+https://sandbox-api.opencard.io/accounts/{accountId}/tpas/{tpaId}/sign/{token}
+```
+
+4. Signatory clicks link → sees TPA legal text → signs with eID
+
+Repeat for each required signatory (check `signature_combinations` from step 3).
+
+<Warning>
+  Signatories can only be updated/deleted while `signed=false`. Once signed, they're locked.
+</Warning>
+
+Full signing details → [TPA Flow](/ems/tpa-flow) and [eID Signing](/ems/eid-signing).
+
+---
+
+## Step 6: Wait for TPA to be signed ✍️
+
+When all signatories have signed:
+
+| Country | Verification |
+|---------|-------------|
+| 🇸🇪 SE, 🇳🇴 NO | **Automatic** — eID `ssn_hash` matched against registry `signature_combinations` |
+| 🇩🇰 DK, 🇫🇮 FI | **Manual** — OpenCard admin approves via `PUT /tpas/{tpaId}` |
+
+On full signing:
+- Signed PDF generated and stored
+- `tpa.signed` webhook fires (if subscribed)
+- TPA status → `pending-activation` (waiting for issuer to confirm cards)
+- Each signatory gets email with signed PDF attached
+
+---
+
+## Step 7: Create organization
+
+```bash
+curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/organizations \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reference_id": "client_acme_001",
+    "tpa_id": '"$TPA_ID"',
+    "name": "Acme AB"
+  }'
+```
+
+`reference_id` = **your** internal client ID. It comes back in every webhook.
+
+Save `organizationId`.
+
+---
+
+## Step 8: Configure webhook 🔔
+
+```bash
+curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/organizations/$ORG_ID/webhooks \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://your-app.com/webhooks/opencard",
+    "enabled": true,
+    "card_transaction_authorized": true,
+    "card_transaction_cleared": true,
+    "card_transaction_deleted": true,
+    "card_holder_created": true,
+    "card_holder_signed_pdpc": true,
+    "receipt_fetched": true,
+    "transaction_true_vat": true,
+    "tpa_signed": true
+  }'
+```
+
+**Challenge happens immediately.** OpenCard sends:
+
+```
+GET https://your-app.com/webhooks/opencard?challenge=RANDOM_STRING
+Header: X-Event: challenge
+```
+
+Your endpoint must respond with header:
+
+```
+X-Verify-Token: HMAC-SHA256(challenge, webhook_secret)
+```
+
+Until challenge passes, `active=false` and no events are delivered.
+
+Full webhook setup → [Webhook Setup](/ems/webhooks/setup)
+
+---
+
+## Step 9: Create card holders 👤
+
+Two paths — pick one. Full guide → [Card Holder Onboarding](/ems/card-holders).
+
+### Path A: Email + eID (new employee)
+
+```bash
+curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/organizations/$ORG_ID/cardholders \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reference_id": "employee_john_42",
+    "email": "john@acme.se",
+    "language": "sv"
+  }'
+```
+
+John gets email → signs PDPC with BankID/MitID → `card_holder.identified` → transactions flow.
+
+### Path B: `identity_id` (instant — person already in OpenCard)
+
+```bash
+# 1. List identities on the TPA (people who already have cards)
+curl "https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/tpas/$TPA_ID/identities?is_card_holder=false" \
+  -H "Authorization: Bearer $TOKEN"
+
+# 2. Create card holder with identity_id — transactions start immediately
+curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/organizations/$ORG_ID/cardholders \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reference_id": "employee_anna_07",
+    "identity_id": 123,
+    "skip_pdpc_email": true
+  }'
+```
+
+`card_holder.identified` fires instantly + retroactive transaction webhooks replay. No waiting for user action. ⚡
+
+---
+
+## Step 10: Receive your first transaction 🎉
+
+Once the issuer delivers transaction states and the cardholder has signed PDPC:
+
+```json
+// POST to your webhook URL
+// Header: X-Event: card.transaction.authorized
+
+{
+  "id": "10",
+  "state": "authorized",
+  "receiptable": true,
+  "card_issuer": "nordea",
+  "original_amount": 109.38,
+  "original_currency": "SEK",
+  "purchase_merchant": "Espresso House",
+  "purchase_date": "2026-06-08",
+  "card_holder": { "reference_id": "employee_john_42" },
+  "organization": { "reference_id": "client_acme_001" }
+}
+```
+
+**You did it.** From zero to live transaction data.
+
+---
+
+## What's next?
+
+- [Transaction states](/ems/webhooks/transactions) — how to handle authorized vs cleared vs deleted
+- [All webhook events](/ems/webhooks/events) — full payload reference
+- [Receipt enrichment](/ems/receipts) — digital receipts + true VAT
+- [Migrating from direct issuer](/ems/migrating-from-issuer) — avoid duplicate transactions

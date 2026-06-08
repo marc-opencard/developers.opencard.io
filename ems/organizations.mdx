@@ -1,0 +1,69 @@
+---
+title: Organizations
+description: Your end-clients in OpenCard. One org per customer, usually.
+---
+
+An **organization** = one of your EMS customers. It's the container for webhooks, card holders, and event routing.
+
+---
+
+## Create
+
+```
+POST /accounts/{accountId}/organizations
+Scope: organizations-write
+```
+
+```json
+{
+  "reference_id": "client_acme_001",
+  "tpa_id": 42,
+  "name": "Acme AB"
+}
+```
+
+| Field | Notes |
+|-------|-------|
+| `reference_id` | **Your** internal client ID. Required. Unique per account. |
+| `tpa_id` | Must be a TPA on this account (ideally signed) |
+| `name` | Display name |
+
+---
+
+## When to use multiple orgs for one client
+
+Usually 1 org = 1 client. But split into multiple orgs when you need:
+
+- Different webhook endpoints per card type
+- Different event subscriptions
+- Separate card holder groups with different configs
+
+Example: Client wants corporate cards in Org A (webhook → accounting system) and private cards in Org B (webhook → different endpoint).
+
+---
+
+## Organization "tabs" (conceptual)
+
+Think of an org as having config sections:
+
+| Section | What it controls |
+|---------|-----------------|
+| **Issuer** | Which TPA + card types flow through this org |
+| **Connection** | Webhook URL + auth |
+| **Webhook events** | Which event types to subscribe |
+| **Card holders** | Which people get data |
+
+All configured via API — no dashboard required for integration.
+
+---
+
+## Query / update / delete
+
+```
+GET    /accounts/{accountId}/organizations
+GET    /accounts/{accountId}/organizations/{organizationId}
+PUT    /accounts/{accountId}/organizations/{organizationId}
+DELETE /accounts/{accountId}/organizations/{organizationId}
+```
+
+Delete cascades: webhooks, card holders, etc. gone. Be careful.

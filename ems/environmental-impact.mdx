@@ -1,0 +1,26 @@
+---
+title: Environmental Impact
+description: CO₂ data on transactions. Åland Index and Deedster.
+---
+
+Subscribe to environmental impact webhooks per organization:
+
+| Flag | Event | Provider |
+|------|-------|----------|
+| `aland_index` | `environmental.impact.aland_index` | Åland Index |
+| `deedster` | `environmental.impact.deedster` | Deedster |
+
+Both return the same payload shape:
+
+```json
+{
+  "carbon_emission_in_grams": 0.66,
+  "carbon_social_cost_amount": 2.1,
+  "carbon_social_cost_currency": "SEK",
+  "transaction": { "id": "10", "card_issuer": "nordea" },
+  "organization": { "reference_id": "client_acme_001" },
+  "card_holder": { "reference_id": "employee_john_42" }
+}
+```
+
+Also available via receipt scanner when `include: ["environmental_impact"]`.

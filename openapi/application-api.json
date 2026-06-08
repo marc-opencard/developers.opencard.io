@@ -1,0 +1,2559 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "OpenCard Application API",
+    "version": "1.0",
+    "description": "EMS integration API. Generated from service.opencard.api source \u2014 not from legacy swagger.",
+    "contact": {
+      "email": "support@opencard.io"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.opencard.io/api/v1/application",
+      "description": "Production"
+    },
+    {
+      "url": "https://sandbox-api.opencard.io/api/v1/application",
+      "description": "Sandbox"
+    }
+  ],
+  "paths": {
+    "/me": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "summary": "Get current user",
+        "operationId": "getMe",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "me-read"
+            ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Me"
+        ],
+        "summary": "Update current user",
+        "operationId": "updateMe",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "first_name",
+                  "last_name",
+                  "email"
+                ],
+                "properties": {
+                  "first_name": {
+                    "type": "string"
+                  },
+                  "last_name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "me-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/me/cards": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "summary": "List my cards",
+        "operationId": "listMyCards",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "me-cards-read"
+            ]
+          }
+        ]
+      }
+    },
+    "/me/cards/{cardId}": {
+      "put": {
+        "tags": [
+          "Me"
+        ],
+        "summary": "Update my card",
+        "operationId": "updateMyCard",
+        "parameters": [
+          {
+            "name": "cardId",
+            "in": "path",
+            "required": true,
+            "description": "Card ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "opencard_enabled"
+                ],
+                "properties": {
+                  "opencard_enabled": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "me-cards-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/me/cards/mastercard_token": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "summary": "Get MasterCard consent token",
+        "operationId": "getMastercardToken",
+        "parameters": [
+          {
+            "name": "pdpc_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "me-cards-read"
+            ]
+          }
+        ]
+      }
+    },
+    "/me/clients": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "summary": "List my PDPC consents",
+        "operationId": "listMyPdpcs",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "me-pdpcs-read"
+            ]
+          }
+        ]
+      }
+    },
+    "/me/tokens": {
+      "get": {
+        "tags": [
+          "Me"
+        ],
+        "summary": "List my access tokens",
+        "operationId": "listMyTokens",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "me-tokens-read"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "List all accounts (admin)",
+        "operationId": "listAccounts",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "accounts-full"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Get account",
+        "operationId": "getAccount",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "accounts-read"
+            ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Update account",
+        "operationId": "updateAccount",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "logo_base64": {
+                    "type": "string",
+                    "description": "Base64-encoded JPEG logo"
+                  },
+                  "notify_email": {
+                    "type": "string",
+                    "format": "email",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "accounts-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/mode": {
+      "put": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Update account mode (admin)",
+        "operationId": "updateAccountMode",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "accounts-full"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/oauthclients": {
+      "get": {
+        "tags": [
+          "OAuth Clients"
+        ],
+        "summary": "List OAuth clients",
+        "operationId": "listOAuthClients",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "oauth-clients-read"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "OAuth Clients"
+        ],
+        "summary": "Create OAuth client",
+        "operationId": "createOAuthClient",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Client created with plain-text secret"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "oauth-clients-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/oauthclients/{oauthclientId}": {
+      "get": {
+        "tags": [
+          "OAuth Clients"
+        ],
+        "summary": "Get OAuth client",
+        "operationId": "getOAuthClient",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "oauthclientId",
+            "in": "path",
+            "required": true,
+            "description": "OAuth client ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "oauth-clients-read"
+            ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "OAuth Clients"
+        ],
+        "summary": "Update OAuth client scopes",
+        "operationId": "updateOAuthClient",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "oauthclientId",
+            "in": "path",
+            "required": true,
+            "description": "OAuth client ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "oauth-clients-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/publicrecords": {
+      "get": {
+        "tags": [
+          "Public Records"
+        ],
+        "summary": "Lookup company registry + signing combinations",
+        "operationId": "queryPublicRecords",
+        "description": "Returns company info and authorized signatory combinations from public registry. Used before TPA creation.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SE",
+                "DK",
+                "NO",
+                "FI"
+              ]
+            }
+          },
+          {
+            "name": "organization_number",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "public-records-read"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/tpas": {
+      "get": {
+        "tags": [
+          "TPAs"
+        ],
+        "summary": "List TPAs",
+        "operationId": "listTpas",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpas-read"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "TPAs"
+        ],
+        "summary": "Create TPA",
+        "operationId": "createTpa",
+        "description": "Creates a Transaction Processing Authorization. Fetches company data from public registry, generates legal text snapshot, links card issuer.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TpaCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "TPA created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tpa"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpas-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/tpas/{tpaId}": {
+      "get": {
+        "tags": [
+          "TPAs"
+        ],
+        "summary": "Get TPA",
+        "operationId": "getTpa",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "tpaId",
+            "in": "path",
+            "required": true,
+            "description": "TPA ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpas-read"
+            ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "TPAs"
+        ],
+        "summary": "Delete TPA",
+        "operationId": "deleteTpa",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "tpaId",
+            "in": "path",
+            "required": true,
+            "description": "TPA ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpas-delete"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/tpas/{tpaId}/signeddocuments": {
+      "get": {
+        "tags": [
+          "TPAs"
+        ],
+        "summary": "Download signed TPA PDF",
+        "operationId": "getTpaSignedDocument",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "tpaId",
+            "in": "path",
+            "required": true,
+            "description": "TPA ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "application/pdf"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpas-read"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/tpas/{tpaId}/signatories": {
+      "get": {
+        "tags": [
+          "TPA Signatories"
+        ],
+        "summary": "List signatories",
+        "operationId": "listTpaSignatories",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "tpaId",
+            "in": "path",
+            "required": true,
+            "description": "TPA ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpa-signatories-read"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "TPA Signatories"
+        ],
+        "summary": "Add signatory + send signing email",
+        "operationId": "createTpaSignatory",
+        "description": "Creates signatory with 40-char token. Queues email with signing link. Signatory signs via eID (BankID/MitID/etc) on web page \u2014 no API login required.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "tpaId",
+            "in": "path",
+            "required": true,
+            "description": "TPA ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TpaSignatoryCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Signatory created, email queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TpaSignatory"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpa-signatories-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/tpas/{tpaId}/signatories/{tpaSignatoryId}": {
+      "put": {
+        "tags": [
+          "TPA Signatories"
+        ],
+        "summary": "Update signatory email (unsigned only)",
+        "operationId": "updateTpaSignatory",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "tpaId",
+            "in": "path",
+            "required": true,
+            "description": "TPA ID",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "tpaSignatoryId",
+            "in": "path",
+            "required": true,
+            "description": "Signatory ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpa-signatories-write"
+            ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "TPA Signatories"
+        ],
+        "summary": "Delete signatory (unsigned only)",
+        "operationId": "deleteTpaSignatory",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "tpaId",
+            "in": "path",
+            "required": true,
+            "description": "TPA ID",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "tpaSignatoryId",
+            "in": "path",
+            "required": true,
+            "description": "Signatory ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpa-signatories-delete"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/tpas/{tpaId}/identities": {
+      "get": {
+        "tags": [
+          "TPAs"
+        ],
+        "summary": "List identities (physical persons) on TPA",
+        "operationId": "listTpaIdentities",
+        "description": "Returns identities linked to this TPA's client \u2014 people who may already have cards. Use identity.id when creating card holders for instant onboarding (no email/eID wait).",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "tpaId",
+            "in": "path",
+            "required": true,
+            "description": "TPA ID",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "is_card_holder",
+            "in": "query",
+            "required": false,
+            "description": "true = only with card holders, false = only without, omit = all",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated identities with cards and card_holders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "description": "Use as identity_id when creating card holder"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "employee_id": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "cards": {
+                            "type": "array",
+                            "items": {
+                              "type": "object"
+                            }
+                          },
+                          "card_holders": {
+                            "type": "array",
+                            "items": {
+                              "type": "object"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpa-identities-read"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/billings": {
+      "get": {
+        "tags": [
+          "Billings"
+        ],
+        "summary": "List billings",
+        "operationId": "listBillings",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "billings-read"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Billings"
+        ],
+        "summary": "Create billing profile",
+        "operationId": "createBilling",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BillingCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Billing created"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "billings-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/billings/{billingId}": {
+      "get": {
+        "tags": [
+          "Billings"
+        ],
+        "summary": "Get billing",
+        "operationId": "getBilling",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "billingId",
+            "in": "path",
+            "required": true,
+            "description": "Billing ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "billings-read"
+            ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Billings"
+        ],
+        "summary": "Update billing",
+        "operationId": "updateBilling",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "billingId",
+            "in": "path",
+            "required": true,
+            "description": "Billing ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "billings-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/cardissuers": {
+      "get": {
+        "tags": [
+          "Account Card Issuers"
+        ],
+        "summary": "List enabled card issuers",
+        "operationId": "listAccountCardIssuers",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-card-issuers-read"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/cardissuers/{cardIssuerId}": {
+      "get": {
+        "tags": [
+          "Account Card Issuers"
+        ],
+        "summary": "Check issuer enabled",
+        "operationId": "getAccountCardIssuer",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "cardIssuerId",
+            "in": "path",
+            "required": true,
+            "description": "Card issuer ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-card-issuers-read"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Account Card Issuers"
+        ],
+        "summary": "Enable card issuer",
+        "operationId": "attachCardIssuer",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "cardIssuerId",
+            "in": "path",
+            "required": true,
+            "description": "Card issuer ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Issuer attached"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-card-issuers-write"
+            ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Account Card Issuers"
+        ],
+        "summary": "Disable card issuer",
+        "operationId": "detachCardIssuer",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "cardIssuerId",
+            "in": "path",
+            "required": true,
+            "description": "Card issuer ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-card-issuers-delete"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations": {
+      "get": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "List organizations",
+        "operationId": "listOrganizations",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "organizations-read"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "Create organization",
+        "operationId": "createOrganization",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganizationCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Organization created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Organization"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "organizations-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations/{organizationId}": {
+      "get": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "Get organization",
+        "operationId": "getOrganization",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "organizations-read"
+            ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "Update organization",
+        "operationId": "updateOrganization",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganizationCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "organizations-write"
+            ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "Delete organization",
+        "operationId": "deleteOrganization",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "organizations-delete"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations/{organizationId}/cardholders": {
+      "get": {
+        "tags": [
+          "Card Holders"
+        ],
+        "summary": "List card holders",
+        "operationId": "listCardHolders",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "card-holders-read"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Card Holders"
+        ],
+        "summary": "Create card holder + send PDPC email",
+        "operationId": "createCardHolder",
+        "description": "Two onboarding modes: (A) provide email \u2014 PDPC email sent, user signs with eID, transactions flow after identification. (B) provide identity_id from GET .../tpas/{tpaId}/identities \u2014 instant identification, retroactive transactions dispatched immediately. Provide email OR identity_id, not both required.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardHolderCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Card holder created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardHolder"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "card-holders-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations/{organizationId}/cardholders/{cardHolderId}": {
+      "put": {
+        "tags": [
+          "Card Holders"
+        ],
+        "summary": "Update card holder",
+        "operationId": "updateCardHolder",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "cardHolderId",
+            "in": "path",
+            "required": true,
+            "description": "Card holder ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardHolderUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "card-holders-write"
+            ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Card Holders"
+        ],
+        "summary": "Delete card holder",
+        "operationId": "deleteCardHolder",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "cardHolderId",
+            "in": "path",
+            "required": true,
+            "description": "Card holder ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "card-holders-delete"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations/{organizationId}/webhooks": {
+      "get": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "List webhooks",
+        "operationId": "listWebhooks",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhooks-read"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Create webhook",
+        "operationId": "createWebhook",
+        "description": "Creates webhook and runs challenge verification. Returns active=false until challenge passes.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Webhook created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Webhook"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhooks-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations/{organizationId}/webhooks/{webhookId}": {
+      "get": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Get webhook",
+        "operationId": "getWebhook",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhooks-read"
+            ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Update webhook",
+        "operationId": "updateWebhook",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhooks-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations/{organizationId}/webhooks/{webhookId}/test/{event}": {
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Send test webhook event",
+        "operationId": "testWebhook",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "event",
+            "in": "path",
+            "required": true,
+            "description": "Event name",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhooks-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations/{organizationId}/webhooks/{webhookId}/events": {
+      "get": {
+        "tags": [
+          "Webhook Events"
+        ],
+        "summary": "List delivery log",
+        "operationId": "listWebhookEvents",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhook-events-read"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations/{organizationId}/webhooks/{webhookId}/headers": {
+      "get": {
+        "tags": [
+          "Webhook Headers"
+        ],
+        "summary": "List custom headers",
+        "operationId": "listWebhookHeaders",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhook-headers-read"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Webhook Headers"
+        ],
+        "summary": "Add custom header",
+        "operationId": "createWebhookHeader",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "key",
+                  "value"
+                ],
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhook-headers-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations/{organizationId}/webhooks/{webhookId}/headers/{headerId}": {
+      "delete": {
+        "tags": [
+          "Webhook Headers"
+        ],
+        "summary": "Delete header",
+        "operationId": "deleteWebhookHeader",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "headerId",
+            "in": "path",
+            "required": true,
+            "description": "Header ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhook-headers-delete"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/receipts/scan": {
+      "post": {
+        "tags": [
+          "Receipts"
+        ],
+        "summary": "OCR scan a receipt image",
+        "operationId": "scanReceipt",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "receipt"
+                ],
+                "properties": {
+                  "receipt": {
+                    "type": "string",
+                    "description": "Base64-encoded image. Recommended width ~800px."
+                  },
+                  "include": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "line_items",
+                        "environmental_impact"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "receipts-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/transactions": {
+      "get": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Query transactions (admin)",
+        "operationId": "listTransactions",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "transactions-read"
+            ]
+          }
+        ]
+      }
+    },
+    "/transactions/{transactionId}": {
+      "get": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Get transaction",
+        "operationId": "getTransaction",
+        "parameters": [
+          {
+            "name": "transactionId",
+            "in": "path",
+            "required": true,
+            "description": "Transaction ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "transactions-read"
+            ]
+          }
+        ]
+      }
+    },
+    "/open/legaltexts": {
+      "get": {
+        "tags": [
+          "Open"
+        ],
+        "summary": "List available legal text languages",
+        "operationId": "listLegalTextLanguages",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "tpa",
+                "pdpc",
+                "account"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "opencard_auth": {
+        "type": "oauth2",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "https://api.opencard.io/oauth/token",
+            "scopes": {
+              "me-read": "Read profile",
+              "me-write": "Write profile",
+              "accounts-read": "Read account",
+              "accounts-write": "Write account",
+              "oauth-clients-read": "Read OAuth clients",
+              "oauth-clients-write": "Write OAuth clients",
+              "public-records-read": "Read company registry",
+              "account-tpas-read": "Read TPAs",
+              "account-tpas-write": "Write TPAs",
+              "account-tpa-signatories-read": "Read TPA signatories",
+              "account-tpa-signatories-write": "Write TPA signatories",
+              "account-tpa-signatories-delete": "Delete TPA signatories",
+              "billings-read": "Read billings",
+              "billings-write": "Write billings",
+              "account-card-issuers-read": "Read account card issuers",
+              "account-card-issuers-write": "Write account card issuers",
+              "organizations-read": "Read organizations",
+              "organizations-write": "Write organizations",
+              "organizations-delete": "Delete organizations",
+              "card-holders-read": "Read card holders",
+              "card-holders-write": "Write card holders",
+              "card-holders-delete": "Delete card holders",
+              "webhooks-read": "Read webhooks",
+              "webhooks-write": "Write webhooks",
+              "webhook-events-read": "Read webhook events",
+              "webhook-headers-read": "Read webhook headers",
+              "webhook-headers-write": "Write webhook headers",
+              "webhook-headers-delete": "Delete webhook headers",
+              "receipts-write": "Scan receipts",
+              "transactions-read": "Read transactions"
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "accountId": {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Your OpenCard account ID",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "organizationId": {
+        "name": "organizationId",
+        "in": "path",
+        "required": true,
+        "description": "Organization ID",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "schemas": {
+      "TpaCreate": {
+        "type": "object",
+        "required": [
+          "card_issuer_id",
+          "name",
+          "country",
+          "organization_number"
+        ],
+        "properties": {
+          "card_issuer_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string",
+            "enum": [
+              "SE",
+              "DK",
+              "NO",
+              "FI"
+            ]
+          },
+          "organization_number": {
+            "type": "string",
+            "description": "SE: 10 digits, NO: 9, DK: 8, FI: XXXXXXX-X"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "sv",
+              "no",
+              "da",
+              "en",
+              "fi"
+            ]
+          }
+        }
+      },
+      "Tpa": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "account_id": {
+            "type": "integer"
+          },
+          "card_issuer_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "organization_number": {
+            "type": "string"
+          },
+          "activated": {
+            "type": "boolean"
+          },
+          "signatures_verified": {
+            "type": "boolean"
+          },
+          "signed_document_path": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending-signatures",
+              "pending-approval",
+              "pending-activation",
+              "activated"
+            ]
+          }
+        }
+      },
+      "TpaSignatoryCreate": {
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "name": {
+            "type": "string"
+          },
+          "country_code": {
+            "type": "string"
+          },
+          "phone_number": {
+            "type": "string"
+          }
+        }
+      },
+      "TpaSignatory": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "tpa_id": {
+            "type": "integer"
+          },
+          "signed": {
+            "type": "boolean"
+          },
+          "signed_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "OrganizationCreate": {
+        "type": "object",
+        "required": [
+          "reference_id",
+          "tpa_id"
+        ],
+        "properties": {
+          "reference_id": {
+            "type": "string",
+            "description": "Your internal client ID"
+          },
+          "tpa_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "Organization": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "reference_id": {
+            "type": "string"
+          },
+          "tpa_id": {
+            "type": "integer"
+          },
+          "account_id": {
+            "type": "integer"
+          }
+        }
+      },
+      "CardHolderCreate": {
+        "type": "object",
+        "required": [
+          "reference_id"
+        ],
+        "properties": {
+          "reference_id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Required unless identity_id provided"
+          },
+          "identity_id": {
+            "type": "integer",
+            "description": "Link existing identity from TPA"
+          },
+          "skip_pdpc_email": {
+            "type": "boolean",
+            "default": false
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "sv",
+              "no",
+              "da",
+              "en",
+              "fi"
+            ]
+          }
+        }
+      },
+      "CardHolderUpdate": {
+        "type": "object",
+        "required": [
+          "email",
+          "reference_id"
+        ],
+        "properties": {
+          "reference_id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "skip_pdpc_email": {
+            "type": "boolean"
+          },
+          "language": {
+            "type": "string"
+          }
+        }
+      },
+      "CardHolder": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "reference_id": {
+            "type": "string"
+          },
+          "organization_id": {
+            "type": "integer"
+          },
+          "meta": {
+            "type": "object",
+            "description": "Includes signed, signed_at, pdpc_url, email delivery status"
+          }
+        }
+      },
+      "BillingCreate": {
+        "type": "object",
+        "required": [
+          "name_display",
+          "name_legal",
+          "organization_number",
+          "country"
+        ],
+        "properties": {
+          "name_display": {
+            "type": "string"
+          },
+          "name_legal": {
+            "type": "string"
+          },
+          "organization_number": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string",
+            "enum": [
+              "SE",
+              "DK",
+              "NO",
+              "FI"
+            ]
+          },
+          "email_invoice": {
+            "type": "string"
+          },
+          "your_reference_invoice": {
+            "type": "string"
+          }
+        }
+      },
+      "WebhookCreate": {
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "secret": {
+            "type": "string",
+            "description": "Auto-generated if omitted"
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "authentication_type": {
+            "type": "string",
+            "enum": [
+              "none",
+              "basic",
+              "oauth",
+              "custom"
+            ]
+          },
+          "basic_username": {
+            "type": "string"
+          },
+          "basic_password": {
+            "type": "string"
+          },
+          "custom_key": {
+            "type": "string"
+          },
+          "custom_value": {
+            "type": "string"
+          },
+          "card_holder_created": {
+            "type": "boolean"
+          },
+          "card_holder_identified": {
+            "type": "boolean"
+          },
+          "card_holder_signed_pdpc": {
+            "type": "boolean"
+          },
+          "card_holder_deleted": {
+            "type": "boolean"
+          },
+          "card_holder_email_delivered": {
+            "type": "boolean"
+          },
+          "card_holder_email_failed": {
+            "type": "boolean"
+          },
+          "card_transaction_authorized": {
+            "type": "boolean"
+          },
+          "card_transaction_cleared": {
+            "type": "boolean"
+          },
+          "card_transaction_deleted": {
+            "type": "boolean"
+          },
+          "card_transaction_invoiced": {
+            "type": "boolean"
+          },
+          "receipt_fetched": {
+            "type": "boolean"
+          },
+          "transaction_true_vat": {
+            "type": "boolean"
+          },
+          "transaction_line_items": {
+            "type": "boolean"
+          },
+          "aland_index": {
+            "type": "boolean"
+          },
+          "deedster": {
+            "type": "boolean"
+          },
+          "tpa_signed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Webhook": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/WebhookCreate"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "active": {
+                "type": "boolean"
+              },
+              "organization_id": {
+                "type": "integer"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "x-tagGroups": [
+    {
+      "name": "Profile",
+      "tags": [
+        "Me"
+      ]
+    },
+    {
+      "name": "Account Setup",
+      "tags": [
+        "Accounts",
+        "OAuth Clients",
+        "Public Records",
+        "Billings",
+        "Account Card Issuers"
+      ]
+    },
+    {
+      "name": "Legal",
+      "tags": [
+        "TPAs",
+        "TPA Signatories"
+      ]
+    },
+    {
+      "name": "Organizations",
+      "tags": [
+        "Organizations",
+        "Card Holders",
+        "Webhooks",
+        "Webhook Events",
+        "Webhook Headers"
+      ]
+    },
+    {
+      "name": "Data",
+      "tags": [
+        "Transactions",
+        "Receipts"
+      ]
+    },
+    {
+      "name": "Open",
+      "tags": [
+        "Open"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "OpenCard Receipt Provider Callback",
+    "version": "1.0",
+    "description": "Inbound webhook for receipt enrichers delivering matched receipts to OpenCard."
+  },
+  "servers": [
+    {
+      "url": "https://api.opencard.io/api"
+    },
+    {
+      "url": "https://sandbox-api.opencard.io/api"
+    }
+  ],
+  "paths": {
+    "/v1/service/marcet/callback/{referenceId}": {
+      "post": {
+        "summary": "Deliver receipt enrichment",
+        "operationId": "receiptProviderCallback",
+        "parameters": [
+          {
+            "name": "referenceId",
+            "in": "path",
+            "required": true,
+            "description": "Transaction reference ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Event",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CallbackRequestResolved",
+                "CallbackRequestDeleted"
+              ]
+            }
+          },
+          {
+            "name": "X-CallbackRequest-Id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Data-Signature",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "HMAC-SHA256 of raw body using shared secret"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/xml": {
+              "schema": {
+                "type": "string"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Accepted"
+          },
+          "403": {
+            "description": "Invalid signature"
+          }
+        }
+      }
+    }
+  }
+}

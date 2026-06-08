@@ -1,0 +1,59 @@
+---
+title: Receipt Provider Integration
+description: Deliver matched receipts, VAT, and line items back to OpenCard.
+---
+
+Receipt providers (enrichers) match card transactions to merchant digital receipts and callback enriched data to OpenCard.
+
+OpenCard then fires `receipt.fetched`, `transaction.true.vat`, and `transaction.line.items` webhooks to the EMS.
+
+---
+
+## The flow
+
+```mermaid
+sequenceDiagram
+    participant OC as OpenCard
+    participant RP as Receipt Provider
+    participant EMS as EMS
+
+    OC->>RP: Transaction marked receiptable
+    Note over RP: Match against merchant receipts
+    RP->>OC: POST callback with receipt XML/JSON
+    OC->>EMS: receipt.fetched webhook
+    OC->>EMS: transaction.true.vat webhook
+    OC->>EMS: transaction.line.items webhook
+```
+
+---
+
+## What you implement
+
+1. Receive transaction data from OpenCard (outbound to your system)
+2. Match against your merchant receipt database
+3. **POST callback** to OpenCard when matched
+
+→ [Callback Delivery](/receipt-providers/callback-delivery) for the inbound API spec.
+
+---
+
+## Auth
+
+Callbacks authenticated via **HMAC-SHA256**:
+
+```
+X-Data-Signature: HMAC-SHA256(raw_request_body, shared_client_secret)
+```
+
+Shared secret provisioned by OpenCard during onboarding.
+
+---
+
+## Events
+
+| `X-Event` header | Meaning |
+|------------------|---------|
+| `CallbackRequestResolved` | Receipt matched, payload contains receipt data |
+| `CallbackRequestDeleted` | Match cancelled/expired |
+
+Contact **support@opencard.io** for provider onboarding.

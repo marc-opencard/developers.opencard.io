@@ -1,0 +1,72 @@
+---
+title: Embed Plugins
+description: ocTPA and ocPDPC JS widgets for self-service flows on your site.
+---
+
+OpenCard ships embeddable JS plugins for partner sites.
+
+---
+
+## ocTPA — TPA onboarding wizard
+
+Self-service multi-step wizard: pick issuer → company info → signatory combos → collect emails.
+
+**Load:**
+```html
+<script src="https://api.opencard.io/plugin/tpa/js/tpa.min.js"></script>
+<link rel="stylesheet" href="https://api.opencard.io/plugin/tpa/css/tpa.min.css">
+```
+
+**Init:**
+```javascript
+new ocTPA({
+  environment: 'sandbox', // or 'production'
+  oAuthToken: 'Bearer ...', // needs public-records-read + account-card-issuers-read
+  accountId: 1,
+  orgNumber: '5561234567',
+  country: 'SE',
+  onDataSend: function(data) {
+    // YOU call the APIs:
+    // 1. POST /billings (data.billing)
+    // 2. POST /tpas (data.tpa)
+    // 3. POST /tpas/{id}/signatories for each in data.tpa_signatories
+  }
+});
+```
+
+The plugin does **not** call APIs itself. It collects data and hands it to your `onDataSend` callback.
+
+### `onDataSend` payload
+
+```json
+{
+  "billing": {
+    "name_display": "...", "name_legal": "...",
+    "organization_number": "...", "country": "SE",
+    "email_invoice": "...", "your_reference_invoice": "..."
+  },
+  "tpa": {
+    "language": "sv", "name": "...", "country": "SE",
+    "organization_number": "...", "card_issuer_id": 1
+  },
+  "tpa_signatories": [
+    { "name": "Anna", "email": "anna@acme.se" }
+  ]
+}
+```
+
+---
+
+## ocPDPC — consent link helper
+
+Lightweight modal that opens the PDPC signing URL in a new tab.
+
+```javascript
+new ocPdpc({
+  pdpcUrl: 'https://api.opencard.io/accounts/1/pdpcs/3/sign/token...',
+  message: 'Please approve data processing for your corporate card.',
+  buttonText: 'Approve now'
+});
+```
+
+Display-only. No API calls.

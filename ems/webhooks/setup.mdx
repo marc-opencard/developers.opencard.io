@@ -1,0 +1,167 @@
+---
+title: Webhook Setup
+description: Create webhook, pass challenge, configure auth. Step by step.
+---
+
+Webhooks are how OpenCard talks to your app. Every transaction, receipt, and lifecycle event gets POSTed to your URL.
+
+---
+
+## Create webhook
+
+```
+POST /accounts/{accountId}/organizations/{organizationId}/webhooks
+Scope: webhooks-write
+```
+
+```json
+{
+  "url": "https://your-app.com/hooks/opencard",
+  "enabled": true,
+  "authentication_type": "basic",
+  "basic_username": "opencard",
+  "basic_password": "your-secret-password",
+
+  "card_transaction_authorized": true,
+  "card_transaction_cleared": true,
+  "card_transaction_deleted": true,
+  "card_transaction_invoiced": false,
+  "card_holder_created": true,
+  "card_holder_identified": true,
+  "card_holder_signed_pdpc": true,
+  "card_holder_deleted": true,
+  "receipt_fetched": true,
+  "transaction_true_vat": true,
+  "transaction_line_items": true,
+  "tpa_signed": true
+}
+```
+
+| Field | Notes |
+|-------|-------|
+| `url` | Your HTTPS endpoint. Must be reachable from internet. |
+| `secret` | Auto-generated 60-char string if omitted. Used for challenge HMAC. |
+| `enabled` | `true` to activate (after challenge passes) |
+| `authentication_type` | `none`, `basic`, `oauth`, or `custom` |
+| Event flags | Boolean per event type. Only subscribed events are delivered. |
+
+Response includes `secret` — **save it**. You need it for challenge verification.
+
+---
+
+## Challenge handshake 🔐
+
+Immediately after create (or URL change), OpenCard verifies you own the endpoint:
+
+```
+GET https://your-app.com/hooks/opencard?challenge=RANDOM_20_CHAR_STRING
+Header: X-Event: challenge
+```
+
+Your server must respond `200` with header:
+
+```
+X-Verify-Token: HMAC-SHA256(challenge_string, webhook_secret)
+```
+
+**Node.js example:**
+
+```javascript
+const crypto = require('crypto');
+
+app.get('/hooks/opencard', (req, res) => {
+  const challenge = req.query.challenge;
+  if (!challenge) return res.status(400).send('missing challenge');
+
+  const token = crypto
+    .createHmac('sha256', process.env.WEBHOOK_SECRET)
+    .update(challenge)
+    .digest('hex');
+
+  res.set('X-Verify-Token', token).status(200).send('ok');
+});
+```
+
+If HMAC matches → `active=true`. If not → `active=false`, no events delivered.
+
+---
+
+## Receiving events
+
+Events come as `POST` to your URL:
+
+```
+POST https://your-app.com/hooks/opencard
+X-Event: card.transaction.authorized
+Content-Type: application/json
+
+{ ... payload ... }
+```
+
+Plus auth headers if configured:
+
+| `authentication_type` | What OpenCard sends |
+|----------------------|---------------------|
+| `none` | Just `X-Event` |
+| `basic` | `Authorization: Basic base64(user:pass)` |
+| `custom` | Your `custom_key: custom_value` as HTTP header |
+| `oauth` | Bearer token fetched from your `oauth_access_token_url` |
+
+**Always respond `200` quickly.** Process async if needed. OpenCard retries on failure.
+
+---
+
+## Custom headers
+
+Add extra headers OpenCard includes on every delivery:
+
+```
+POST .../webhooks/{webhookId}/headers
+{ "key": "X-My-App-Id", "value": "ems-prod-001" }
+```
+
+---
+
+## Webhook groups (buyer-party filter)
+
+Filter events by card issuer buyer party:
+
+```
+POST .../webhooks/{webhookId}/groups
+{ "buyer_party": "5561234567" }
+```
+
+Only transactions matching that buyer party hit this webhook.
+
+---
+
+## Test an event
+
+```
+POST .../webhooks/{webhookId}/test/card.transaction.authorized
+```
+
+Sends a test payload to your endpoint. Good for verifying your handler works.
+
+---
+
+## Delivery log
+
+```
+GET .../webhooks/{webhookId}/events
+Scope: webhook-events-read
+```
+
+Paginated log of every delivery attempt — status code, payload, timestamp. Use for debugging.
+
+---
+
+## Checklist ✅
+
+- [ ] HTTPS endpoint deployed
+- [ ] Challenge handler implemented (GET with `?challenge=`)
+- [ ] Event handler implemented (POST with `X-Event` header)
+- [ ] Respond 200 fast, process async
+- [ ] `secret` stored securely
+- [ ] Subscribed to the right event flags
+- [ ] Test event sent and received

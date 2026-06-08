@@ -1,0 +1,26 @@
+---
+title: Glossary
+description: Every term you'll see in the API and docs.
+---
+
+| Term | What it means |
+|------|---------------|
+| **Account** | Your EMS partner account. Top of the hierarchy. |
+| **Organization** | Your end-client. You set `reference_id`. Has webhooks + card holders. |
+| **Card Holder** | Individual whose transactions you receive. You set `reference_id`. |
+| **Identity** | Physical person in OpenCard (SSN via eID). Has cards. Use `identity_id` for instant onboarding. |
+| **TPA** | Transaction Processing Authorization. Company-level legal agreement. |
+| **PDPC** | Personal Data Processing Consent. Individual GDPR consent. |
+| **Transaction** | One purchase. ID stays same across all states. |
+| **Transaction State** | Snapshot: `authorized`, `cleared`, `deleted`, `invoiced`. |
+| **Card Issuer** | Bank/card program (Nordea, Zevoy, Entercard). |
+| **Enricher** | Third party adding receipts, VAT, line items, CO₂ data. |
+| **Webhook** | HTTP POST from OpenCard when stuff happens. |
+| **Reference ID** | Your string ID on orgs/cardholders. In every webhook. |
+| **Challenge** | Webhook verification handshake on setup. |
+| **Scope** | OAuth permission string like `webhooks-write`. |
+| **CAID / MID** | Merchant ID in receipt networks. |
+| **MCC** | Merchant Category Code (ISO 18245). |
+| **Assently CoreID** | eID provider widget (BankID, MitID, etc.). |
+| **Buyer party** | Company org number (digits only) on TPA. |
+| **Seller party** | Issuer-side party identifier. |

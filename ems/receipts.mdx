@@ -1,0 +1,42 @@
+---
+title: Digital Receipts
+description: How receipt matching works and what webhooks you get.
+---
+
+When `receiptable: true` on a transaction, OpenCard tries to match it against merchant digital receipt networks.
+
+---
+
+## What you receive
+
+Three separate webhooks, in any order:
+
+| Event | Contains |
+|-------|----------|
+| `receipt.fetched` | PDF/image URL (expires — download it!) |
+| `transaction.true.vat` | Correct VAT breakdown from merchant |
+| `transaction.line.items` | Individual purchase items |
+
+Subscribe to all three in your webhook config for the full picture.
+
+---
+
+## Receipt URL handling
+
+```json
+{
+  "url": "https://api.opencard.io/files/receipts/abc123",
+  "content_type": "application/pdf",
+  "expiration_time": "2026-07-08 13:23:08"
+}
+```
+
+1. Download immediately when webhook arrives
+2. Store in your system
+3. Don't hotlink — URLs expire
+
+---
+
+## When no receipt comes
+
+Not all merchants are in the receipt network. If `receiptable: true` but no `receipt.fetched` within reasonable time → no match found. Your users can still upload photo receipts via your UI or use [Receipt Scanner](/ems/receipt-scanner).

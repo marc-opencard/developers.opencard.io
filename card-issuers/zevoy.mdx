@@ -1,0 +1,41 @@
+---
+title: Zevoy
+description: Full card CRUD + transaction states via OAuth.
+---
+
+Zevoy has the most complete issuer API — full card lifecycle + transaction states.
+
+## Scopes
+
+| Scope | Access |
+|-------|--------|
+| `issuer-zevoy-cards-read` | List/get cards |
+| `issuer-zevoy-cards-write` | Create/update cards |
+| `issuer-zevoy-cards-delete` | Delete cards |
+| `issuer-zevoy-transaction-states-write` | Post transaction states |
+
+## Card endpoints
+
+```
+GET    /api/v1/issuers/zevoy/cards
+POST   /api/v1/issuers/zevoy/cards
+GET    /api/v1/issuers/zevoy/cards/{cardId}
+PUT    /api/v1/issuers/zevoy/cards/{cardId}
+DELETE /api/v1/issuers/zevoy/cards/{cardId}
+```
+
+`{cardId}` = Zevoy external card ID (stored in `cards.token`).
+
+### Query filters
+
+`last_four`, `buyer_party`, `seller_party`, `bin_number`, `id`, `active`, `per_page`, `page`
+
+## Transaction states
+
+```
+POST /api/v1/issuers/zevoy/cards/{cardId}/transaction_states
+```
+
+All fields required (unlike Nordea). See [Transaction States](/card-issuers/transaction-states).
+
+**Never send `pre-authorized`** — rejected.

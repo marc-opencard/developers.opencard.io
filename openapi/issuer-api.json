@@ -1,0 +1,488 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "OpenCard Card Issuer API",
+    "version": "1.0",
+    "contact": {
+      "email": "support@opencard.io"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.opencard.io/api",
+      "description": "Production"
+    },
+    {
+      "url": "https://sandbox-api.opencard.io/api",
+      "description": "Sandbox"
+    }
+  ],
+  "paths": {
+    "/v1/issuers/zevoy/cards": {
+      "get": {
+        "tags": [
+          "Zevoy"
+        ],
+        "summary": "List cards",
+        "operationId": "zevoyListCards",
+        "security": [
+          {
+            "opencard_auth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Zevoy"
+        ],
+        "summary": "Create card",
+        "operationId": "zevoyCreateCard",
+        "security": [
+          {
+            "opencard_auth": [
+              "issuer-zevoy-cards-write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "last_four",
+                  "bin_number",
+                  "liability",
+                  "scheme",
+                  "identity"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "last_four": {
+                    "type": "string"
+                  },
+                  "bin_number": {
+                    "type": "string"
+                  },
+                  "liability": {
+                    "type": "string"
+                  },
+                  "scheme": {
+                    "type": "string"
+                  },
+                  "identity": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Card created"
+          }
+        }
+      }
+    },
+    "/v1/issuers/zevoy/cards/{cardId}": {
+      "get": {
+        "tags": [
+          "Zevoy"
+        ],
+        "summary": "Get card",
+        "operationId": "zevoyGetCard",
+        "parameters": [
+          {
+            "name": "cardId",
+            "in": "path",
+            "required": true,
+            "description": "Zevoy external card ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "opencard_auth": [
+              "issuer-zevoy-cards-read"
+            ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Zevoy"
+        ],
+        "summary": "Update card",
+        "operationId": "zevoyUpdateCard",
+        "parameters": [
+          {
+            "name": "cardId",
+            "in": "path",
+            "required": true,
+            "description": "Card ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "opencard_auth": [
+              "issuer-zevoy-cards-write"
+            ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Zevoy"
+        ],
+        "summary": "Delete card",
+        "operationId": "zevoyDeleteCard",
+        "parameters": [
+          {
+            "name": "cardId",
+            "in": "path",
+            "required": true,
+            "description": "Card ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "opencard_auth": [
+              "issuer-zevoy-cards-delete"
+            ]
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/v1/issuers/zevoy/cards/{cardId}/transaction_states": {
+      "post": {
+        "tags": [
+          "Zevoy"
+        ],
+        "summary": "Post transaction state",
+        "operationId": "zevoyCreateTransactionState",
+        "parameters": [
+          {
+            "name": "cardId",
+            "in": "path",
+            "required": true,
+            "description": "Card ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "opencard_auth": [
+              "issuer-zevoy-transaction-states-write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssuerTransactionState"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          }
+        }
+      }
+    },
+    "/v1/issuers/nordea/cards/{cardId}/transaction_states": {
+      "post": {
+        "tags": [
+          "Nordea"
+        ],
+        "summary": "Post transaction state",
+        "operationId": "nordeaCreateTransactionState",
+        "parameters": [
+          {
+            "name": "cardId",
+            "in": "path",
+            "required": true,
+            "description": "OpenCard card ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "security": [
+          {
+            "opencard_auth": [
+              "issuer-nordea-transaction-states-write"
+            ]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssuerTransactionState"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          }
+        }
+      }
+    },
+    "/v1/issuer/nordea/partner-event": {
+      "post": {
+        "tags": [
+          "Nordea"
+        ],
+        "summary": "Partner event batch (mTLS)",
+        "operationId": "nordeaPartnerEvent",
+        "description": "Requires mTLS. Headers: X-SSL-Client-CN, X-SSL-Client-Fingerprint",
+        "security": [],
+        "responses": {
+          "201": {
+            "description": "Accepted"
+          }
+        }
+      }
+    },
+    "/v1/issuers/entercard/cards": {
+      "post": {
+        "tags": [
+          "Entercard"
+        ],
+        "summary": "Create card",
+        "operationId": "entercardCreateCard",
+        "security": [
+          {
+            "opencard_auth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      }
+    },
+    "/v1/issuers/entercard/cards/{cardId}": {
+      "delete": {
+        "tags": [
+          "Entercard"
+        ],
+        "summary": "Delete card",
+        "operationId": "entercardDeleteCard",
+        "parameters": [
+          {
+            "name": "cardId",
+            "in": "path",
+            "required": true,
+            "description": "Card ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "security": [
+          {
+            "opencard_auth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/v1/issuers/entercard/cards/{cardId}/transaction_states": {
+      "post": {
+        "tags": [
+          "Entercard"
+        ],
+        "summary": "Post transaction state",
+        "operationId": "entercardCreateTransactionState",
+        "parameters": [
+          {
+            "name": "cardId",
+            "in": "path",
+            "required": true,
+            "description": "Card ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "security": [
+          {
+            "opencard_auth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssuerTransactionState"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "opencard_auth": {
+        "type": "oauth2",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "https://api.opencard.io/oauth/token",
+            "scopes": {}
+          }
+        }
+      }
+    },
+    "schemas": {
+      "IssuerTransactionState": {
+        "type": "object",
+        "required": [
+          "id",
+          "state",
+          "type",
+          "original_amount",
+          "original_currency",
+          "accounting_amount",
+          "accounting_currency",
+          "exchange_rate",
+          "purchase_merchant",
+          "purchase_time",
+          "purchase_country",
+          "mcc_code",
+          "merchant_number",
+          "terminal_id",
+          "rrn",
+          "auth_code"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "authorized",
+              "cleared",
+              "invoiced",
+              "deleted"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "CARD_PURCHASE",
+              "CASH_WITHDRAWAL",
+              "FEE_AND_DISCOUNT"
+            ]
+          },
+          "invoice_number": {
+            "type": "string",
+            "nullable": true
+          },
+          "original_amount": {
+            "type": "number"
+          },
+          "original_currency": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 3
+          },
+          "accounting_amount": {
+            "type": "number"
+          },
+          "accounting_currency": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 3
+          },
+          "exchange_rate": {
+            "type": "number"
+          },
+          "vat_rate": {
+            "type": "number",
+            "nullable": true
+          },
+          "vat_amount": {
+            "type": "number",
+            "nullable": true
+          },
+          "vat_currency": {
+            "type": "string",
+            "nullable": true
+          },
+          "purchase_merchant": {
+            "type": "string"
+          },
+          "purchase_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "purchase_country": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 2
+          },
+          "purchase_city": {
+            "type": "string",
+            "nullable": true
+          },
+          "mcc_code": {
+            "type": "string"
+          },
+          "merchant_number": {
+            "type": "string"
+          },
+          "terminal_id": {
+            "type": "string"
+          },
+          "rrn": {
+            "type": "string"
+          },
+          "auth_code": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

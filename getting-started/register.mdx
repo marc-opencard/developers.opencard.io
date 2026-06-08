@@ -1,0 +1,60 @@
+---
+title: Register & Setup
+description: Create your sandbox account and get your first OAuth client.
+---
+
+## Sandbox registration
+
+1. Go to 👉 [sandbox-api.opencard.io/register](https://sandbox-api.opencard.io/register)
+2. Fill in account + user details
+3. Verify email (check inbox + spam)
+4. Log in
+
+You now have:
+- An **Account** (your EMS partner account)
+- An **admin user** (for dashboard access)
+- An `accountId` (visible in dashboard URL)
+
+---
+
+## Create OAuth client
+
+**Dashboard:** Account → OAuth Clients → Create New
+
+Give it a name, select scopes (see [Authentication](/getting-started/authentication)), save.
+
+You'll get:
+- `client_id`
+- `client_secret` (shown **once** — copy it now)
+
+---
+
+## Get your first token
+
+```bash
+curl -X POST https://sandbox-api.opencard.io/oauth/token \
+  -d "grant_type=client_credentials" \
+  -d "client_id=YOUR_ID" \
+  -d "client_secret=YOUR_SECRET" \
+  -d "scope=accounts-read"
+```
+
+If you get a token back → you're wired up. 🔌
+
+---
+
+## Production access
+
+Sandbox is free and instant. Production requires:
+
+1. Complete sandbox integration
+2. Security review
+3. Partnership agreement
+
+Email **support@opencard.io** when you're ready.
+
+---
+
+## What's next?
+
+→ [Quickstart](/getting-started/quickstart) — full integration walkthrough

@@ -1,0 +1,136 @@
+---
+title: Authentication
+description: OAuth2 client credentials. Scopes. Tokens. The works.
+---
+
+OpenCard uses **OAuth2 client credentials** for machine-to-machine API access. No user login flow for API calls (signing pages are separate web flows).
+
+---
+
+## Get a token
+
+```
+POST /oauth/token
+Content-Type: application/x-www-form-urlencoded
+```
+
+```bash
+curl -X POST https://sandbox-api.opencard.io/oauth/token \
+  -d "grant_type=client_credentials" \
+  -d "client_id=YOUR_CLIENT_ID" \
+  -d "client_secret=YOUR_CLIENT_SECRET" \
+  -d "scope=organizations-read organizations-write webhooks-write"
+```
+
+**Response:**
+```json
+{
+  "token_type": "Bearer",
+  "expires_in": 31536000,
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+}
+```
+
+Use it:
+```
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
+```
+
+---
+
+## Create OAuth client
+
+Via dashboard or API:
+
+```
+POST /accounts/{accountId}/oauthclients
+Scope: oauth-clients-write
+```
+
+Response includes `secret` in **plain text** — shown once. Store it.
+
+Update scopes later:
+```
+PUT /accounts/{accountId}/oauthclients/{oauthclientId}
+{ "scopes": ["organizations-read", "organizations-write", "webhooks-write"] }
+```
+
+---
+
+## Scopes you actually need
+
+### EMS integration starter pack
+
+```
+account-tpas-write account-tpas-read account-tpa-signatories-write
+organizations-read organizations-write
+card-holders-write card-holders-read
+webhooks-write webhooks-read
+public-records-read
+account-card-issuers-read account-card-issuers-write
+oauth-clients-read
+```
+
+### Full list (Application API)
+
+| Scope | What it unlocks |
+|-------|----------------|
+| `me-read` / `me-write` | Your user profile |
+| `accounts-read` / `accounts-write` | Account settings |
+| `oauth-clients-read` / `oauth-clients-write` | OAuth client management |
+| `public-records-read` | Company registry lookup |
+| `account-tpas-read` / `account-tpas-write` / `account-tpas-delete` | TPA CRUD |
+| `account-tpa-signatories-read` / `-write` / `-delete` | TPA signatories |
+| `account-tpa-identities-read` | Identities on a TPA |
+| `organizations-read` / `-write` / `-delete` | Organizations |
+| `card-holders-read` / `-write` / `-delete` | Card holders |
+| `webhooks-read` / `webhooks-write` | Webhooks |
+| `webhook-events-read` | Delivery log |
+| `webhook-headers-read` / `-write` / `-delete` | Custom headers |
+| `webhook-groups-read` / `-write` / `-delete` | Buyer-party filters |
+| `billings-read` / `billings-write` | Billing profiles |
+| `account-card-issuers-read` / `-write` / `-delete` | Enable/disable issuers |
+| `receipts-write` | Receipt OCR scan |
+| `transactions-read` | Query transactions (admin/reconciliation) |
+| `files-read` | Download files |
+| `tpas-read` / `tpas-write` | Global TPA admin |
+
+### Issuer scopes
+
+| Scope | Issuer |
+|-------|--------|
+| `issuer-zevoy-cards-read` / `-write` / `-delete` | Zevoy cards |
+| `issuer-zevoy-transaction-states-write` | Zevoy transactions |
+| `issuer-nordea-transaction-states-write` | Nordea transactions |
+
+---
+
+## Access control
+
+Your token is tied to your **account**. The API checks:
+
+1. Token has required scope for the route
+2. Token owner has access to `accountId` / `organizationId` in the URL path
+
+You can only access your own account's resources. No cross-tenant access.
+
+---
+
+## Token types
+
+| Owner type | Use case |
+|------------|----------|
+| `account_client` | Machine-to-machine EMS integration (most common) |
+| `account_user` | Human user via dashboard |
+| `organization_client` | Scoped to one organization |
+| `card_issuer` | Issuer integration (restricted to `/api/v1/issuers/{slug}/...`) |
+
+---
+
+## Errors
+
+| Status | Meaning |
+|--------|---------|
+| `401` | Invalid/expired token |
+| `403` | Valid token but missing scope or no access to resource |
+| `404` | Resource doesn't exist (or you can't see it) |

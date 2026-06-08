@@ -1,0 +1,121 @@
+---
+title: Handling Transaction States
+description: authorized vs cleared vs deleted vs invoiced. The logic you need to get right.
+---
+
+Getting transaction states wrong = angry accountants. Here's the exact logic.
+
+---
+
+## The 4 states
+
+```mermaid
+stateDiagram-v2
+    [*] --> authorized: purchase happens
+    authorized --> deleted: auth reversed
+    authorized --> cleared: settles (3-5 days)
+    cleared --> invoiced: issuer invoices
+```
+
+| State | Timing | Amounts reliable? | Use for accounting? |
+|-------|--------|-------------------|---------------------|
+| `authorized` | Seconds after purchase | ❌ May change | Preview only |
+| `deleted` | Before clearing | N/A | Delete from your system |
+| `cleared` | 3-5 days after purchase | ✅ Final | **YES** |
+| `invoiced` | When issuer invoices | ✅ Final + invoice # | YES |
+
+---
+
+## Recommended implementation
+
+```javascript
+async function handleTransaction(event, payload) {
+  const txId = payload.id;
+  const state = payload.state; // from X-Event suffix or payload.state
+
+  switch (event) {
+    case 'card.transaction.authorized':
+      // Create if not exists (upsert by id)
+      await db.transactions.upsert(txId, { ...payload, status: 'pending' });
+      break;
+
+    case 'card.transaction.cleared':
+    case 'card.transaction.invoiced':
+      // Update existing OR create if you skipped authorized
+      await db.transactions.upsert(txId, { ...payload, status: 'confirmed' });
+      break;
+
+    case 'card.transaction.deleted':
+      // Only relevant if you stored authorized
+      await db.transactions.delete(txId);
+      break;
+  }
+}
+```
+
+### The golden rules
+
+1. **Always handle `cleared`** — non-negotiable for accounting
+2. **`authorized` + `deleted` + `cleared`** = best UX (users see purchases instantly, deletions handled)
+3. **`authorized` alone** = you'll miss transactions that clear without prior auth (rare but possible)
+4. **Use `id` as primary key** — same `id` across all states for one transaction
+5. **`card_issuer_reference` differs per state** — don't use it as your primary key
+
+---
+
+## Upsert logic detail
+
+| Event | Transaction exists? | Action |
+|-------|-------------------|--------|
+| `authorized` | No | Create |
+| `authorized` | Yes | Update (amounts may change before clearing) |
+| `cleared` | No | Create (you missed authorized — still ok) |
+| `cleared` | Yes | Update with final amounts |
+| `invoiced` | No | Create |
+| `invoiced` | Yes | Update, set `invoice_number` |
+| `deleted` | Yes | Delete |
+| `deleted` | No | Ignore (nothing to delete) |
+
+---
+
+## `receiptable` flag
+
+```json
+{ "receiptable": true }
+```
+
+If `true`, a digital receipt may arrive later via `receipt.fetched`. If `false`, don't wait for one.
+
+Subscribe to `receipt_fetched`, `transaction_true_vat`, and `transaction_line_items` separately — they come as independent events after the transaction.
+
+---
+
+## Card types
+
+| `card_type` | Meaning |
+|-------------|---------|
+| `corporate` | Company card, company pays |
+| `private` | Personal card |
+| `corporate_with_private_invoice` | Company card, employee reimbursed privately |
+
+Verify with your client which card types to include. Common setup: corporate only.
+
+---
+
+## Migrating from direct issuer feed
+
+When switching from a legacy issuer integration to OpenCard:
+
+1. Stop old feed when you get `card_holder.identified`
+2. OpenCard delivers all transactions since last credit card invoice
+3. Dedupe using `card_issuer_reference` on `cleared` events — if you already have it from the old feed, skip
+
+See [Migrating from Issuer](/ems/migrating-from-issuer).
+
+---
+
+## VAT caveat
+
+`vat_rate` and `vat_amount` on the transaction payload come from the **card network** — often wrong for restaurants, hotels, etc.
+
+For correct VAT, subscribe to `transaction.true.vat` — that comes from the actual merchant receipt.

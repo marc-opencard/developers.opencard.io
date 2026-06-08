@@ -1,0 +1,20 @@
+---
+title: Entercard
+description: Card create/delete + transaction states.
+---
+
+## Endpoints
+
+```
+POST   /api/v1/issuers/entercard/cards
+DELETE /api/v1/issuers/entercard/cards/{cardId}
+POST   /api/v1/issuers/entercard/cards/{cardId}/transaction_states
+```
+
+## Card lookup
+
+Cards matched by `push_token` internally. Transaction state payload same as Zevoy.
+
+## Note
+
+Entercard routes use ACL but issuer-specific OAuth scopes may need configuration — contact support@opencard.io for credential setup.

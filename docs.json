@@ -1,0 +1,185 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "OpenCard",
+  "description": "Build on OpenCard. Real-time card data, digital receipts, zero bullshit.",
+  "colors": {
+    "primary": "#C9A9A9",
+    "light": "#E8D4D4",
+    "dark": "#8B6B6B"
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "favicon": "/favicon.svg",
+  "navbar": {
+    "links": [
+      {
+        "label": "🧪 Sandbox",
+        "href": "https://sandbox-api.opencard.io/register"
+      },
+      {
+        "label": "💬 Support",
+        "href": "mailto:support@opencard.io"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get API Access",
+      "href": "https://sandbox-api.opencard.io/register"
+    }
+  },
+  "api": {
+    "openapi": [
+      "openapi/oauth.json",
+      "openapi/application-api.json",
+      "openapi/issuer-api.json",
+      "openapi/receipt-provider-callback.json"
+    ],
+    "playground": {
+      "display": "interactive"
+    },
+    "examples": {
+      "languages": ["curl", "javascript", "python", "php"],
+      "defaults": "required",
+      "prefill": true,
+      "autogenerate": true
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Start Here",
+        "groups": [
+          {
+            "group": "👋 Welcome",
+            "pages": [
+              "introduction/index",
+              "introduction/how-it-works",
+              "introduction/environments",
+              "introduction/glossary"
+            ]
+          },
+          {
+            "group": "🚀 Getting Started",
+            "pages": [
+              "getting-started/register",
+              "getting-started/authentication",
+              "getting-started/quickstart"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "EMS Guide",
+        "groups": [
+          {
+            "group": "🧠 Core Concepts",
+            "pages": [
+              "ems/data-model",
+              "ems/organizations",
+              "ems/card-holders",
+              "ems/pdpc-flow"
+            ]
+          },
+          {
+            "group": "📜 Legal & Signing",
+            "pages": [
+              "ems/tpa-flow",
+              "ems/eid-signing"
+            ]
+          },
+          {
+            "group": "🔔 Webhooks",
+            "pages": [
+              "ems/webhooks/setup",
+              "ems/webhooks/events",
+              "ems/webhooks/transactions"
+            ]
+          },
+          {
+            "group": "✨ Enrichment",
+            "pages": [
+              "ems/receipts",
+              "ems/receipt-scanner",
+              "ems/environmental-impact"
+            ]
+          },
+          {
+            "group": "🔧 Advanced",
+            "pages": [
+              "ems/plugins",
+              "ems/migrating-from-issuer",
+              "ems/error-handling"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["api-reference/overview"]
+          },
+          {
+            "group": "OAuth",
+            "openapi": {
+              "source": "openapi/oauth.json",
+              "directory": "api-reference/oauth"
+            }
+          },
+          {
+            "group": "Application API",
+            "openapi": {
+              "source": "openapi/application-api.json",
+              "directory": "api-reference/application"
+            }
+          }
+        ]
+      },
+      {
+        "tab": "Card Issuers",
+        "groups": [
+          {
+            "group": "Integration",
+            "pages": [
+              "card-issuers/index",
+              "card-issuers/transaction-states",
+              "card-issuers/nordea",
+              "card-issuers/zevoy",
+              "card-issuers/entercard"
+            ]
+          },
+          {
+            "group": "Issuer API",
+            "openapi": {
+              "source": "openapi/issuer-api.json",
+              "directory": "api-reference/issuer"
+            }
+          }
+        ]
+      },
+      {
+        "tab": "Receipt Providers",
+        "groups": [
+          {
+            "group": "Integration",
+            "pages": [
+              "receipt-providers/index",
+              "receipt-providers/callback-delivery"
+            ]
+          },
+          {
+            "group": "Callback API",
+            "openapi": {
+              "source": "openapi/receipt-provider-callback.json",
+              "directory": "api-reference/receipt-callback"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,184 @@
+---
+title: eID Signing — 4 Countries
+description: BankID, MitID, BankID NO, Finnish TUPAS. How signing works for TPA and PDPC.
+---
+
+OpenCard uses **[Assently CoreID](https://coreid.assently.com)** for electronic identity. We don't integrate BankID/MitID directly — Assently handles the provider routing.
+
+Two modes:
+
+| Mode | Used for | What happens |
+|------|----------|--------------|
+| **`sign`** | TPA signing | User signs a specific legal document (hash-bound) |
+| **`auth`** | PDPC consent | User identifies themselves + checks consent box |
+
+---
+
+## 🇸🇪 Sweden — BankID
+
+| Setting | Value |
+|---------|-------|
+| Location | `se` |
+| Default provider | `se-bankid` |
+| Also available | `se-telia-osif` |
+| UI language | `sv` |
+| BankID setting | `autoStart: false` |
+
+User opens BankID app on phone or uses BankID on same device.
+
+---
+
+## 🇳🇴 Norway — BankID
+
+| Setting | Value |
+|---------|-------|
+| Location | `no` |
+| Default provider | `no-bankid-oidc` |
+| UI language | `no` |
+
+---
+
+## 🇩🇰 Denmark — MitID (+ legacy NemID)
+
+| Setting | Value |
+|---------|-------|
+| Location | `dk` |
+| Default provider | `dk-mitid` |
+| Also available | `dk-nemid` (with `cprPrompt: true`) |
+| UI language | `da` |
+
+---
+
+## 🇫🇮 Finland — Multiple providers
+
+| Setting | Value |
+|---------|-------|
+| Location | `fi` |
+| Default provider | none (user picks) |
+| Available | `fi-mv-telia`, `fi-tupas`, `fi-vrk` |
+| UI language | `fi` |
+
+User selects their preferred Finnish eID provider from the list.
+
+---
+
+## How the token flow works
+
+```mermaid
+sequenceDiagram
+    participant User as Signatory/Cardholder
+    participant Page as OpenCard signing page
+    participant Assently as Assently CoreID
+    participant API as OpenCard API
+
+    User->>Page: Click email link (token in URL)
+    Page->>Assently: Load CoreID widget with eID token
+    Assently->>User: Show BankID/MitID/etc picker
+    User->>Assently: Complete eID authentication
+    Assently->>Page: POST identityToken (JWT)
+    Page->>API: POST /sign/{token} with identityToken
+    API->>API: Validate JWT, extract ssn/name/country
+    API->>User: Redirect back with success
+```
+
+### Server-side token generation
+
+OpenCard generates an outbound JWT for Assently with claims:
+- `iss`, `aud`, `jti`, `iat`, `exp`
+- `hst`, `dnm` (host/domain binding)
+- `response_mode: form_post`
+- `redirect_uri` → the POST sign endpoint
+
+### Inbound validation
+
+When Assently returns `identityToken`:
+- Validated against `ASSENTLY_IDENTITY` public key
+- Claims extracted:
+
+| JWT claim | Stored as |
+|-----------|-----------|
+| `sub.national_id` | `ssn` (encrypted) |
+| `provider` (first 2 chars) | country |
+| `sub.full_name` or name parts | `name` |
+| Full claims JSON | `signature` (encrypted) |
+
+---
+
+## TPA signing page
+
+**URL:** `GET /accounts/{accountId}/tpas/{tpaId}/sign/{token}`
+
+No login required. The 40-char token in the URL **is** the authentication.
+
+**What the user sees:**
+1. TPA legal text (rendered markdown)
+2. "Sign" button → Assently widget
+3. eID provider selection (country-specific)
+4. Document signing with legal text hash:
+
+```javascript
+// TPA sign config sent to Assently
+{
+  mode: 'sign',
+  sign: {
+    title: 'Sign Transaction Processing Authorisation',
+    data: legalTextHash,  // SHA-256 of legal text content
+    type: 'text'
+  }
+}
+```
+
+**POST:** `POST /accounts/{accountId}/tpas/{tpaId}/sign/{token}`
+Body: `identityToken={assently_jwt}`
+
+CSRF exempt on POST (external redirect from Assently).
+
+---
+
+## PDPC signing page
+
+**URL:** `GET /accounts/{accountId}/pdpcs/{pdpcId}/sign/{token}`
+
+**What the user sees:**
+1. PDPC legal text
+2. Checkbox: "I have read the text above"
+3. "Approve & Identify" button
+4. Assently widget in **`auth`** mode (identity only, no document hash)
+
+**POST:** same pattern with `identityToken`
+
+On success:
+- Identity created/found by SSN
+- Card holder linked
+- PDPC marked signed
+- Signed PDF generated + emailed to cardholder
+- `card_holder.signed.pdpc` webhook fires
+
+---
+
+## Auto-verification (TPA only)
+
+After TPA signatory signs, OpenCard checks if signing rights are valid:
+
+| Country | Auto-verify? | How |
+|---------|-------------|-----|
+| 🇸🇪 SE | ✅ Yes | `ssn_hash` matched against `signature_combinations` from registry |
+| 🇳🇴 NO | ✅ Yes | Same as SE |
+| 🇩🇰 DK | ❌ No | Requires manual admin approval |
+| 🇫🇮 FI | ❌ No | Requires manual admin approval |
+
+If SE/NO auto-verify fails (wrong person signed) → account gets notification email + Slack alert. TPA stays `pending-approval`.
+
+---
+
+## Supported languages for legal text
+
+Templates available in: `sv`, `no`, `da`, `en`, `fi`
+
+Query available languages:
+```
+GET /api/v1/application/open/legaltexts?type=tpa
+GET /api/v1/application/open/legaltexts?type=pdpc
+```
+
+No auth required for this endpoint.

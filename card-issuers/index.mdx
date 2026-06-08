@@ -1,0 +1,59 @@
+---
+title: Card Issuer Integration
+description: If you're a bank/card program delivering transactions to OpenCard.
+---
+
+This section is for **card issuers** — banks and card programs that need to push card + transaction data into OpenCard.
+
+If you're an EMS → you want the [EMS Guide](/getting-started/quickstart) instead.
+
+---
+
+## What issuers do
+
+1. **Register cards** in OpenCard (link to TPA buyer/seller parties)
+2. **Deliver transaction states** as they happen (authorized → cleared → invoiced → deleted)
+3. Optionally use **mTLS** for batch ingestion (Nordea partner events, MasterCard)
+
+OpenCard normalizes everything and pushes to EMS webhooks.
+
+---
+
+## Supported issuers
+
+| Issuer | Card API | Transaction API | Auth |
+|--------|----------|-----------------|------|
+| **Zevoy** | Full CRUD | POST transaction states | OAuth issuer client |
+| **Nordea** | Via partner events | POST transaction states + batch partner-event | OAuth + mTLS |
+| **Entercard** | Create/delete | POST transaction states | OAuth issuer client |
+| **MasterCard** | Via PDPC flow | authorizations + clearings | mTLS |
+
+---
+
+## Transaction state rules
+
+All issuers deliver the same 4 states:
+
+| State | When to send |
+|-------|-------------|
+| `authorized` | At point of purchase |
+| `cleared` | When settled (3-5 days) |
+| `invoiced` | When invoiced (includes `invoice_number`) |
+| `deleted` | When authorization reversed |
+
+**Never send `pre-authorized`** — rejected by validation.
+
+---
+
+## Get issuer credentials
+
+Contact **support@opencard.io**. You'll get:
+- OAuth client with issuer-specific scopes
+- mTLS certificates (if applicable)
+- Sandbox environment for testing
+
+---
+
+## API reference
+
+→ [Issuer API](/api-reference/issuer) tab for endpoint details.

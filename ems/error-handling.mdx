@@ -1,0 +1,37 @@
+---
+title: Error Handling
+description: HTTP errors, webhook retries, and common gotchas.
+---
+
+## API errors
+
+| Code | Meaning | Fix |
+|------|---------|-----|
+| `400` | Bad request / validation | Check field formats (org numbers, country codes) |
+| `401` | Invalid token | Refresh OAuth token |
+| `403` | Missing scope | Add scope to OAuth client |
+| `404` | Not found | Check IDs, or no access |
+| `409` | Conflict | Duplicate (e.g. issuer transaction state ID) |
+| `422` | Business rule | e.g. delete signed signatory |
+
+---
+
+## Webhook delivery
+
+- OpenCard retries failed deliveries
+- Check delivery log: `GET .../webhooks/{id}/events`
+- Your endpoint must return `200` fast
+- Process heavy work async (queue it)
+
+---
+
+## Common gotchas
+
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| Webhook `active=false` | Challenge failed | Implement HMAC challenge handler |
+| No transactions | TPA not activated | Wait for issuer card confirmation |
+| No transactions | PDPC not signed | Cardholder must sign consent |
+| Duplicate txs | Old issuer feed still running | Stop on `card_holder.identified` |
+| DK/FI TPA stuck | Needs manual approval | Contact OpenCard support |
+| Wrong VAT on tx | Network VAT, not merchant | Subscribe to `transaction.true.vat` |

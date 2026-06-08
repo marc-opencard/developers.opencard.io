@@ -1,0 +1,89 @@
+---
+title: Transaction States
+description: The payload every issuer sends. Field by field.
+---
+
+```
+POST /api/v1/issuers/{issuer}/cards/{cardId}/transaction_states
+→ 202 Accepted (processed async)
+```
+
+---
+
+## Payload
+
+```json
+{
+  "id": "TX-2026-001234",
+  "state": "authorized",
+  "type": "CARD_PURCHASE",
+  "invoice_number": null,
+  "original_amount": 109.38,
+  "original_currency": "SEK",
+  "accounting_amount": 109.38,
+  "accounting_currency": "SEK",
+  "exchange_rate": 1.0,
+  "vat_rate": null,
+  "vat_amount": null,
+  "vat_currency": null,
+  "purchase_merchant": "Espresso House Sveavägen",
+  "purchase_time": "2026-06-08T11:12:14+02:00",
+  "purchase_country": "SE",
+  "purchase_city": "Stockholm",
+  "mcc_code": "5814",
+  "merchant_number": "1234567890",
+  "terminal_id": "T001",
+  "rrn": "123456789012",
+  "auth_code": "ABC123"
+}
+```
+
+### Required fields
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | string | Your unique reference for this state |
+| `state` | enum | `authorized`, `cleared`, `invoiced`, `deleted` |
+| `type` | enum | `CARD_PURCHASE`, `CASH_WITHDRAWAL`, `FEE_AND_DISCOUNT` |
+| `original_amount` | number | Amount at merchant |
+| `original_currency` | string | ISO 4217 (3 chars) |
+| `accounting_amount` | number | Home currency amount |
+| `accounting_currency` | string | ISO 4217 (3 chars) |
+| `exchange_rate` | number | |
+| `purchase_merchant` | string | |
+| `purchase_time` | string | ISO 8601 |
+| `purchase_country` | string | ISO 3166-1 alpha-2 |
+| `mcc_code` | string | |
+| `merchant_number` | string | Zevoy required, Nordea nullable |
+| `terminal_id` | string | Zevoy required, Nordea nullable |
+| `rrn` | string | Retrieval reference number |
+| `auth_code` | string | |
+
+### Optional
+
+| Field | Notes |
+|-------|-------|
+| `invoice_number` | Required when `state=invoiced` |
+| `vat_rate`, `vat_amount`, `vat_currency` | Network-reported VAT |
+| `purchase_city` | |
+
+---
+
+## Response codes
+
+| Code | Meaning |
+|------|---------|
+| `202` | Accepted, processing async |
+| `400` | Card not found or validation error |
+| `409` | Duplicate state ID |
+| `422` | Business rule violation |
+
+---
+
+## Card ID in path
+
+| Issuer | `{cardId}` means |
+|--------|-----------------|
+| Zevoy | External card ID (stored in `cards.token`) |
+| Nordea | OpenCard internal card ID |
+| Entercard | OpenCard internal card ID (lookup by `push_token`) |

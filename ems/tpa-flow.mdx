@@ -1,0 +1,257 @@
+---
+title: TPA Flow — Full Walkthrough
+description: Create TPA, add signatories, email, eID signing in 4 countries. Every step, every field.
+---
+
+TPA = **Transaction Processing Authorization**.
+
+It's the legal agreement that says "this company's card transaction data is allowed to flow through OpenCard to the EMS." Without a signed TPA, no transactions.
+
+---
+
+## TPA lifecycle states
+
+| Status | Meaning |
+|--------|---------|
+| `pending-signatures` | Signatories added but not all signed yet |
+| `pending-approval` | All signed, but signatures not verified (DK/FI, or SE/NO mismatch) |
+| `pending-activation` | Verified + signed, waiting for issuer to confirm cards exist |
+| `activated` | Live. Transactions flow. |
+
+```mermaid
+stateDiagram-v2
+    [*] --> pending-signatures: POST /tpas
+    pending-signatures --> pending-approval: all signed, not verified
+    pending-signatures --> pending-activation: all signed + verified (SE/NO)
+    pending-approval --> pending-activation: admin approves
+    pending-activation --> activated: issuer confirms cards
+```
+
+---
+
+## Step 1: Create TPA
+
+```
+POST /api/v1/application/accounts/{accountId}/tpas
+Scope: account-tpas-write
+```
+
+```json
+{
+  "card_issuer_id": 1,
+  "name": "Acme AB",
+  "country": "SE",
+  "organization_number": "5561234567",
+  "language": "sv"
+}
+```
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `card_issuer_id` | ✅ | Which card program (Nordea, Zevoy, etc.) |
+| `name` | ✅ | Overwritten by registry name if found |
+| `country` | ✅ | `SE`, `DK`, `NO`, or `FI` only |
+| `organization_number` | ✅ | Format depends on country (see below) |
+| `language` | ❌ | `sv`, `no`, `da`, `en`, `fi`. Defaults from country |
+
+**Server-side magic:**
+1. Looks up company in public registry (Roaring in prod)
+2. Stores `signature_combinations` in `public_info` (who can sign)
+3. Sets `seller_party` from issuer config
+4. Creates/finds `client` record
+5. Snapshots legal text from latest `type=tpa` template
+
+**Response `201`:**
+```json
+{
+  "id": 42,
+  "account_id": 1,
+  "card_issuer_id": 1,
+  "name": "Acme AB",
+  "country": "SE",
+  "organization_number": "5561234567",
+  "activated": false,
+  "signatures_verified": false,
+  "signed_document_path": null
+}
+```
+
+### Org number validation
+
+| Country | Rule | Example |
+|---------|------|---------|
+| 🇸🇪 `SE` | exactly 10 digits | `5561234567` |
+| 🇳🇴 `NO` | exactly 9 digits | `987654321` |
+| 🇩🇰 `DK` | exactly 8 digits | `12345678` |
+| 🇫🇮 `FI` | `\d{7}-\d{1}` | `1234567-8` |
+
+---
+
+## Step 2: Check who can sign (recommended)
+
+Before adding signatories, query the registry:
+
+```
+GET /accounts/{accountId}/publicrecords?country=SE&organization_number=5561234567
+Scope: public-records-read
+```
+
+Response includes `signature_combinations` — groups of people where **all members of a group** must sign. Example:
+
+```json
+{
+  "signature_combinations": [
+    [
+      { "name": "Anna Andersson", "ssn_hash": "abc123..." },
+      { "name": "Erik Eriksson", "ssn_hash": "def456..." }
+    ]
+  ]
+}
+```
+
+Add each person as a signatory. When they sign with eID, their `ssn_hash` is checked against these combinations.
+
+---
+
+## Step 3: Add signatories → email fires 📧
+
+```
+POST /accounts/{accountId}/tpas/{tpaId}/signatories
+Scope: account-tpa-signatories-write
+```
+
+```json
+{
+  "email": "ceo@acme.se",
+  "name": "Anna Andersson",
+  "country_code": "+46",
+  "phone_number": "0701234567"
+}
+```
+
+Only `email` is required. `phone_number` is stored but not returned in API responses.
+
+**What happens immediately:**
+
+1. `token` = random 40-char string generated
+2. Signatory record created with `signed: false`
+3. **Email queued** via issuer-specific mailer:
+   - **Subject:** `Authorise TPA for {tpaName}`
+   - **Template:** TPA signing invitation
+   - **Link:** `https://{env}/accounts/{accountId}/tpas/{tpaId}/sign/{token}`
+   - **Language:** English (hardcoded for signatory emails)
+
+The signatory does **not** need an OpenCard account. The token in the URL is their auth.
+
+### Update / delete signatory
+
+```
+PUT  .../signatories/{tpaSignatoryId}   ← only if signed=false, resends email
+DELETE .../signatories/{tpaSignatoryId} ← only if signed=false
+```
+
+### Reminder emails
+
+If unsigned after 7+ days, a reminder job re-sends the email (if `SCHEDULE_REMIND_TPA_SIGNATORIES=true`).
+
+---
+
+## Step 4: Signatory signs with eID ✍️
+
+This is a **web flow**, not an API call. The signatory:
+
+1. Clicks email link → `GET /accounts/{accountId}/tpas/{tpaId}/sign/{token}`
+2. Sees TPA legal text (markdown rendered)
+3. Clicks "Sign" → Assently CoreID widget loads
+4. Picks their eID provider (BankID, MitID, etc.) — see [eID Signing](/ems/eid-signing)
+5. Signs the document (mode: **sign** — legal text hash is bound to signature)
+6. Assently POSTs `identityToken` back → `POST .../sign/{token}`
+
+**Server validates:**
+- `identityToken` JWT from Assently
+- Extracts: `ssn`, `country`, `name`, full signature claims
+- Sets signatory: `signed=true`, `signed_at=now()`, encrypted `ssn` + `signature`
+
+**Then checks if TPA is fully signed:**
+
+### 🇸🇪 SE + 🇳🇴 NO → auto-verify
+
+Compares signed signatories' `ssn_hash` against `public_info.signature_combinations`. If a complete combination matches → `signatures_verified=true` → `setSigned()` called automatically.
+
+### 🇩🇰 DK + 🇫🇮 FI → manual approval
+
+Auto-verify is **not** available. TPA stays `pending-approval` until OpenCard admin runs:
+
+```
+PUT /api/v1/application/tpas/{tpaId}
+Scope: tpas-write (admin)
+```
+
+```json
+{
+  "signatures_verified": true,
+  "signatures_approval_description": "Verified by support after document review"
+}
+```
+
+---
+
+## Step 5: TPA fully signed → stuff happens
+
+When `setSigned()` runs:
+
+1. 📄 **Signed PDF generated** with all signatory eID approval blocks
+2. 💾 Stored at `legal_documents/{date}/{random}.pdf`
+3. 📧 **Email to each signatory** with signed PDF attached
+4. 📧 **Issuer notified** (e.g. Nordea gets the PDF)
+5. 🔔 **`tpa.signed` webhook** fires on orgs that subscribed
+
+**Webhook payload:**
+```json
+{
+  "id": "42",
+  "name": "Acme AB",
+  "organization_number": "5561234567",
+  "url": "https://api.opencard.io/files/tpas/abc123.pdf",
+  "organization": {
+    "reference_id": "client_acme_001"
+  }
+}
+```
+
+### Download signed PDF via API
+
+```
+GET /accounts/{accountId}/tpas/{tpaId}/signeddocuments
+→ application/pdf
+```
+
+---
+
+## Step 6: Activation
+
+TPA moves to `activated` when the card issuer confirms cards exist for this buyer/seller party. This is triggered by issuer-side card processing — not something you call directly.
+
+Until activated, transactions won't flow even if TPA is signed.
+
+---
+
+## Delete TPA
+
+```
+DELETE /accounts/{accountId}/tpas/{tpaId}
+```
+
+If TPA was activated → issuer termination email sent, cascades delete organizations/webhooks/cardholders linked to it.
+
+<Warning>
+  Only delete TPAs you're sure are unused. Activated TPA deletion is destructive.
+</Warning>
+
+---
+
+## TPA embed plugin (optional)
+
+OpenCard ships a JS wizard (`ocTPA`) for self-service TPA onboarding on your site. It collects issuer selection, signatory combos, billing info — then calls your `onDataSend` callback with the payload for you to hit the APIs.
+
+See [Plugins](/ems/plugins).

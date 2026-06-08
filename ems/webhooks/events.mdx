@@ -1,0 +1,240 @@
+---
+title: Webhook Event Reference
+description: Every webhook event, header, and payload. Copy-paste ready.
+---
+
+All webhook deliveries include:
+
+```
+X-Event: {event_name}
+```
+
+Plus any custom headers you configured, and auth headers if you set `authentication_type`.
+
+---
+
+## Event catalog
+
+### TPA
+
+| Event | Flag to enable | When |
+|-------|---------------|------|
+| `tpa.signed` | `tpa_signed` | TPA fully signed, PDF generated |
+
+### Card holder
+
+| Event | Flag | When |
+|-------|------|------|
+| `card_holder.created` | `card_holder_created` | Card holder created via API |
+| `card_holder.identified` | `card_holder_identified` | Identity linked via eID |
+| `card_holder.signed.pdpc` | `card_holder_signed_pdpc` | PDPC consent signed |
+| `card_holder.deleted` | `card_holder_deleted` | Card holder deleted |
+| `card_holder.email.delivered` | `card_holder_email_delivered` | PDPC email delivered |
+| `card_holder.email.failed` | `card_holder_email_failed` | PDPC email bounced |
+
+### Transactions
+
+| Event | Flag | When |
+|-------|------|------|
+| `card.transaction.authorized` | `card_transaction_authorized` | Purchase authorized (real-time) |
+| `card.transaction.cleared` | `card_transaction_cleared` | Transaction settled (3-5 days) |
+| `card.transaction.deleted` | `card_transaction_deleted` | Authorization reversed |
+| `card.transaction.invoiced` | `card_transaction_invoiced` | Invoice number assigned |
+
+### Enrichment
+
+| Event | Flag | When |
+|-------|------|------|
+| `receipt.fetched` | `receipt_fetched` | Digital receipt matched |
+| `transaction.true.vat` | `transaction_true_vat` | Correct VAT from merchant |
+| `transaction.line.items` | `transaction_line_items` | Purchase line items |
+| `environmental.impact.aland_index` | `aland_index` | CO₂ via Åland Index |
+| `environmental.impact.deedster` | `deedster` | CO₂ via Deedster |
+
+---
+
+## Payloads
+
+### `tpa.signed`
+
+```json
+{
+  "id": "42",
+  "name": "Acme AB",
+  "organization_number": "5561234567",
+  "url": "https://api.opencard.io/files/tpas/abc123.pdf",
+  "organization": {
+    "reference_id": "client_acme_001"
+  }
+}
+```
+
+### Card holder events (all share same shape)
+
+```json
+{
+  "card_holder": {
+    "reference_id": "employee_john_42"
+  },
+  "organization": {
+    "reference_id": "client_acme_001"
+  }
+}
+```
+
+### `card.transaction.*` (all share same shape)
+
+```json
+{
+  "id": "10",
+  "state": "authorized",
+  "receiptable": true,
+  "card_issuer": "nordea",
+  "card_issuer_reference": "654321",
+  "card_issuer_customer_number": null,
+  "type": "card",
+  "invoice_number": null,
+  "invoice_date": null,
+  "original_amount": 109.38,
+  "original_currency": "SEK",
+  "vat_rate": 0,
+  "vat_amount": 0,
+  "vat_currency": "SEK",
+  "accounting_amount": 109.38,
+  "accounting_currency": "SEK",
+  "exchange_rate": null,
+  "purchase_merchant": "Espresso House Sveavägen",
+  "purchase_merchant_common": "Espresso House",
+  "purchase_date": "2026-06-08",
+  "purchase_time": "11:12:14",
+  "purchase_timezone": null,
+  "purchase_country": "SE",
+  "purchase_city": "STOCKHOLM",
+  "card_id": 1,
+  "card_product": "first_card",
+  "card_type": "corporate",
+  "card_last_four": "1234",
+  "mcc_code": "5814",
+  "mcc_text": null,
+  "mcc_top_level": "Miscellaneous Stores",
+  "branch_code": null,
+  "branch_text": null,
+  "category_text": "Card purchase",
+  "card_holder": {
+    "reference_id": "employee_john_42"
+  },
+  "organization": {
+    "reference_id": "client_acme_001"
+  }
+}
+```
+
+#### Field reference
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique transaction ID. **Use this as your primary key.** |
+| `state` | string | `authorized`, `cleared`, `deleted`, `invoiced` |
+| `receiptable` | boolean | Expect a digital receipt? |
+| `card_issuer` | string | e.g. `nordea`, `zevoy` |
+| `card_issuer_reference` | string | Issuer's reference for this state (not globally unique) |
+| `card_type` | string | `private`, `corporate`, `corporate_with_private_invoice` |
+| `original_amount` | float | Amount at merchant |
+| `original_currency` | string | ISO 4217 |
+| `accounting_amount` | float | Amount in customer's home currency |
+| `accounting_currency` | string | ISO 4217 |
+| `purchase_merchant` | string | Full merchant name |
+| `purchase_merchant_common` | string | Normalized merchant name |
+| `mcc_code` | string | Merchant Category Code |
+
+### `receipt.fetched`
+
+```json
+{
+  "url": "https://api.opencard.io/files/receipts/abc123",
+  "content_type": "application/pdf",
+  "expiration_time": "2026-07-08 13:23:08",
+  "purchase_merchant": "ICA Supermarket",
+  "original_amount": 245.50,
+  "original_currency": "SEK",
+  "purchase_date": "2026-06-08",
+  "purchase_time": "14:30:00",
+  "transaction": {
+    "id": "10",
+    "card_issuer": "nordea"
+  },
+  "card_holder": { "reference_id": "employee_john_42" },
+  "organization": { "reference_id": "client_acme_001" }
+}
+```
+
+<Warning>
+  Receipt URLs expire. Download and store the file, don't hotlink.
+</Warning>
+
+### `transaction.true.vat`
+
+```json
+{
+  "transaction": { "id": "10", "card_issuer": "nordea" },
+  "organization": { "reference_id": "client_acme_001" },
+  "card_holder": { "reference_id": "employee_john_42" },
+  "purchase_country": "SE",
+  "vat_rates": [
+    {
+      "vat_amount": 5.52,
+      "taxable_amount": 45.96,
+      "total_amount": 51.48,
+      "percentage": 12,
+      "currency": "SEK"
+    }
+  ],
+  "totals": [
+    {
+      "vat_amount": 17.1,
+      "taxable_amount": 92.29,
+      "total_amount": 109.38,
+      "currency": "SEK"
+    }
+  ]
+}
+```
+
+### `transaction.line.items`
+
+```json
+{
+  "transaction": { "id": "10", "card_issuer": "nordea" },
+  "organization": { "reference_id": "client_acme_001" },
+  "card_holder": { "reference_id": "employee_john_42" },
+  "line_items": [
+    {
+      "description": "Cappuccino",
+      "amount": 45,
+      "total_amount": 45,
+      "quantity": 1,
+      "currency": "SEK"
+    },
+    {
+      "description": "Cinnamon bun",
+      "amount": 35,
+      "total_amount": 35,
+      "quantity": 1,
+      "currency": "SEK"
+    }
+  ]
+}
+```
+
+### `environmental.impact.aland_index` / `deedster`
+
+```json
+{
+  "carbon_emission_in_grams": 0.66,
+  "carbon_social_cost_amount": 2.1,
+  "carbon_social_cost_currency": "SEK",
+  "transaction": { "id": "10", "card_issuer": "nordea" },
+  "organization": { "reference_id": "client_acme_001" },
+  "card_holder": { "reference_id": "employee_john_42" }
+}
+```

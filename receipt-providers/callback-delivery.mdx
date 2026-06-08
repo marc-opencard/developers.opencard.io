@@ -1,0 +1,78 @@
+---
+title: Callback Delivery
+description: POST receipt data back to OpenCard. Headers, signature, payload.
+---
+
+```
+POST /api/v1/service/marcet/callback/{referenceId}
+```
+
+`{referenceId}` = OpenCard transaction reference.
+
+---
+
+## Required headers
+
+| Header | Value |
+|--------|-------|
+| `X-Event` | `CallbackRequestResolved` or `CallbackRequestDeleted` |
+| `X-CallbackRequest-Id` | Callback request ID from OpenCard |
+| `X-Data-Signature` | `HMAC-SHA256(raw_body, client_secret)` |
+
+---
+
+## Signature calculation
+
+```python
+import hmac, hashlib
+
+signature = hmac.new(
+    client_secret.encode(),
+    request_body_bytes,
+    hashlib.sha256
+).hexdigest()
+```
+
+```javascript
+const crypto = require('crypto');
+const sig = crypto.createHmac('sha256', clientSecret)
+  .update(rawBody)
+  .digest('hex');
+```
+
+Must match `X-Data-Signature` header exactly. Raw body bytes, not re-serialized JSON.
+
+---
+
+## Resolved payload
+
+Content type depends on callback type configured for the request:
+
+- `application/xml` — receipt XML (parsed for VAT + line items)
+- `application/json` — structured receipt data
+
+OpenCard extracts:
+- True VAT rates and amounts → `transaction.true.vat` webhook
+- Line items → `transaction.line.items` webhook
+- Receipt file → stored, URL sent via `receipt.fetched` webhook
+
+---
+
+## Response
+
+| Code | Meaning |
+|------|---------|
+| `200` | Accepted |
+| `403` | Bad signature |
+| `404` | Unknown callback request ID |
+
+Duplicate `CallbackRequestResolved` for already-resolved requests → `200` (idempotent, logged as warning).
+
+---
+
+## What happens after
+
+1. Receipt file downloaded and stored in cloud
+2. TrueVAT records created
+3. LineItem records created
+4. Webhooks fired to EMS (per org webhook config)
