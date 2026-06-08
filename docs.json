@@ -8,6 +8,17 @@
     "light": "#E8D4D4",
     "dark": "#8B6B6B"
   },
+  "fonts": {
+    "family": "Montserrat",
+    "weight": 500
+  },
+  "background": {
+    "decoration": "gradient",
+    "color": {
+      "light": "#FAFAF9",
+      "dark": "#121212"
+    }
+  },
   "logo": {
     "light": "/logo/light.png",
     "dark": "/logo/dark.png"
