@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "willow",
   "name": "OpenCard",
   "description": "Build on OpenCard. Real-time card data, digital receipts, zero bullshit.",
   "colors": {
@@ -8,9 +8,31 @@
     "light": "#E8D4D4",
     "dark": "#8B6B6B"
   },
+  "appearance": {
+    "default": "dark",
+    "strict": false
+  },
+  "fonts": {
+    "family": "Montserrat",
+    "weight": 500
+  },
+  "icons": {
+    "library": "lucide"
+  },
+  "background": {
+    "decoration": "gradient",
+    "color": {
+      "light": "#f4f4f4",
+      "dark": "#0a0a0a"
+    },
+    "image": {
+      "dark": "/background.png"
+    }
+  },
   "logo": {
     "light": "/logo/light.png",
-    "dark": "/logo/dark.png"
+    "dark": "/logo/dark.png",
+    "href": "https://opencard.io"
   },
   "favicon": "/favicon.png",
   "navbar": {
@@ -43,7 +65,7 @@
         "tab": "Start Here",
         "groups": [
           {
-            "group": "👋 Welcome",
+            "group": "Overview",
             "pages": [
               "introduction/index",
               "introduction/welcome",
@@ -53,7 +75,7 @@
             ]
           },
           {
-            "group": "🚀 Getting Started",
+            "group": "First integration",
             "pages": [
               "getting-started/register",
               "getting-started/authentication",
@@ -66,26 +88,46 @@
         "tab": "EMS",
         "groups": [
           {
-            "group": "📖 Guides",
+            "group": "Platform",
             "pages": [
               "ems/data-model",
               "ems/organizations",
-              "ems/card-holders",
-              "ems/pdpc-flow",
-              "ems/tpa-flow",
-              "ems/eid-signing",
-              "ems/webhooks/setup",
-              "ems/webhooks/events",
-              "ems/webhooks/transactions",
-              "ems/receipts",
-              "ems/receipt-scanner",
-              "ems/environmental-impact",
-              "ems/plugins",
               "ems/error-handling"
             ]
           },
           {
-            "group": "🔑 Authentication",
+            "group": "Customer onboarding",
+            "pages": [
+              "ems/tpa-flow",
+              "ems/eid-signing",
+              "ems/card-holders",
+              "ems/pdpc-flow"
+            ]
+          },
+          {
+            "group": "Webhooks",
+            "pages": [
+              "ems/webhooks/setup",
+              "ems/webhooks/events",
+              "ems/webhooks/transactions"
+            ]
+          },
+          {
+            "group": "Enrichment",
+            "pages": [
+              "ems/receipts",
+              "ems/receipt-scanner",
+              "ems/environmental-impact"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "ems/plugins"
+            ]
+          },
+          {
+            "group": "API — Auth",
             "pages": ["api-reference/ems/authentication"],
             "openapi": {
               "source": "openapi/oauth.json",
@@ -93,7 +135,7 @@
             }
           },
           {
-            "group": "EMS API",
+            "group": "API — Endpoints",
             "pages": ["api-reference/ems/overview"],
             "openapi": {
               "source": "openapi/ems-api.json",
@@ -106,7 +148,7 @@
         "tab": "Card Issuers",
         "groups": [
           {
-            "group": "📖 Guides",
+            "group": "Digital receipts",
             "pages": [
               "card-issuers/index",
               "card-issuers/digital-receipts"
@@ -126,10 +168,15 @@
         "tab": "Receipt Providers",
         "groups": [
           {
-            "group": "📖 Integration Guide",
+            "group": "Overview",
             "pages": [
               "receipt-providers/index",
-              "receipt-providers/how-it-works",
+              "receipt-providers/how-it-works"
+            ]
+          },
+          {
+            "group": "Deliver receipts",
+            "pages": [
               "receipt-providers/callback-delivery",
               "receipt-providers/payload-formats"
             ]
