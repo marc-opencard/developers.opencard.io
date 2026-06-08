@@ -1,9 +1,9 @@
 ---
 title: Payload Formats
-description: XML and JSON receipt payloads for receipt provider callbacks.
+description: How to format receipts you deliver to OpenCard.
 ---
 
-When you POST to OpenCard's callback endpoint, the body format depends on the callback type configured for the request.
+When you send a collected receipt to OpenCard, the body format depends on the callback type configured for your integration.
 
 ---
 
@@ -88,4 +88,4 @@ OpenCard fires these webhooks to the EMS (if subscribed):
 
 **`transaction.line.items`** — purchase line items
 
-EMS integrators receive these automatically — you don't call the EMS.
+OpenCard handles EMS delivery — you only send receipts to OpenCard.

@@ -1,13 +1,15 @@
 ---
 title: Callback Delivery
-description: POST receipt data back to OpenCard. Headers, signature, payload.
+description: Send collected receipts to OpenCard. Headers, signature, payload.
 ---
 
+When you've matched a receipt from your collection to an OpenCard transaction, POST it here:
+
 ```
-POST /api/v1/service/marcet/callback/{referenceId}
+POST https://api.opencard.io/api/v1/service/marcet/callback/{referenceId}
 ```
 
-`{referenceId}` = OpenCard transaction reference.
+`{referenceId}` = OpenCard transaction reference from the match request.
 
 ---
 

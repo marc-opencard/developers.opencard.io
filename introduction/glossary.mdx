@@ -14,7 +14,7 @@ description: Every term you'll see in the API and docs.
 | **Transaction** | One purchase. ID stays same across all states. |
 | **Transaction State** | Snapshot: `authorized`, `cleared`, `deleted`, `invoiced`. |
 | **Card Issuer** | Bank or card program. Uses `receipts.opencard.io` for digital receipt matching. |
-| **Enricher** | Third party adding receipts, VAT, line items, CO₂ data. |
+| **Receipt Provider** | Collects receipts from merchants and delivers them to OpenCard. OpenCard forwards enriched data to EMS. |
 | **Webhook** | HTTP POST from OpenCard when stuff happens. |
 | **Reference ID** | Your string ID on orgs/cardholders. In every webhook. |
 | **Challenge** | Webhook verification handshake on setup. |

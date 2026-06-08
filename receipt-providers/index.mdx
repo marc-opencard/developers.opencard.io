@@ -1,11 +1,11 @@
 ---
 title: Receipt Provider Integration
-description: Deliver matched receipts, VAT, and line items back to OpenCard.
+description: Collect receipts and deliver them to OpenCard so EMS apps get enriched transaction data.
 ---
 
-Receipt providers (enrichers) match card transactions to merchant digital receipts and callback enriched data to OpenCard.
+Receipt providers are actors that **collect digital receipts** — from merchants, POS systems, e-commerce platforms, or your own network — and **deliver them to OpenCard**.
 
-OpenCard then fires `receipt.fetched`, `transaction.true.vat`, and `transaction.line.items` webhooks to the EMS.
+OpenCard attaches the receipt to the matching card transaction, extracts VAT and line items, and forwards everything to EMS apps via webhooks.
 
 ---
 
@@ -13,50 +13,42 @@ OpenCard then fires `receipt.fetched`, `transaction.true.vat`, and `transaction.
 
 ```mermaid
 sequenceDiagram
-    participant OC as OpenCard
     participant RP as Receipt Provider
+    participant OC as OpenCard
     participant EMS as EMS
 
-    OC->>RP: Transaction marked receiptable
-    Note over RP: Match against merchant receipts
-    RP->>OC: POST callback with receipt XML/JSON
-    OC->>EMS: receipt.fetched webhook
-    OC->>EMS: transaction.true.vat webhook
-    OC->>EMS: transaction.line.items webhook
+    Note over RP: You collect receipts from merchants
+    OC->>RP: Match request (transaction data)
+    RP->>RP: Find receipt in your collection
+    RP->>OC: POST callback with receipt data
+    OC->>EMS: receipt.fetched
+    OC->>EMS: transaction.true.vat
+    OC->>EMS: transaction.line.items
 ```
 
----
-
-## Two different "receipt" integrations
-
-| Role | API | You are |
-|------|-----|---------|
-| **Receipt Provider** (this section) | Callback to `api.opencard.io` | Merchant network / enricher |
-| **Card Issuer — Digital Receipts** | `receipts.opencard.io` | Bank requesting receipts for cardholders |
-
-If you're a **card issuer** wanting digital receipts for your app → [Digital Receipts](/card-issuers/digital-receipts), not this section.
+Your job ends at the callback to OpenCard. You never talk to EMS apps directly.
 
 ---
 
 ## What you implement
 
-1. Receive transaction data from OpenCard (outbound to your system)
-2. Match against your merchant receipt database
-3. **POST callback** to OpenCard when matched
+1. **Collect receipts** in your merchant network
+2. **Receive match requests** from OpenCard when a transaction is receiptable
+3. **POST the receipt** back to OpenCard when you have a match
 
-→ [How it works](/receipt-providers/how-it-works) · [Callback Delivery](/receipt-providers/callback-delivery) · [Payload formats](/receipt-providers/payload-formats)
+→ [How it works](/receipt-providers/how-it-works) · [Callback delivery](/receipt-providers/callback-delivery) · [Payload formats](/receipt-providers/payload-formats)
 
 ---
 
 ## Auth
 
-Callbacks authenticated via **HMAC-SHA256**:
+Callbacks to OpenCard are authenticated with **HMAC-SHA256**:
 
 ```
 X-Data-Signature: HMAC-SHA256(raw_request_body, shared_client_secret)
 ```
 
-Shared secret provisioned by OpenCard during onboarding.
+You receive the shared secret from OpenCard during onboarding.
 
 ---
 
@@ -64,7 +56,7 @@ Shared secret provisioned by OpenCard during onboarding.
 
 | `X-Event` header | Meaning |
 |------------------|---------|
-| `CallbackRequestResolved` | Receipt matched, payload contains receipt data |
-| `CallbackRequestDeleted` | Match cancelled/expired |
+| `CallbackRequestResolved` | Receipt found — send receipt payload |
+| `CallbackRequestDeleted` | No match / expired — send empty body |
 
-Contact **support@opencard.io** for provider onboarding.
+Contact **support@opencard.io** to become a receipt provider partner.

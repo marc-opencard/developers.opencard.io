@@ -1,53 +1,51 @@
 ---
-title: How Receipt Enrichment Works
-description: The receipt provider role in the OpenCard ecosystem.
+title: How It Works
+description: Collect receipts, deliver to OpenCard, EMS gets enriched data.
 ---
 
-Receipt providers (enrichers) sit between OpenCard and the EMS. You match merchant receipts to card transactions and deliver structured data back.
-
-<Note>
-  This is **not** the same as [Digital Receipts for Issuers](/card-issuers/digital-receipts) (`receipts.opencard.io`). That's for card issuers requesting receipts. **You** are the merchant network side — delivering enrichment data **to** OpenCard.
-</Note>
+You operate a **receipt collection network**. OpenCard connects your receipts to card transactions and passes enriched data to EMS integrators.
 
 ---
 
-## Your role
+## Where you sit
 
 ```mermaid
 flowchart LR
-    Issuer[Card Issuer] -->|transaction| OC[OpenCard]
-    OC -->|match request| You[Receipt Provider]
-    You -->|callback| OC
-    OC -->|webhooks| EMS[EMS]
+    Merchants[Merchants / POS / E-com] -->|receipts| You[Receipt Provider]
+    OC[OpenCard] -->|match request| You
+    You -->|receipt callback| OC
+    OC -->|webhooks| EMS[EMS apps]
 ```
 
-1. OpenCard receives a transaction marked `receiptable: true`
-2. OpenCard sends match request to your system (outbound from OpenCard)
-3. You find the merchant receipt in your network
-4. You **POST callback** to OpenCard with receipt XML/JSON
-5. OpenCard extracts VAT + line items, stores receipt
-6. EMS gets `receipt.fetched`, `transaction.true.vat`, `transaction.line.items` webhooks
+1. You continuously **collect receipts** from merchants in your network
+2. OpenCard receives a card transaction marked `receiptable: true`
+3. OpenCard sends you the transaction details to match against your receipts
+4. When you find a match, you **POST the receipt** to OpenCard
+5. OpenCard stores the receipt, extracts VAT + line items
+6. EMS apps receive `receipt.fetched`, `transaction.true.vat`, and `transaction.line.items` webhooks
+
+You only integrate with OpenCard — not with EMS apps or card programs.
 
 ---
 
-## What you deliver
+## What you deliver to OpenCard
 
-| Data | OpenCard creates | EMS webhook |
-|------|------------------|-------------|
-| Receipt file (PDF/image) | Stored file + URL | `receipt.fetched` |
-| True VAT breakdown | TrueVAT records | `transaction.true.vat` |
-| Line items | LineItem records | `transaction.line.items` |
+| You send | OpenCard does | EMS receives |
+|----------|---------------|--------------|
+| Receipt file (PDF, image, XML) | Stores file, generates URL | `receipt.fetched` |
+| VAT breakdown in receipt | Creates TrueVAT records | `transaction.true.vat` |
+| Line items in receipt | Creates LineItem records | `transaction.line.items` |
 
 ---
 
 ## Onboarding checklist
 
-- [ ] Receive shared **client secret** from OpenCard
-- [ ] Implement callback endpoint readiness (OpenCard POSTs **to** you for match requests)
-- [ ] Implement **inbound callback** to OpenCard (`POST /v1/service/marcet/callback/{referenceId}`)
-- [ ] Handle `CallbackRequestResolved` and `CallbackRequestDeleted` events
-- [ ] Sign payloads with HMAC-SHA256
+- [ ] Receive **client secret** from OpenCard
+- [ ] Endpoint ready to **receive match requests** from OpenCard
+- [ ] Implement **outbound callback** to OpenCard (`POST /v1/service/marcet/callback/{referenceId}`)
+- [ ] Handle `CallbackRequestResolved` and `CallbackRequestDeleted`
+- [ ] Sign every payload with HMAC-SHA256
 
-→ [Callback Delivery](/receipt-providers/callback-delivery) for the inbound API.
+→ [Callback delivery](/receipt-providers/callback-delivery) for endpoint details.
 
-Contact **support@opencard.io** to become a receipt provider partner.
+Contact **support@opencard.io** to get started.
