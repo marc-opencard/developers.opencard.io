@@ -24,9 +24,6 @@
     "color": {
       "light": "#f4f4f4",
       "dark": "#0a0a0a"
-    },
-    "image": {
-      "dark": "/background.png"
     }
   },
   "logo": {
