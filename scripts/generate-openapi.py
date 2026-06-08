@@ -674,22 +674,64 @@ oauth_spec = {
 
 # ─── Issuer API ──────────────────────────────────────────────────────────────
 
+ISSUER_OAUTH_SCOPES = {
+    "issuer-zevoy-cards-read": "Read Zevoy cards",
+    "issuer-zevoy-cards-write": "Write Zevoy cards",
+    "issuer-zevoy-cards-delete": "Delete Zevoy cards",
+    "issuer-zevoy-transaction-states-write": "Write Zevoy transaction states",
+    "issuer-nordea-transaction-states-write": "Write Nordea transaction states",
+}
+
+DEFAULT_RESPONSES = {
+    "200": resp("200", "Success"),
+    "400": resp("400", "Bad request"),
+    "401": resp("401", "Unauthorized"),
+    "403": resp("403", "Forbidden"),
+}
+
 issuer_paths = {
     "/v1/issuers/zevoy/cards": {
-        "get": {"tags": ["Zevoy"], "summary": "List cards", "operationId": "zevoyListCards", "security": [OAUTH_SECURITY]},
+        "get": {
+            "tags": ["Zevoy"],
+            "summary": "List cards",
+            "operationId": "zevoyListCards",
+            "security": [{"opencard_auth": ["issuer-zevoy-cards-read"]}],
+            "responses": DEFAULT_RESPONSES,
+        },
         "post": {
             "tags": ["Zevoy"],
             "summary": "Create card",
             "operationId": "zevoyCreateCard",
             "security": [{"opencard_auth": ["issuer-zevoy-cards-write"]}],
             "requestBody": json_body({"type": "object", "required": ["id", "last_four", "bin_number", "liability", "scheme", "identity"], "properties": {"id": {"type": "string"}, "last_four": {"type": "string"}, "bin_number": {"type": "string"}, "liability": {"type": "string"}, "scheme": {"type": "string"}, "identity": {"type": "object"}}}),
-            "responses": {"201": resp("201", "Card created")},
+            "responses": {"201": resp("201", "Card created"), "400": resp("400", "Bad request")},
         },
     },
     "/v1/issuers/zevoy/cards/{cardId}": {
-        "get": {"tags": ["Zevoy"], "summary": "Get card", "operationId": "zevoyGetCard", "parameters": [path_param("cardId", "Zevoy external card ID", "string")], "security": [{"opencard_auth": ["issuer-zevoy-cards-read"]}]},
-        "put": {"tags": ["Zevoy"], "summary": "Update card", "operationId": "zevoyUpdateCard", "parameters": [path_param("cardId", "Card ID", "string")], "security": [{"opencard_auth": ["issuer-zevoy-cards-write"]}]},
-        "delete": {"tags": ["Zevoy"], "summary": "Delete card", "operationId": "zevoyDeleteCard", "parameters": [path_param("cardId", "Card ID", "string")], "security": [{"opencard_auth": ["issuer-zevoy-cards-delete"]}], "responses": {"204": resp("204", "Deleted")}},
+        "get": {
+            "tags": ["Zevoy"],
+            "summary": "Get card",
+            "operationId": "zevoyGetCard",
+            "parameters": [path_param("cardId", "Zevoy external card ID", "string")],
+            "security": [{"opencard_auth": ["issuer-zevoy-cards-read"]}],
+            "responses": DEFAULT_RESPONSES,
+        },
+        "put": {
+            "tags": ["Zevoy"],
+            "summary": "Update card",
+            "operationId": "zevoyUpdateCard",
+            "parameters": [path_param("cardId", "Card ID", "string")],
+            "security": [{"opencard_auth": ["issuer-zevoy-cards-write"]}],
+            "responses": DEFAULT_RESPONSES,
+        },
+        "delete": {
+            "tags": ["Zevoy"],
+            "summary": "Delete card",
+            "operationId": "zevoyDeleteCard",
+            "parameters": [path_param("cardId", "Card ID", "string")],
+            "security": [{"opencard_auth": ["issuer-zevoy-cards-delete"]}],
+            "responses": {"204": resp("204", "Deleted"), "404": resp("404", "Not found")},
+        },
     },
     "/v1/issuers/zevoy/cards/{cardId}/transaction_states": {
         "post": {
@@ -718,13 +760,18 @@ issuer_paths = {
             "tags": ["Nordea"],
             "summary": "Partner event batch (mTLS)",
             "operationId": "nordeaPartnerEvent",
-            "description": "Requires mTLS. Headers: X-SSL-Client-CN, X-SSL-Client-Fingerprint",
-            "security": [],
-            "responses": {"201": resp("201", "Accepted")},
+            "description": "Requires mutual TLS. Headers: X-SSL-Client-CN, X-SSL-Client-Fingerprint. No OAuth token.",
+            "responses": {"201": resp("201", "Accepted"), "400": resp("400", "Invalid payload"), "500": resp("500", "Server error")},
         }
     },
     "/v1/issuers/entercard/cards": {
-        "post": {"tags": ["Entercard"], "summary": "Create card", "operationId": "entercardCreateCard", "security": [OAUTH_SECURITY], "responses": {"201": resp("201", "Created")}}
+        "post": {
+            "tags": ["Entercard"],
+            "summary": "Create card",
+            "operationId": "entercardCreateCard",
+            "security": [OAUTH_SECURITY],
+            "responses": {"201": resp("201", "Created"), "400": resp("400", "Bad request")},
+        }
     },
     "/v1/issuers/entercard/cards/{cardId}": {
         "delete": {"tags": ["Entercard"], "summary": "Delete card", "operationId": "entercardDeleteCard", "parameters": [path_param("cardId", "Card ID")], "security": [OAUTH_SECURITY], "responses": {"204": resp("204", "Deleted")}}
@@ -744,17 +791,32 @@ issuer_paths = {
 
 issuer_spec = {
     "openapi": "3.0.3",
-    "info": {"title": "OpenCard Card Issuer API", "version": "1.0", "contact": {"email": "support@opencard.io"}},
+    "info": {
+        "title": "OpenCard Card Issuer API",
+        "version": "1.0",
+        "description": "Card issuer integration API for delivering cards and transaction states.",
+        "contact": {"email": "support@opencard.io"},
+    },
     "servers": [
         {"url": "https://api.opencard.io/api", "description": "Production"},
         {"url": "https://sandbox-api.opencard.io/api", "description": "Sandbox"},
+    ],
+    "tags": [
+        {"name": "Zevoy", "description": "Zevoy card and transaction integration"},
+        {"name": "Nordea", "description": "Nordea FirstCard integration"},
+        {"name": "Entercard", "description": "Entercard integration"},
     ],
     "paths": issuer_paths,
     "components": {
         "securitySchemes": {
             "opencard_auth": {
                 "type": "oauth2",
-                "flows": {"clientCredentials": {"tokenUrl": "https://api.opencard.io/oauth/token", "scopes": {}}},
+                "flows": {
+                    "clientCredentials": {
+                        "tokenUrl": "https://api.opencard.io/oauth/token",
+                        "scopes": ISSUER_OAUTH_SCOPES,
+                    }
+                },
             }
         },
         "schemas": {
@@ -795,9 +857,11 @@ receipt_callback_spec = {
     "openapi": "3.0.3",
     "info": {"title": "OpenCard Receipt Provider Callback", "version": "1.0", "description": "Inbound webhook for receipt enrichers delivering matched receipts to OpenCard."},
     "servers": [{"url": "https://api.opencard.io/api"}, {"url": "https://sandbox-api.opencard.io/api"}],
+    "tags": [{"name": "Receipt Callback", "description": "Inbound enrichment delivery"}],
     "paths": {
         "/v1/service/marcet/callback/{referenceId}": {
             "post": {
+                "tags": ["Receipt Callback"],
                 "summary": "Deliver receipt enrichment",
                 "operationId": "receiptProviderCallback",
                 "parameters": [

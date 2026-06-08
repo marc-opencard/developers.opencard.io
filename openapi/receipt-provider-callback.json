@@ -13,9 +13,18 @@
       "url": "https://sandbox-api.opencard.io/api"
     }
   ],
+  "tags": [
+    {
+      "name": "Receipt Callback",
+      "description": "Inbound enrichment delivery"
+    }
+  ],
   "paths": {
     "/v1/service/marcet/callback/{referenceId}": {
       "post": {
+        "tags": [
+          "Receipt Callback"
+        ],
         "summary": "Deliver receipt enrichment",
         "operationId": "receiptProviderCallback",
         "parameters": [

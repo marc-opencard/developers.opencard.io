@@ -3,6 +3,7 @@
   "info": {
     "title": "OpenCard Card Issuer API",
     "version": "1.0",
+    "description": "Card issuer integration API for delivering cards and transaction states.",
     "contact": {
       "email": "support@opencard.io"
     }
@@ -17,6 +18,20 @@
       "description": "Sandbox"
     }
   ],
+  "tags": [
+    {
+      "name": "Zevoy",
+      "description": "Zevoy card and transaction integration"
+    },
+    {
+      "name": "Nordea",
+      "description": "Nordea FirstCard integration"
+    },
+    {
+      "name": "Entercard",
+      "description": "Entercard integration"
+    }
+  ],
   "paths": {
     "/v1/issuers/zevoy/cards": {
       "get": {
@@ -27,9 +42,25 @@
         "operationId": "zevoyListCards",
         "security": [
           {
-            "opencard_auth": []
+            "opencard_auth": [
+              "issuer-zevoy-cards-read"
+            ]
           }
-        ]
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
       },
       "post": {
         "tags": [
@@ -85,6 +116,9 @@
         "responses": {
           "201": {
             "description": "Card created"
+          },
+          "400": {
+            "description": "Bad request"
           }
         }
       }
@@ -113,7 +147,21 @@
               "issuer-zevoy-cards-read"
             ]
           }
-        ]
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
       },
       "put": {
         "tags": [
@@ -138,7 +186,21 @@
               "issuer-zevoy-cards-write"
             ]
           }
-        ]
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
       },
       "delete": {
         "tags": [
@@ -167,6 +229,9 @@
         "responses": {
           "204": {
             "description": "Deleted"
+          },
+          "404": {
+            "description": "Not found"
           }
         }
       }
@@ -262,11 +327,16 @@
         ],
         "summary": "Partner event batch (mTLS)",
         "operationId": "nordeaPartnerEvent",
-        "description": "Requires mTLS. Headers: X-SSL-Client-CN, X-SSL-Client-Fingerprint",
-        "security": [],
+        "description": "Requires mutual TLS. Headers: X-SSL-Client-CN, X-SSL-Client-Fingerprint. No OAuth token.",
         "responses": {
           "201": {
             "description": "Accepted"
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "500": {
+            "description": "Server error"
           }
         }
       }
@@ -286,6 +356,9 @@
         "responses": {
           "201": {
             "description": "Created"
+          },
+          "400": {
+            "description": "Bad request"
           }
         }
       }
@@ -368,7 +441,13 @@
         "flows": {
           "clientCredentials": {
             "tokenUrl": "https://api.opencard.io/oauth/token",
-            "scopes": {}
+            "scopes": {
+              "issuer-zevoy-cards-read": "Read Zevoy cards",
+              "issuer-zevoy-cards-write": "Write Zevoy cards",
+              "issuer-zevoy-cards-delete": "Delete Zevoy cards",
+              "issuer-zevoy-transaction-states-write": "Write Zevoy transaction states",
+              "issuer-nordea-transaction-states-write": "Write Nordea transaction states"
+            }
           }
         }
       }
