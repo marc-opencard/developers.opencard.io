@@ -1,0 +1,1484 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "OpenCard EMS API",
+    "version": "1.0",
+    "description": "API for Expense Management Systems. Manage TPAs, organizations, card holders, and webhooks. Receive transaction data via webhooks \u2014 not by polling this API.",
+    "contact": {
+      "email": "support@opencard.io"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.opencard.io/api/v1/application",
+      "description": "Production"
+    },
+    {
+      "url": "https://sandbox-api.opencard.io/api/v1/application",
+      "description": "Sandbox"
+    }
+  ],
+  "paths": {
+    "/accounts/{accountId}": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Get your account",
+        "operationId": "getAccount",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 1,
+                  "name_system": "Acme EMS",
+                  "name_legal": "Acme Expense AB",
+                  "organization_number": "5561234567",
+                  "country": "SE"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "Access denied"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "accounts-read"
+            ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Update your account",
+        "operationId": "updateAccount",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "notify_email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated account",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 1,
+                  "name_system": "Acme EMS",
+                  "name_legal": "Acme Expense AB",
+                  "organization_number": "5561234567",
+                  "country": "SE"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "accounts-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/oauthclients": {
+      "get": {
+        "tags": [
+          "OAuth Clients"
+        ],
+        "summary": "List OAuth clients",
+        "operationId": "listOAuthClients",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OAuth clients",
+            "content": {
+              "application/json": {
+                "example": {
+                  "current_page": 1,
+                  "data": [
+                    {
+                      "id": 1,
+                      "name": "Production EMS"
+                    }
+                  ],
+                  "per_page": 15,
+                  "total": 1,
+                  "last_page": 1
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "oauth-clients-read"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "OAuth Clients"
+        ],
+        "summary": "Create OAuth client",
+        "operationId": "createOAuthClient",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 2,
+                  "secret": "plain-text-secret-shown-once"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "Access denied"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "oauth-clients-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/publicrecords": {
+      "get": {
+        "tags": [
+          "Public Records"
+        ],
+        "summary": "Lookup company + signing combinations",
+        "operationId": "queryPublicRecords",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "country",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SE",
+                "DK",
+                "NO",
+                "FI"
+              ]
+            }
+          },
+          {
+            "name": "organization_number",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public record",
+            "content": {
+              "application/json": {
+                "example": {
+                  "name": "Acme AB",
+                  "signature_combinations": [
+                    [
+                      {
+                        "name": "Anna Andersson"
+                      }
+                    ]
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "public-records-read"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/tpas": {
+      "get": {
+        "tags": [
+          "TPAs"
+        ],
+        "summary": "List TPAs",
+        "operationId": "listTpas",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "TPAs",
+            "content": {
+              "application/json": {
+                "example": {
+                  "current_page": 1,
+                  "data": [
+                    {
+                      "id": 42,
+                      "account_id": 1,
+                      "card_issuer_id": 1,
+                      "name": "Acme AB",
+                      "country": "SE",
+                      "organization_number": "5561234567",
+                      "activated": false,
+                      "signatures_verified": false,
+                      "status": "pending-signatures"
+                    }
+                  ],
+                  "per_page": 15,
+                  "total": 1,
+                  "last_page": 1
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpas-read"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "TPAs"
+        ],
+        "summary": "Create TPA",
+        "operationId": "createTpa",
+        "description": "Creates TPA, fetches registry data, generates legal text.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TpaCreate"
+              },
+              "example": {
+                "card_issuer_id": 1,
+                "name": "Acme AB",
+                "country": "SE",
+                "organization_number": "5561234567",
+                "language": "sv"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "TPA created",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 42,
+                  "account_id": 1,
+                  "card_issuer_id": 1,
+                  "name": "Acme AB",
+                  "country": "SE",
+                  "organization_number": "5561234567",
+                  "activated": false,
+                  "signatures_verified": false,
+                  "status": "pending-signatures"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpas-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/tpas/{tpaId}": {
+      "get": {
+        "tags": [
+          "TPAs"
+        ],
+        "summary": "Get TPA",
+        "operationId": "getTpa",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "tpaId",
+            "in": "path",
+            "required": true,
+            "description": "TPA ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "TPA",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 42,
+                  "account_id": 1,
+                  "card_issuer_id": 1,
+                  "name": "Acme AB",
+                  "country": "SE",
+                  "organization_number": "5561234567",
+                  "activated": false,
+                  "signatures_verified": false,
+                  "status": "pending-signatures"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpas-read"
+            ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "TPAs"
+        ],
+        "summary": "Delete TPA",
+        "operationId": "deleteTpa",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "tpaId",
+            "in": "path",
+            "required": true,
+            "description": "TPA ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {}
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpas-delete"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/tpas/{tpaId}/signatories": {
+      "get": {
+        "tags": [
+          "TPA Signatories"
+        ],
+        "summary": "List signatories",
+        "operationId": "listTpaSignatories",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "tpaId",
+            "in": "path",
+            "required": true,
+            "description": "TPA ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signatories",
+            "content": {
+              "application/json": {
+                "example": {
+                  "current_page": 1,
+                  "data": [
+                    {
+                      "id": 7,
+                      "email": "ceo@acme.se",
+                      "name": "Anna Andersson",
+                      "tpa_id": 42,
+                      "signed": false,
+                      "signed_at": null
+                    }
+                  ],
+                  "per_page": 15,
+                  "total": 1,
+                  "last_page": 1
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpa-signatories-read"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "TPA Signatories"
+        ],
+        "summary": "Add signatory (sends email)",
+        "operationId": "createTpaSignatory",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "tpaId",
+            "in": "path",
+            "required": true,
+            "description": "TPA ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TpaSignatoryCreate"
+              },
+              "example": {
+                "email": "ceo@acme.se",
+                "name": "Anna Andersson"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Signatory created",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 7,
+                  "email": "ceo@acme.se",
+                  "name": "Anna Andersson",
+                  "tpa_id": 42,
+                  "signed": false,
+                  "signed_at": null
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpa-signatories-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/tpas/{tpaId}/identities": {
+      "get": {
+        "tags": [
+          "Identities"
+        ],
+        "summary": "List identities on TPA",
+        "operationId": "listTpaIdentities",
+        "description": "Physical persons linked to this TPA. Use `id` as `identity_id` for instant card holder onboarding.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "tpaId",
+            "in": "path",
+            "required": true,
+            "description": "TPA ID",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "is_card_holder",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Identities",
+            "content": {
+              "application/json": {
+                "example": {
+                  "current_page": 1,
+                  "data": [
+                    {
+                      "id": 123,
+                      "name": "Anna Andersson",
+                      "employee_id": "001",
+                      "cards": [
+                        {
+                          "id": 10,
+                          "last_four": "1234",
+                          "token": "zevoy-ext-abc",
+                          "type": "corporate"
+                        }
+                      ],
+                      "card_holders": []
+                    }
+                  ],
+                  "per_page": 15,
+                  "total": 1,
+                  "last_page": 1
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpa-identities-read"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/billings": {
+      "post": {
+        "tags": [
+          "Billings"
+        ],
+        "summary": "Create billing profile",
+        "operationId": "createBilling",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BillingCreate"
+              },
+              "example": {
+                "name_display": "Acme AB",
+                "name_legal": "Acme AB",
+                "organization_number": "5561234567",
+                "country": "SE"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Billing created",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 1,
+                  "name_display": "Acme AB"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "billings-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/cardissuers": {
+      "get": {
+        "tags": [
+          "Card Issuers"
+        ],
+        "summary": "List enabled issuers",
+        "operationId": "listAccountCardIssuers",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Issuers",
+            "content": {
+              "application/json": {
+                "example": {
+                  "current_page": 1,
+                  "data": [
+                    {
+                      "id": 1,
+                      "name_display": "Nordea FirstCard"
+                    }
+                  ],
+                  "per_page": 15,
+                  "total": 1,
+                  "last_page": 1
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-card-issuers-read"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/cardissuers/{cardIssuerId}": {
+      "post": {
+        "tags": [
+          "Card Issuers"
+        ],
+        "summary": "Enable issuer",
+        "operationId": "attachCardIssuer",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "cardIssuerId",
+            "in": "path",
+            "required": true,
+            "description": "Issuer ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Attached",
+            "content": {
+              "application/json": {}
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-card-issuers-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations": {
+      "get": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "List organizations",
+        "operationId": "listOrganizations",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organizations",
+            "content": {
+              "application/json": {
+                "example": {
+                  "current_page": 1,
+                  "data": [
+                    {
+                      "id": 3,
+                      "reference_id": "client_acme_001",
+                      "tpa_id": 42,
+                      "account_id": 1,
+                      "name": "Acme AB"
+                    }
+                  ],
+                  "per_page": 15,
+                  "total": 1,
+                  "last_page": 1
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "organizations-read"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "Create organization",
+        "operationId": "createOrganization",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganizationCreate"
+              },
+              "example": {
+                "reference_id": "client_acme_001",
+                "tpa_id": 42,
+                "name": "Acme AB"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Organization created",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 3,
+                  "reference_id": "client_acme_001",
+                  "tpa_id": 42,
+                  "account_id": 1,
+                  "name": "Acme AB"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "organizations-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations/{organizationId}": {
+      "get": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "Get organization",
+        "operationId": "getOrganization",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organization",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 3,
+                  "reference_id": "client_acme_001",
+                  "tpa_id": 42,
+                  "account_id": 1,
+                  "name": "Acme AB"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "organizations-read"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations/{organizationId}/cardholders": {
+      "get": {
+        "tags": [
+          "Card Holders"
+        ],
+        "summary": "List card holders",
+        "operationId": "listCardHolders",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Card holders",
+            "content": {
+              "application/json": {
+                "example": {
+                  "current_page": 1,
+                  "data": [
+                    {
+                      "id": 15,
+                      "reference_id": "employee_john_42",
+                      "organization_id": 3,
+                      "meta": {
+                        "signed": false,
+                        "pdpc_url": "https://sandbox-api.opencard.io/accounts/1/pdpcs/8/sign/abc...",
+                        "email_delivered": true
+                      }
+                    }
+                  ],
+                  "per_page": 15,
+                  "total": 1,
+                  "last_page": 1
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "card-holders-read"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Card Holders"
+        ],
+        "summary": "Create card holder",
+        "operationId": "createCardHolder",
+        "description": "Path A: `email` \u2192 PDPC email + eID. Path B: `identity_id` \u2192 instant, transactions flow immediately.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardHolderCreate"
+              },
+              "example": {
+                "reference_id": "employee_john_42",
+                "email": "john@acme.se",
+                "language": "sv"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Card holder created",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 15,
+                  "reference_id": "employee_john_42",
+                  "organization_id": 3,
+                  "meta": {
+                    "signed": false,
+                    "pdpc_url": "https://sandbox-api.opencard.io/accounts/1/pdpcs/8/sign/abc...",
+                    "email_delivered": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "card-holders-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations/{organizationId}/webhooks": {
+      "get": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "List webhooks",
+        "operationId": "listWebhooks",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhooks",
+            "content": {
+              "application/json": {
+                "example": {
+                  "current_page": 1,
+                  "data": [
+                    {
+                      "id": 5,
+                      "organization_id": 3,
+                      "url": "https://your-app.com/hooks/opencard",
+                      "active": true,
+                      "enabled": true,
+                      "card_transaction_authorized": true,
+                      "card_transaction_cleared": true,
+                      "card_transaction_deleted": true,
+                      "receipt_fetched": true
+                    }
+                  ],
+                  "per_page": 15,
+                  "total": 1,
+                  "last_page": 1
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhooks-read"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Create webhook",
+        "operationId": "createWebhook",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookCreate"
+              },
+              "example": {
+                "url": "https://your-app.com/hooks/opencard",
+                "card_transaction_cleared": true,
+                "card_transaction_authorized": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Webhook created",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 5,
+                  "organization_id": 3,
+                  "url": "https://your-app.com/hooks/opencard",
+                  "active": true,
+                  "enabled": true,
+                  "card_transaction_authorized": true,
+                  "card_transaction_cleared": true,
+                  "card_transaction_deleted": true,
+                  "receipt_fetched": true
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhooks-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations/{organizationId}/webhooks/{webhookId}/events": {
+      "get": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Delivery log",
+        "operationId": "listWebhookEvents",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Events",
+            "content": {
+              "application/json": {
+                "example": {
+                  "current_page": 1,
+                  "data": [
+                    {
+                      "event": "card.transaction.authorized",
+                      "status": 200
+                    }
+                  ],
+                  "per_page": 15,
+                  "total": 1,
+                  "last_page": 1
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhook-events-read"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/receipts/scan": {
+      "post": {
+        "tags": [
+          "Receipt Scanner"
+        ],
+        "summary": "OCR scan receipt",
+        "operationId": "scanReceipt",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "receipt"
+                ],
+                "properties": {
+                  "receipt": {
+                    "type": "string"
+                  },
+                  "include": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "example": {
+                "receipt": "base64-image...",
+                "include": [
+                  "line_items"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OCR result",
+            "content": {
+              "application/json": {
+                "example": {
+                  "merchant": "ICA",
+                  "total_amount": 109.38,
+                  "currency": "SEK",
+                  "line_items": [
+                    {
+                      "description": "Coffee",
+                      "amount": 45
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "receipts-write"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "opencard_auth": {
+        "type": "oauth2",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "https://api.opencard.io/oauth/token",
+            "scopes": {
+              "accounts-read": "Read your account",
+              "accounts-write": "Update your account",
+              "oauth-clients-read": "Read OAuth clients",
+              "oauth-clients-write": "Create OAuth clients",
+              "public-records-read": "Company registry lookup",
+              "account-tpas-read": "Read TPAs",
+              "account-tpas-write": "Create TPAs",
+              "account-tpas-delete": "Delete TPAs",
+              "account-tpa-signatories-read": "Read TPA signatories",
+              "account-tpa-signatories-write": "Add TPA signatories",
+              "account-tpa-identities-read": "List identities on TPA",
+              "billings-write": "Create billing profiles",
+              "account-card-issuers-read": "List enabled issuers",
+              "account-card-issuers-write": "Enable issuers",
+              "organizations-read": "Read organizations",
+              "organizations-write": "Create organizations",
+              "card-holders-read": "Read card holders",
+              "card-holders-write": "Create card holders",
+              "webhooks-read": "Read webhooks",
+              "webhooks-write": "Create webhooks",
+              "webhook-events-read": "Read webhook delivery log",
+              "receipts-write": "Scan receipts (OCR)"
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "accountId": {
+        "name": "accountId",
+        "in": "path",
+        "required": true,
+        "description": "Your account ID",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "organizationId": {
+        "name": "organizationId",
+        "in": "path",
+        "required": true,
+        "description": "Organization ID",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "schemas": {
+      "TpaCreate": {
+        "type": "object",
+        "required": [
+          "card_issuer_id",
+          "name",
+          "country",
+          "organization_number"
+        ],
+        "properties": {
+          "card_issuer_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string",
+            "enum": [
+              "SE",
+              "DK",
+              "NO",
+              "FI"
+            ]
+          },
+          "organization_number": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "sv",
+              "no",
+              "da",
+              "en",
+              "fi"
+            ]
+          }
+        }
+      },
+      "TpaSignatoryCreate": {
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "OrganizationCreate": {
+        "type": "object",
+        "required": [
+          "reference_id",
+          "tpa_id"
+        ],
+        "properties": {
+          "reference_id": {
+            "type": "string"
+          },
+          "tpa_id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "CardHolderCreate": {
+        "type": "object",
+        "required": [
+          "reference_id"
+        ],
+        "properties": {
+          "reference_id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "identity_id": {
+            "type": "integer"
+          },
+          "skip_pdpc_email": {
+            "type": "boolean"
+          },
+          "language": {
+            "type": "string"
+          }
+        }
+      },
+      "BillingCreate": {
+        "type": "object",
+        "required": [
+          "name_display",
+          "name_legal",
+          "organization_number",
+          "country"
+        ],
+        "properties": {
+          "name_display": {
+            "type": "string"
+          },
+          "name_legal": {
+            "type": "string"
+          },
+          "organization_number": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          }
+        }
+      },
+      "WebhookCreate": {
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "card_transaction_authorized": {
+            "type": "boolean"
+          },
+          "card_transaction_cleared": {
+            "type": "boolean"
+          },
+          "card_transaction_deleted": {
+            "type": "boolean"
+          },
+          "receipt_fetched": {
+            "type": "boolean"
+          },
+          "transaction_true_vat": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "x-tagGroups": [
+    {
+      "name": "Account",
+      "tags": [
+        "Account",
+        "OAuth Clients",
+        "Public Records",
+        "Billings",
+        "Card Issuers"
+      ]
+    },
+    {
+      "name": "Legal",
+      "tags": [
+        "TPAs",
+        "TPA Signatories",
+        "Identities"
+      ]
+    },
+    {
+      "name": "Organizations",
+      "tags": [
+        "Organizations",
+        "Card Holders",
+        "Webhooks"
+      ]
+    },
+    {
+      "name": "Enrichment",
+      "tags": [
+        "Receipt Scanner"
+      ]
+    }
+  ]
+}

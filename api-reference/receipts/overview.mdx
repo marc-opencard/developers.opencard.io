@@ -1,0 +1,45 @@
+---
+title: Digital Receipts API Overview
+description: receipts.opencard.io — card issuers request digital receipt matching.
+---
+
+Payment providers and card issuers use this API to **request digital receipt matching** from OpenCard's merchant network.
+
+<Warning>
+  This is **not** the EMS API (`api.opencard.io`) and **not** the receipt provider callback. This is for **issuers** who want to offer digital receipts to their cardholders.
+</Warning>
+
+## Base URL
+
+```
+https://receipts.opencard.io
+```
+
+## How it works
+
+```mermaid
+sequenceDiagram
+    participant Issuer as Card Issuer
+    participant R as receipts.opencard.io
+    participant M as Merchant Network
+
+    Issuer->>R: GET /publishers (which merchants?)
+    Issuer->>R: POST /callbackrequests (transaction data)
+    R->>M: Match receipt
+    R->>Issuer: Callback to your URL with receipt
+```
+
+## Auth
+
+Bearer JWT. Contact **support@opencard.io** for credentials.
+
+## Key endpoints
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET` | `/api/v1/marcet/publishers` | List merchants with digital receipts |
+| `POST` | `/api/v1/marcet/callbackrequests` | Submit transaction for matching |
+| `PUT` | `/api/v1/marcet/callbackrequests/{id}` | Update (e.g. mark cleared) |
+| `DELETE` | `/api/v1/marcet/callbackrequests/{id}` | Cancel request |
+
+Full guide → [Digital Receipts for Issuers](/card-issuers/digital-receipts)

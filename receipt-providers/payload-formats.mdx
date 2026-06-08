@@ -1,0 +1,91 @@
+---
+title: Payload Formats
+description: XML and JSON receipt payloads for receipt provider callbacks.
+---
+
+When you POST to OpenCard's callback endpoint, the body format depends on the callback type configured for the request.
+
+---
+
+## Headers (always required)
+
+| Header | Value |
+|--------|-------|
+| `X-Event` | `CallbackRequestResolved` or `CallbackRequestDeleted` |
+| `X-CallbackRequest-Id` | Callback request ID from OpenCard |
+| `X-Data-Signature` | `HMAC-SHA256(raw_body, client_secret)` |
+
+---
+
+## CallbackRequestResolved — XML receipt
+
+Content-Type: `application/xml`
+
+OpenCard parses receipt XML to extract:
+- True VAT rates and amounts
+- Line items (if present in receipt)
+- Receipt file for storage
+
+Delivery note XML (partner code transactions) uses a different VAT extraction path.
+
+---
+
+## CallbackRequestResolved — JSON
+
+Content-Type: `application/json`
+
+Structured receipt data when callback type is JSON.
+
+---
+
+## CallbackRequestDeleted
+
+Empty or minimal body. Indicates the match was cancelled or expired. OpenCard marks the callback request as deleted.
+
+---
+
+## Signature calculation
+
+```python
+import hmac, hashlib
+
+signature = hmac.new(
+    client_secret.encode(),
+    request_body_bytes,  # raw bytes, not re-serialized
+    hashlib.sha256
+).hexdigest()
+# Set as X-Data-Signature header
+```
+
+```javascript
+const crypto = require('crypto');
+const sig = crypto.createHmac('sha256', clientSecret)
+  .update(rawBodyBuffer)
+  .digest('hex');
+```
+
+<Warning>
+  Hash the **raw request body bytes** exactly as received. Re-serializing JSON will break the signature.
+</Warning>
+
+---
+
+## After successful delivery
+
+OpenCard fires these webhooks to the EMS (if subscribed):
+
+**`receipt.fetched`**
+```json
+{
+  "url": "https://api.opencard.io/files/receipts/abc123",
+  "content_type": "application/pdf",
+  "expiration_time": "2026-07-08 13:23:08",
+  "transaction": { "id": "10", "card_issuer": "nordea" }
+}
+```
+
+**`transaction.true.vat`** — corrected VAT from merchant receipt
+
+**`transaction.line.items`** — purchase line items
+
+EMS integrators receive these automatically — you don't call the EMS.

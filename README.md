@@ -20,8 +20,11 @@ getting-started/       # Register, auth, quickstart
 ems/                   # EMS integration guides
 card-issuers/          # Issuer integration guides
 receipt-providers/     # Receipt provider guides
-api-reference/         # API overview (generated pages in subdirs)
-openapi/               # OpenAPI specs (generated from API source)
+api-reference/
+  ems/                 # EMS API (api.opencard.io/application)
+  issuer/              # Issuer transaction states API
+  receipts/            # Digital Receipts API (receipts.opencard.io)
+openapi/               # Generated OpenAPI specs (ems, oauth, issuer, receipts, callback)
 scripts/
   generate-openapi.py  # Generate specs from code inventory
   sync-openapi.sh      # Wrapper script

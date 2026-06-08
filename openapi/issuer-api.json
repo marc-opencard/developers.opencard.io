@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "OpenCard Card Issuer API",
+    "title": "OpenCard Issuer API",
     "version": "1.0",
-    "description": "Card issuer integration API for delivering cards and transaction states.",
+    "description": "Card issuers deliver transaction states to OpenCard. Base: api.opencard.io",
     "contact": {
       "email": "support@opencard.io"
     }
@@ -20,226 +20,17 @@
   ],
   "tags": [
     {
-      "name": "Zevoy",
-      "description": "Zevoy card and transaction integration"
+      "name": "Transaction States"
     },
     {
-      "name": "Nordea",
-      "description": "Nordea FirstCard integration"
-    },
-    {
-      "name": "Entercard",
-      "description": "Entercard integration"
+      "name": "Nordea"
     }
   ],
   "paths": {
-    "/v1/issuers/zevoy/cards": {
-      "get": {
-        "tags": [
-          "Zevoy"
-        ],
-        "summary": "List cards",
-        "operationId": "zevoyListCards",
-        "security": [
-          {
-            "opencard_auth": [
-              "issuer-zevoy-cards-read"
-            ]
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "400": {
-            "description": "Bad request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Zevoy"
-        ],
-        "summary": "Create card",
-        "operationId": "zevoyCreateCard",
-        "security": [
-          {
-            "opencard_auth": [
-              "issuer-zevoy-cards-write"
-            ]
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "id",
-                  "last_four",
-                  "bin_number",
-                  "liability",
-                  "scheme",
-                  "identity"
-                ],
-                "properties": {
-                  "id": {
-                    "type": "string"
-                  },
-                  "last_four": {
-                    "type": "string"
-                  },
-                  "bin_number": {
-                    "type": "string"
-                  },
-                  "liability": {
-                    "type": "string"
-                  },
-                  "scheme": {
-                    "type": "string"
-                  },
-                  "identity": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Card created"
-          },
-          "400": {
-            "description": "Bad request"
-          }
-        }
-      }
-    },
-    "/v1/issuers/zevoy/cards/{cardId}": {
-      "get": {
-        "tags": [
-          "Zevoy"
-        ],
-        "summary": "Get card",
-        "operationId": "zevoyGetCard",
-        "parameters": [
-          {
-            "name": "cardId",
-            "in": "path",
-            "required": true,
-            "description": "Zevoy external card ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "security": [
-          {
-            "opencard_auth": [
-              "issuer-zevoy-cards-read"
-            ]
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "400": {
-            "description": "Bad request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Zevoy"
-        ],
-        "summary": "Update card",
-        "operationId": "zevoyUpdateCard",
-        "parameters": [
-          {
-            "name": "cardId",
-            "in": "path",
-            "required": true,
-            "description": "Card ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "security": [
-          {
-            "opencard_auth": [
-              "issuer-zevoy-cards-write"
-            ]
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          },
-          "400": {
-            "description": "Bad request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Zevoy"
-        ],
-        "summary": "Delete card",
-        "operationId": "zevoyDeleteCard",
-        "parameters": [
-          {
-            "name": "cardId",
-            "in": "path",
-            "required": true,
-            "description": "Card ID",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "security": [
-          {
-            "opencard_auth": [
-              "issuer-zevoy-cards-delete"
-            ]
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Deleted"
-          },
-          "404": {
-            "description": "Not found"
-          }
-        }
-      }
-    },
     "/v1/issuers/zevoy/cards/{cardId}/transaction_states": {
       "post": {
         "tags": [
-          "Zevoy"
+          "Transaction States"
         ],
         "summary": "Post transaction state",
         "operationId": "zevoyCreateTransactionState",
@@ -248,7 +39,7 @@
             "name": "cardId",
             "in": "path",
             "required": true,
-            "description": "Card ID",
+            "description": "Zevoy card ID",
             "schema": {
               "type": "string"
             }
@@ -267,13 +58,38 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/IssuerTransactionState"
+              },
+              "example": {
+                "id": "TX-001",
+                "state": "authorized",
+                "type": "CARD_PURCHASE",
+                "original_amount": 109.38,
+                "original_currency": "SEK",
+                "accounting_amount": 109.38,
+                "accounting_currency": "SEK",
+                "exchange_rate": 1.0,
+                "purchase_merchant": "Espresso House",
+                "purchase_time": "2026-06-08T11:12:14+02:00",
+                "purchase_country": "SE",
+                "mcc_code": "5814",
+                "merchant_number": "1234567890",
+                "terminal_id": "T001",
+                "rrn": "190102519907",
+                "auth_code": "ABC123"
               }
             }
           }
         },
         "responses": {
           "202": {
-            "description": "Accepted"
+            "description": "Accepted for processing",
+            "content": {
+              "application/json": {
+                "example": {
+                  "ok": true
+                }
+              }
+            }
           }
         }
       }
@@ -281,7 +97,7 @@
     "/v1/issuers/nordea/cards/{cardId}/transaction_states": {
       "post": {
         "tags": [
-          "Nordea"
+          "Transaction States"
         ],
         "summary": "Post transaction state",
         "operationId": "nordeaCreateTransactionState",
@@ -309,13 +125,38 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/IssuerTransactionState"
+              },
+              "example": {
+                "id": "TX-001",
+                "state": "authorized",
+                "type": "CARD_PURCHASE",
+                "original_amount": 109.38,
+                "original_currency": "SEK",
+                "accounting_amount": 109.38,
+                "accounting_currency": "SEK",
+                "exchange_rate": 1.0,
+                "purchase_merchant": "Espresso House",
+                "purchase_time": "2026-06-08T11:12:14+02:00",
+                "purchase_country": "SE",
+                "mcc_code": "5814",
+                "merchant_number": "1234567890",
+                "terminal_id": "T001",
+                "rrn": "190102519907",
+                "auth_code": "ABC123"
               }
             }
           }
         },
         "responses": {
           "202": {
-            "description": "Accepted"
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "example": {
+                  "ok": true
+                }
+              }
+            }
           }
         }
       }
@@ -327,108 +168,13 @@
         ],
         "summary": "Partner event batch (mTLS)",
         "operationId": "nordeaPartnerEvent",
-        "description": "Requires mutual TLS. Headers: X-SSL-Client-CN, X-SSL-Client-Fingerprint. No OAuth token.",
+        "description": "Mutual TLS. Headers: X-SSL-Client-CN, X-SSL-Client-Fingerprint",
         "responses": {
           "201": {
-            "description": "Accepted"
-          },
-          "400": {
-            "description": "Invalid payload"
-          },
-          "500": {
-            "description": "Server error"
-          }
-        }
-      }
-    },
-    "/v1/issuers/entercard/cards": {
-      "post": {
-        "tags": [
-          "Entercard"
-        ],
-        "summary": "Create card",
-        "operationId": "entercardCreateCard",
-        "security": [
-          {
-            "opencard_auth": []
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Created"
-          },
-          "400": {
-            "description": "Bad request"
-          }
-        }
-      }
-    },
-    "/v1/issuers/entercard/cards/{cardId}": {
-      "delete": {
-        "tags": [
-          "Entercard"
-        ],
-        "summary": "Delete card",
-        "operationId": "entercardDeleteCard",
-        "parameters": [
-          {
-            "name": "cardId",
-            "in": "path",
-            "required": true,
-            "description": "Card ID",
-            "schema": {
-              "type": "integer"
+            "description": "Accepted",
+            "content": {
+              "application/json": {}
             }
-          }
-        ],
-        "security": [
-          {
-            "opencard_auth": []
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Deleted"
-          }
-        }
-      }
-    },
-    "/v1/issuers/entercard/cards/{cardId}/transaction_states": {
-      "post": {
-        "tags": [
-          "Entercard"
-        ],
-        "summary": "Post transaction state",
-        "operationId": "entercardCreateTransactionState",
-        "parameters": [
-          {
-            "name": "cardId",
-            "in": "path",
-            "required": true,
-            "description": "Card ID",
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "security": [
-          {
-            "opencard_auth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/IssuerTransactionState"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "Accepted"
           }
         }
       }
@@ -445,7 +191,7 @@
               "issuer-zevoy-cards-read": "Read Zevoy cards",
               "issuer-zevoy-cards-write": "Write Zevoy cards",
               "issuer-zevoy-cards-delete": "Delete Zevoy cards",
-              "issuer-zevoy-transaction-states-write": "Write Zevoy transaction states",
+              "issuer-zevoy-transaction-states-write": "Write transaction states",
               "issuer-nordea-transaction-states-write": "Write Nordea transaction states"
             }
           }
@@ -460,18 +206,7 @@
           "state",
           "type",
           "original_amount",
-          "original_currency",
-          "accounting_amount",
-          "accounting_currency",
-          "exchange_rate",
-          "purchase_merchant",
-          "purchase_time",
-          "purchase_country",
-          "mcc_code",
-          "merchant_number",
-          "terminal_id",
-          "rrn",
-          "auth_code"
+          "original_currency"
         ],
         "properties": {
           "id": {
@@ -487,47 +222,13 @@
             ]
           },
           "type": {
-            "type": "string",
-            "enum": [
-              "CARD_PURCHASE",
-              "CASH_WITHDRAWAL",
-              "FEE_AND_DISCOUNT"
-            ]
-          },
-          "invoice_number": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "original_amount": {
             "type": "number"
           },
           "original_currency": {
-            "type": "string",
-            "minLength": 3,
-            "maxLength": 3
-          },
-          "accounting_amount": {
-            "type": "number"
-          },
-          "accounting_currency": {
-            "type": "string",
-            "minLength": 3,
-            "maxLength": 3
-          },
-          "exchange_rate": {
-            "type": "number"
-          },
-          "vat_rate": {
-            "type": "number",
-            "nullable": true
-          },
-          "vat_amount": {
-            "type": "number",
-            "nullable": true
-          },
-          "vat_currency": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "purchase_merchant": {
             "type": "string"
@@ -537,27 +238,9 @@
             "format": "date-time"
           },
           "purchase_country": {
-            "type": "string",
-            "minLength": 2,
-            "maxLength": 2
-          },
-          "purchase_city": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "mcc_code": {
-            "type": "string"
-          },
-          "merchant_number": {
-            "type": "string"
-          },
-          "terminal_id": {
-            "type": "string"
-          },
-          "rrn": {
-            "type": "string"
-          },
-          "auth_code": {
             "type": "string"
           }
         }

@@ -1,0 +1,391 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "OpenCard Digital Receipts API",
+    "version": "1.0",
+    "description": "Card issuers and payment providers submit transaction data for digital receipt matching. Hosted at receipts.opencard.io \u2014 separate from the EMS and issuer transaction APIs.",
+    "contact": {
+      "email": "support@opencard.io"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://receipts.opencard.io",
+      "description": "Digital Receipts Service"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Publishers",
+      "description": "Merchants with active digital receipts"
+    },
+    {
+      "name": "Callback Requests",
+      "description": "Submit transactions for receipt matching"
+    }
+  ],
+  "paths": {
+    "/api/v1/marcet/publishers": {
+      "get": {
+        "tags": [
+          "Publishers"
+        ],
+        "summary": "List active merchants",
+        "operationId": "queryPublishers",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Publishers",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "id": "79e59794-449e-4f3c-b584-0e9e9547501a",
+                    "partner_id": "3ab69d8c-3019-40e9-a6e9-afb5d3dfca5b",
+                    "caids": [
+                      {
+                        "caid": "00004172235",
+                        "activated": "2014-03-31"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/marcet/callbackrequests": {
+      "post": {
+        "tags": [
+          "Callback Requests"
+        ],
+        "summary": "Create callback request",
+        "operationId": "createCallbackRequest",
+        "description": "Submit transaction for receipt matching. OpenCard calls your callback_url when matched.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CallbackTransaction"
+                }
+              },
+              "example": [
+                {
+                  "callback_path": "/transaction/123456789",
+                  "callback_content_type": "text/xml",
+                  "transaction": {
+                    "id": "txn_001",
+                    "auth_amount": 99.95,
+                    "auth_currency": "SEK",
+                    "auth_date": "2026-06-08",
+                    "auth_time": "11:12:14",
+                    "auth_timezone": "Europe/Stockholm",
+                    "reference_no": "190102519907",
+                    "auth_code": "ABC123",
+                    "terminal_id": "0000000015745355",
+                    "merchant_no": "3462188",
+                    "merchant_name": "Espresso House",
+                    "merchant_country": "SE",
+                    "clearing": "false",
+                    "auth_masked_card_number": "****1234",
+                    "type": "CARD_PURCHASE",
+                    "state": "AUTHORIZED",
+                    "mcc": "5814"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "callback_path": "/transaction/123456789",
+                    "callback_content_type": "text/xml",
+                    "transaction": {
+                      "id": "txn_001",
+                      "auth_amount": 99.95,
+                      "auth_currency": "SEK",
+                      "auth_date": "2026-06-08",
+                      "auth_time": "11:12:14",
+                      "auth_timezone": "Europe/Stockholm",
+                      "reference_no": "190102519907",
+                      "auth_code": "ABC123",
+                      "terminal_id": "0000000015745355",
+                      "merchant_no": "3462188",
+                      "merchant_name": "Espresso House",
+                      "merchant_country": "SE",
+                      "clearing": "false",
+                      "auth_masked_card_number": "****1234",
+                      "type": "CARD_PURCHASE",
+                      "state": "AUTHORIZED",
+                      "mcc": "5814"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Callback Requests"
+        ],
+        "summary": "List callback requests",
+        "operationId": "queryCallbackRequests",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Callback requests",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "callback_path": "/transaction/123456789",
+                    "callback_content_type": "text/xml",
+                    "transaction": {
+                      "id": "txn_001",
+                      "auth_amount": 99.95,
+                      "auth_currency": "SEK",
+                      "auth_date": "2026-06-08",
+                      "auth_time": "11:12:14",
+                      "auth_timezone": "Europe/Stockholm",
+                      "reference_no": "190102519907",
+                      "auth_code": "ABC123",
+                      "terminal_id": "0000000015745355",
+                      "merchant_no": "3462188",
+                      "merchant_name": "Espresso House",
+                      "merchant_country": "SE",
+                      "clearing": "false",
+                      "auth_masked_card_number": "****1234",
+                      "type": "CARD_PURCHASE",
+                      "state": "AUTHORIZED",
+                      "mcc": "5814"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/marcet/callbackrequests/{callbackRequestId}": {
+      "get": {
+        "tags": [
+          "Callback Requests"
+        ],
+        "summary": "Get callback request",
+        "operationId": "getCallbackRequest",
+        "parameters": [
+          {
+            "name": "callbackRequestId",
+            "in": "path",
+            "required": true,
+            "description": "Callback request ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Callback request",
+            "content": {
+              "application/json": {
+                "example": {
+                  "callback_path": "/transaction/123456789",
+                  "callback_content_type": "text/xml",
+                  "transaction": {
+                    "id": "txn_001",
+                    "auth_amount": 99.95,
+                    "auth_currency": "SEK",
+                    "auth_date": "2026-06-08",
+                    "auth_time": "11:12:14",
+                    "auth_timezone": "Europe/Stockholm",
+                    "reference_no": "190102519907",
+                    "auth_code": "ABC123",
+                    "terminal_id": "0000000015745355",
+                    "merchant_no": "3462188",
+                    "merchant_name": "Espresso House",
+                    "merchant_country": "SE",
+                    "clearing": "false",
+                    "auth_masked_card_number": "****1234",
+                    "type": "CARD_PURCHASE",
+                    "state": "AUTHORIZED",
+                    "mcc": "5814"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Callback Requests"
+        ],
+        "summary": "Update (e.g. clearing status)",
+        "operationId": "updateCallbackRequest",
+        "parameters": [
+          {
+            "name": "callbackRequestId",
+            "in": "path",
+            "required": true,
+            "description": "Callback request ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              },
+              "example": {
+                "transaction": {
+                  "clearing": "true"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "example": {
+                  "callback_path": "/transaction/123456789",
+                  "callback_content_type": "text/xml",
+                  "transaction": {
+                    "id": "txn_001",
+                    "auth_amount": 99.95,
+                    "auth_currency": "SEK",
+                    "auth_date": "2026-06-08",
+                    "auth_time": "11:12:14",
+                    "auth_timezone": "Europe/Stockholm",
+                    "reference_no": "190102519907",
+                    "auth_code": "ABC123",
+                    "terminal_id": "0000000015745355",
+                    "merchant_no": "3462188",
+                    "merchant_name": "Espresso House",
+                    "merchant_country": "SE",
+                    "clearing": "false",
+                    "auth_masked_card_number": "****1234",
+                    "type": "CARD_PURCHASE",
+                    "state": "AUTHORIZED",
+                    "mcc": "5814"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Callback Requests"
+        ],
+        "summary": "Delete callback request",
+        "operationId": "deleteCallbackRequest",
+        "parameters": [
+          {
+            "name": "callbackRequestId",
+            "in": "path",
+            "required": true,
+            "description": "Callback request ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "CallbackTransaction": {
+        "type": "object",
+        "properties": {
+          "callback_path": {
+            "type": "string"
+          },
+          "callback_content_type": {
+            "type": "string"
+          },
+          "transaction": {
+            "type": "object"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "error": "Access denied"
+        }
+      }
+    }
+  }
+}

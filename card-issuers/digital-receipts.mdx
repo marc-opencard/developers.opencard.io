@@ -1,0 +1,115 @@
+---
+title: Digital Receipts (receipts.opencard.io)
+description: How card issuers request digital receipt matching from OpenCard.
+---
+
+Give your cardholders digital receipts from connected merchants. This uses **`receipts.opencard.io`** — a separate API from transaction state delivery on `api.opencard.io`.
+
+---
+
+## Step 1: Discover merchants
+
+```
+GET https://receipts.opencard.io/api/v1/marcet/publishers
+Authorization: Bearer {jwt}
+```
+
+Returns merchants (publishers) with active digital receipts. Each has **CAIDs** (Card Acceptor IDs / Merchant IDs) you match against transaction data.
+
+**Response example:**
+
+```json
+[
+  {
+    "id": "79e59794-449e-4f3c-b584-0e9e9547501a",
+    "caids": [
+      { "caid": "00004172235", "activated": "2014-03-31" }
+    ]
+  }
+]
+```
+
+---
+
+## Step 2: Submit transaction for matching
+
+```
+POST https://receipts.opencard.io/api/v1/marcet/callbackrequests
+Authorization: Bearer {jwt}
+```
+
+**Body** (array of callback transactions):
+
+```json
+[
+  {
+    "callback_path": "https://your-issuer.com/receipts/callback/txn_001",
+    "callback_content_type": "text/xml",
+    "transaction": {
+      "id": "txn_001",
+      "auth_date": "2026-06-08",
+      "auth_time": "11:12:14",
+      "auth_timezone": "Europe/Stockholm",
+      "reference_no": "190102519907",
+      "auth_code": "ABC123",
+      "terminal_id": "0000000015745355",
+      "merchant_no": "3462188",
+      "merchant_name": "Espresso House",
+      "merchant_country": "SE",
+      "auth_amount": 99.95,
+      "auth_currency": "SEK",
+      "auth_masked_card_number": "****1234",
+      "clearing": "false",
+      "type": "CARD_PURCHASE",
+      "state": "AUTHORIZED",
+      "mcc": "5814"
+    }
+  }
+]
+```
+
+### Required transaction fields
+
+| Field | ISO8583 | Description |
+|-------|---------|-------------|
+| `id` | — | Your public transaction ID |
+| `auth_date` | Field 13 | `YYYY-MM-DD` |
+| `auth_time` | Field 12 | `HH:mm:ss` |
+| `auth_timezone` | — | e.g. `Europe/Stockholm` |
+| `reference_no` | Field 37 | Retrieval reference number |
+| `auth_code` | Field 38 | Authorization code |
+| `terminal_id` | Field 41 | Terminal ID |
+| `merchant_no` | Field 42 | Merchant ID (CAID) |
+| `merchant_name` | Field 43 | Merchant name |
+| `auth_amount` | — | Original amount |
+| `auth_currency` | — | ISO 4217 |
+| `auth_masked_card_number` | — | Masked PAN |
+| `clearing` | — | `"true"` / `"false"` |
+
+---
+
+## Step 3: Receive matched receipt
+
+OpenCard calls your `callback_path` when a receipt is matched. Your endpoint must:
+
+- Accept the configured `callback_content_type`
+- Return HTTP `200`
+- Verify webhook signature (provided during onboarding)
+
+---
+
+## Update when transaction clears
+
+```
+PUT /api/v1/marcet/callbackrequests/{id}
+```
+
+Update `clearing` to `"true"` when the transaction settles — improves match accuracy.
+
+---
+
+## API reference
+
+→ [Digital Receipts API](/api-reference/receipts/overview) for full endpoint docs with examples.
+
+Contact **support@opencard.io** for JWT credentials and callback verification setup.

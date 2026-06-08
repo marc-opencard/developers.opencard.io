@@ -1,0 +1,34 @@
+---
+title: Issuer API Overview
+description: api.opencard.io — card issuers deliver transaction states.
+---
+
+Card issuers push **transaction states** to OpenCard. OpenCard normalizes and forwards to EMS webhooks.
+
+## Base URL
+
+| Environment | URL |
+|-------------|-----|
+| Production | `https://api.opencard.io/api` |
+| Sandbox | `https://sandbox-api.opencard.io/api` |
+
+## This API vs Digital Receipts API
+
+| API | Host | Purpose |
+|-----|------|---------|
+| **Issuer API** (this) | `api.opencard.io` | Deliver card transaction states |
+| **Digital Receipts API** | `receipts.opencard.io` | Submit transactions for receipt matching |
+
+They're separate services with separate credentials.
+
+## Auth
+
+OAuth2 client credentials with **issuer-specific scopes** (e.g. `issuer-zevoy-transaction-states-write`).
+
+Nordea partner events use **mTLS** instead of OAuth.
+
+## States to deliver
+
+`authorized` → `cleared` → `invoiced` (optional) → `deleted`
+
+See [Transaction States](/card-issuers/transaction-states).

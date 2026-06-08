@@ -3,7 +3,7 @@
   "info": {
     "title": "OpenCard OAuth",
     "version": "1.0",
-    "description": "Token endpoint for all OpenCard APIs."
+    "description": "Get bearer tokens for EMS and Issuer APIs."
   },
   "servers": [
     {
@@ -23,11 +23,10 @@
         ],
         "summary": "Get access token",
         "operationId": "getAccessToken",
-        "description": "Client credentials grant only. Request scopes as space-separated string.",
         "requestBody": {
           "required": true,
           "content": {
-            "application/x-www-form-urlencoded": {
+            "application/json": {
               "schema": {
                 "type": "object",
                 "required": [
@@ -50,10 +49,15 @@
                     "type": "string"
                   },
                   "scope": {
-                    "type": "string",
-                    "description": "Space-separated scopes"
+                    "type": "string"
                   }
                 }
+              },
+              "example": {
+                "grant_type": "client_credentials",
+                "client_id": "your-client-id",
+                "client_secret": "your-secret",
+                "scope": "organizations-write webhooks-write card-holders-write"
               }
             }
           }
@@ -63,20 +67,10 @@
             "description": "Token issued",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "token_type": {
-                      "type": "string",
-                      "example": "Bearer"
-                    },
-                    "expires_in": {
-                      "type": "integer"
-                    },
-                    "access_token": {
-                      "type": "string"
-                    }
-                  }
+                "example": {
+                  "token_type": "Bearer",
+                  "expires_in": 31536000,
+                  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
                 }
               }
             }

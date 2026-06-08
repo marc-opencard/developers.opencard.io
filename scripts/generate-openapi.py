@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""
-Generate OpenAPI specs from service.opencard.api route inventory.
-Run from repo root: python3 scripts/generate-openapi.py
-"""
+"""Generate audience-specific OpenAPI specs for Mintlify. Run: python3 scripts/generate-openapi.py"""
 from __future__ import annotations
 
 import json
@@ -13,9 +10,10 @@ OUT = ROOT / "openapi"
 
 ACCOUNT_ID = {"$ref": "#/components/parameters/accountId"}
 ORG_ID = {"$ref": "#/components/parameters/organizationId"}
+OAUTH = {"opencard_auth": []}
+BEARER = {"bearer": []}
 
-OAUTH_SECURITY = {"opencard_auth": []}
-BEARER = {"bearer_auth": []}
+ERR = {"type": "object", "properties": {"error": {"type": "string"}}, "example": {"error": "Access denied"}}
 
 
 def ref(name: str) -> dict:
@@ -26,602 +24,315 @@ def path_param(name: str, desc: str, typ: str = "integer") -> dict:
     return {"name": name, "in": "path", "required": True, "description": desc, "schema": {"type": typ}}
 
 
-def json_body(schema: dict, required: bool = True) -> dict:
-    return {
-        "required": required,
-        "content": {"application/json": {"schema": schema}},
-    }
+def json_body(schema: dict, example: dict | None = None, required: bool = True) -> dict:
+    body = {"required": required, "content": {"application/json": {"schema": schema}}}
+    if example:
+        body["content"]["application/json"]["example"] = example
+    return body
 
 
-def resp(code: str, desc: str, schema: dict | None = None) -> dict:
-    r: dict = {"description": desc}
+def json_resp(code: str, desc: str, schema: dict | None = None, example=None) -> dict:
+    content: dict = {"application/json": {}}
     if schema:
-        r["content"] = {"application/json": {"schema": schema}}
-    return r
+        content["application/json"]["schema"] = schema
+    if example is not None:
+        content["application/json"]["example"] = example
+    return {code: {"description": desc, "content": content}}
 
 
-def op(
-    method: str,
-    path: str,
-    *,
-    tag: str,
-    summary: str,
-    operation_id: str,
-    scope: str | list[str] | None = None,
-    description: str = "",
-    params: list | None = None,
-    body: dict | None = None,
-    responses: dict | None = None,
-    security: bool = True,
-) -> None:
+def op(paths: dict, method: str, path: str, *, tag: str, summary: str, operation_id: str,
+       scope: str | list[str] | None = None, description: str = "", params: list | None = None,
+       body: dict | None = None, responses: dict | None = None, security: bool = True) -> None:
     paths.setdefault(path, {})
-    operation: dict = {
-        "tags": [tag],
-        "summary": summary,
-        "operationId": operation_id,
-    }
+    operation: dict = {"tags": [tag], "summary": summary, "operationId": operation_id}
     if description:
         operation["description"] = description
     if params:
         operation["parameters"] = params
     if body:
         operation["requestBody"] = body
-    operation["responses"] = responses or {"200": resp("200", "Success")}
+    operation["responses"] = responses or json_resp("200", "Success", example={})
     if security:
         scopes = scope if isinstance(scope, list) else ([scope] if scope else [])
         operation["security"] = [{"opencard_auth": scopes}]
     paths[path][method] = operation
 
 
-paths: dict = {}
+# ─── Shared examples (EMS) ───────────────────────────────────────────────────
 
-# ─── Application API ─────────────────────────────────────────────────────────
+EX = {
+    "account": {
+        "id": 1,
+        "name_system": "Acme EMS",
+        "name_legal": "Acme Expense AB",
+        "organization_number": "5561234567",
+        "country": "SE",
+    },
+    "tpa": {
+        "id": 42,
+        "account_id": 1,
+        "card_issuer_id": 1,
+        "name": "Acme AB",
+        "country": "SE",
+        "organization_number": "5561234567",
+        "activated": False,
+        "signatures_verified": False,
+        "status": "pending-signatures",
+    },
+    "tpa_signatory": {
+        "id": 7,
+        "email": "ceo@acme.se",
+        "name": "Anna Andersson",
+        "tpa_id": 42,
+        "signed": False,
+        "signed_at": None,
+    },
+    "organization": {
+        "id": 3,
+        "reference_id": "client_acme_001",
+        "tpa_id": 42,
+        "account_id": 1,
+        "name": "Acme AB",
+    },
+    "card_holder": {
+        "id": 15,
+        "reference_id": "employee_john_42",
+        "organization_id": 3,
+        "meta": {
+            "signed": False,
+            "pdpc_url": "https://sandbox-api.opencard.io/accounts/1/pdpcs/8/sign/abc...",
+            "email_delivered": True,
+        },
+    },
+    "webhook": {
+        "id": 5,
+        "organization_id": 3,
+        "url": "https://your-app.com/hooks/opencard",
+        "active": True,
+        "enabled": True,
+        "card_transaction_authorized": True,
+        "card_transaction_cleared": True,
+        "card_transaction_deleted": True,
+        "receipt_fetched": True,
+    },
+    "identity": {
+        "id": 123,
+        "name": "Anna Andersson",
+        "employee_id": "001",
+        "cards": [{"id": 10, "last_four": "1234", "token": "zevoy-ext-abc", "type": "corporate"}],
+        "card_holders": [],
+    },
+    "oauth_token": {
+        "token_type": "Bearer",
+        "expires_in": 31536000,
+        "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...",
+    },
+    "paginated": lambda data: {
+        "current_page": 1,
+        "data": data,
+        "per_page": 15,
+        "total": len(data) if isinstance(data, list) else 1,
+        "last_page": 1,
+    },
+}
 
-# Me
-op("get", "/me", tag="Me", summary="Get current user", operation_id="getMe", scope="me-read")
-op(
-    "put",
-    "/me",
-    tag="Me",
-    summary="Update current user",
-    operation_id="updateMe",
-    scope="me-write",
-    body=json_body(
-        {
-            "type": "object",
-            "required": ["first_name", "last_name", "email"],
-            "properties": {
-                "first_name": {"type": "string"},
-                "last_name": {"type": "string"},
-                "email": {"type": "string", "format": "email"},
-            },
-        }
-    ),
-)
-op("get", "/me/cards", tag="Me", summary="List my cards", operation_id="listMyCards", scope="me-cards-read")
-op(
-    "put",
-    "/me/cards/{cardId}",
-    tag="Me",
-    summary="Update my card",
-    operation_id="updateMyCard",
-    scope="me-cards-write",
-    params=[path_param("cardId", "Card ID")],
-    body=json_body({"type": "object", "required": ["opencard_enabled"], "properties": {"opencard_enabled": {"type": "boolean"}}}),
-)
-op(
-    "get",
-    "/me/cards/mastercard_token",
-    tag="Me",
-    summary="Get MasterCard consent token",
-    operation_id="getMastercardToken",
-    scope="me-cards-read",
-    params=[{"name": "pdpc_id", "in": "query", "required": True, "schema": {"type": "integer"}}],
-)
-op("get", "/me/clients", tag="Me", summary="List my PDPC consents", operation_id="listMyPdpcs", scope="me-pdpcs-read")
-op("get", "/me/tokens", tag="Me", summary="List my access tokens", operation_id="listMyTokens", scope="me-tokens-read")
+# ─── EMS API (api.opencard.io/api/v1/application) ────────────────────────────
 
-# Accounts
-op("get", "/accounts", tag="Accounts", summary="List all accounts (admin)", operation_id="listAccounts", scope="accounts-full")
-op("get", "/accounts/{accountId}", tag="Accounts", summary="Get account", operation_id="getAccount", scope="accounts-read", params=[ACCOUNT_ID])
-op(
-    "put",
-    "/accounts/{accountId}",
-    tag="Accounts",
-    summary="Update account",
-    operation_id="updateAccount",
-    scope="accounts-write",
-    params=[ACCOUNT_ID],
-    body=json_body(
-        {
-            "type": "object",
-            "properties": {
-                "logo_base64": {"type": "string", "description": "Base64-encoded JPEG logo"},
-                "notify_email": {"type": "string", "format": "email", "nullable": True},
-            },
-        }
-    ),
-)
-op(
-    "put",
-    "/accounts/{accountId}/mode",
-    tag="Accounts",
-    summary="Update account mode (admin)",
-    operation_id="updateAccountMode",
-    scope="accounts-full",
-    params=[ACCOUNT_ID],
-)
+ems_paths: dict = {}
+
+# Account (own account only — no admin list/mode)
+op(ems_paths, "get", "/accounts/{accountId}", tag="Account", summary="Get your account",
+   operation_id="getAccount", scope="accounts-read", params=[ACCOUNT_ID],
+   responses={**json_resp("200", "Account", example=EX["account"]), **json_resp("403", "Forbidden", example={"error": "Access denied"})})
+op(ems_paths, "put", "/accounts/{accountId}", tag="Account", summary="Update your account",
+   operation_id="updateAccount", scope="accounts-write", params=[ACCOUNT_ID],
+   body=json_body({"type": "object", "properties": {"notify_email": {"type": "string", "format": "email"}}}),
+   responses=json_resp("200", "Updated account", example=EX["account"]))
 
 # OAuth clients
-base = "/accounts/{accountId}/oauthclients"
-op("get", base, tag="OAuth Clients", summary="List OAuth clients", operation_id="listOAuthClients", scope="oauth-clients-read", params=[ACCOUNT_ID])
-op("post", base, tag="OAuth Clients", summary="Create OAuth client", operation_id="createOAuthClient", scope="oauth-clients-write", params=[ACCOUNT_ID], responses={"201": resp("201", "Client created with plain-text secret")})
-op("get", f"{base}/{{oauthclientId}}", tag="OAuth Clients", summary="Get OAuth client", operation_id="getOAuthClient", scope="oauth-clients-read", params=[ACCOUNT_ID, path_param("oauthclientId", "OAuth client ID")])
-op("put", f"{base}/{{oauthclientId}}", tag="OAuth Clients", summary="Update OAuth client scopes", operation_id="updateOAuthClient", scope="oauth-clients-write", params=[ACCOUNT_ID, path_param("oauthclientId", "OAuth client ID")])
+ocb = "/accounts/{accountId}/oauthclients"
+op(ems_paths, "get", ocb, tag="OAuth Clients", summary="List OAuth clients", operation_id="listOAuthClients",
+   scope="oauth-clients-read", params=[ACCOUNT_ID],
+   responses=json_resp("200", "OAuth clients", example=EX["paginated"]([{"id": 1, "name": "Production EMS"}])))
+op(ems_paths, "post", ocb, tag="OAuth Clients", summary="Create OAuth client", operation_id="createOAuthClient",
+   scope="oauth-clients-write", params=[ACCOUNT_ID],
+   responses={**json_resp("201", "Created", example={"id": 2, "secret": "plain-text-secret-shown-once"}), **json_resp("403", "Forbidden", example={"error": "Access denied"})})
 
 # Public records
-op(
-    "get",
-    "/accounts/{accountId}/publicrecords",
-    tag="Public Records",
-    summary="Lookup company registry + signing combinations",
-    operation_id="queryPublicRecords",
-    scope="public-records-read",
-    params=[
-        ACCOUNT_ID,
-        {"name": "country", "in": "query", "required": True, "schema": {"type": "string", "enum": ["SE", "DK", "NO", "FI"]}},
-        {"name": "organization_number", "in": "query", "required": True, "schema": {"type": "string"}},
-    ],
-    description="Returns company info and authorized signatory combinations from public registry. Used before TPA creation.",
-)
+op(ems_paths, "get", "/accounts/{accountId}/publicrecords", tag="Public Records",
+   summary="Lookup company + signing combinations", operation_id="queryPublicRecords",
+   scope="public-records-read", params=[ACCOUNT_ID,
+       {"name": "country", "in": "query", "required": True, "schema": {"type": "string", "enum": ["SE", "DK", "NO", "FI"]}},
+       {"name": "organization_number", "in": "query", "required": True, "schema": {"type": "string"}}],
+   responses=json_resp("200", "Public record", example={"name": "Acme AB", "signature_combinations": [[{"name": "Anna Andersson"}]]}))
 
 # TPAs
-tpa_base = "/accounts/{accountId}/tpas"
-op("get", tpa_base, tag="TPAs", summary="List TPAs", operation_id="listTpas", scope="account-tpas-read", params=[ACCOUNT_ID])
-op(
-    "post",
-    tpa_base,
-    tag="TPAs",
-    summary="Create TPA",
-    operation_id="createTpa",
-    scope="account-tpas-write",
-    params=[ACCOUNT_ID],
-    description="Creates a Transaction Processing Authorization. Fetches company data from public registry, generates legal text snapshot, links card issuer.",
-    body=json_body(ref("TpaCreate")),
-    responses={"201": resp("201", "TPA created", ref("Tpa"))},
-)
-op("get", f"{tpa_base}/{{tpaId}}", tag="TPAs", summary="Get TPA", operation_id="getTpa", scope="account-tpas-read", params=[ACCOUNT_ID, path_param("tpaId", "TPA ID")])
-op("delete", f"{tpa_base}/{{tpaId}}", tag="TPAs", summary="Delete TPA", operation_id="deleteTpa", scope="account-tpas-delete", params=[ACCOUNT_ID, path_param("tpaId", "TPA ID")])
-op("get", f"{tpa_base}/{{tpaId}}/signeddocuments", tag="TPAs", summary="Download signed TPA PDF", operation_id="getTpaSignedDocument", scope="account-tpas-read", params=[ACCOUNT_ID, path_param("tpaId", "TPA ID")], responses={"200": {"description": "application/pdf"}})
+tpa = "/accounts/{accountId}/tpas"
+op(ems_paths, "get", tpa, tag="TPAs", summary="List TPAs", operation_id="listTpas", scope="account-tpas-read", params=[ACCOUNT_ID],
+   responses=json_resp("200", "TPAs", example=EX["paginated"]([EX["tpa"]])))
+op(ems_paths, "post", tpa, tag="TPAs", summary="Create TPA", operation_id="createTpa", scope="account-tpas-write", params=[ACCOUNT_ID],
+   description="Creates TPA, fetches registry data, generates legal text.",
+   body=json_body(ref("TpaCreate"), example={"card_issuer_id": 1, "name": "Acme AB", "country": "SE", "organization_number": "5561234567", "language": "sv"}),
+   responses=json_resp("201", "TPA created", example=EX["tpa"]))
+op(ems_paths, "get", f"{tpa}/{{tpaId}}", tag="TPAs", summary="Get TPA", operation_id="getTpa", scope="account-tpas-read",
+   params=[ACCOUNT_ID, path_param("tpaId", "TPA ID")], responses=json_resp("200", "TPA", example=EX["tpa"]))
+op(ems_paths, "delete", f"{tpa}/{{tpaId}}", tag="TPAs", summary="Delete TPA", operation_id="deleteTpa", scope="account-tpas-delete",
+   params=[ACCOUNT_ID, path_param("tpaId", "TPA ID")], responses=json_resp("200", "Deleted"))
 
-# TPA Signatories
-sig_base = f"{tpa_base}/{{tpaId}}/signatories"
-op("get", sig_base, tag="TPA Signatories", summary="List signatories", operation_id="listTpaSignatories", scope="account-tpa-signatories-read", params=[ACCOUNT_ID, path_param("tpaId", "TPA ID")])
-op(
-    "post",
-    sig_base,
-    tag="TPA Signatories",
-    summary="Add signatory + send signing email",
-    operation_id="createTpaSignatory",
-    scope="account-tpa-signatories-write",
-    params=[ACCOUNT_ID, path_param("tpaId", "TPA ID")],
-    description="Creates signatory with 40-char token. Queues email with signing link. Signatory signs via eID (BankID/MitID/etc) on web page — no API login required.",
-    body=json_body(ref("TpaSignatoryCreate")),
-    responses={"201": resp("201", "Signatory created, email queued", ref("TpaSignatory"))},
-)
-op(
-    "put",
-    f"{sig_base}/{{tpaSignatoryId}}",
-    tag="TPA Signatories",
-    summary="Update signatory email (unsigned only)",
-    operation_id="updateTpaSignatory",
-    scope="account-tpa-signatories-write",
-    params=[ACCOUNT_ID, path_param("tpaId", "TPA ID"), path_param("tpaSignatoryId", "Signatory ID")],
-    body=json_body({"type": "object", "required": ["email"], "properties": {"email": {"type": "string", "format": "email"}}}),
-)
-op(
-    "delete",
-    f"{sig_base}/{{tpaSignatoryId}}",
-    tag="TPA Signatories",
-    summary="Delete signatory (unsigned only)",
-    operation_id="deleteTpaSignatory",
-    scope="account-tpa-signatories-delete",
-    params=[ACCOUNT_ID, path_param("tpaId", "TPA ID"), path_param("tpaSignatoryId", "Signatory ID")],
-)
-op(
-    "get",
-    f"{tpa_base}/{{tpaId}}/identities",
-    tag="TPAs",
-    summary="List identities (physical persons) on TPA",
-    operation_id="listTpaIdentities",
-    scope="account-tpa-identities-read",
-    params=[
-        ACCOUNT_ID,
-        path_param("tpaId", "TPA ID"),
-        {
-            "name": "is_card_holder",
-            "in": "query",
-            "required": False,
-            "description": "true = only with card holders, false = only without, omit = all",
-            "schema": {"type": "boolean"},
-        },
-    ],
-    description="Returns identities linked to this TPA's client — people who may already have cards. Use identity.id when creating card holders for instant onboarding (no email/eID wait).",
-    responses={
-        "200": resp(
-            "200",
-            "Paginated identities with cards and card_holders",
-            {
-                "type": "object",
-                "properties": {
-                    "data": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "id": {"type": "integer", "description": "Use as identity_id when creating card holder"},
-                                "name": {"type": "string"},
-                                "employee_id": {"type": "string", "nullable": True},
-                                "cards": {"type": "array", "items": {"type": "object"}},
-                                "card_holders": {"type": "array", "items": {"type": "object"}},
-                            },
-                        },
-                    }
-                },
-            },
-        )
-    },
-)
+sig = f"{tpa}/{{tpaId}}/signatories"
+op(ems_paths, "get", sig, tag="TPA Signatories", summary="List signatories", operation_id="listTpaSignatories",
+   scope="account-tpa-signatories-read", params=[ACCOUNT_ID, path_param("tpaId", "TPA ID")],
+   responses=json_resp("200", "Signatories", example=EX["paginated"]([EX["tpa_signatory"]])))
+op(ems_paths, "post", sig, tag="TPA Signatories", summary="Add signatory (sends email)", operation_id="createTpaSignatory",
+   scope="account-tpa-signatories-write", params=[ACCOUNT_ID, path_param("tpaId", "TPA ID")],
+   body=json_body(ref("TpaSignatoryCreate"), example={"email": "ceo@acme.se", "name": "Anna Andersson"}),
+   responses=json_resp("201", "Signatory created", example=EX["tpa_signatory"]))
+
+op(ems_paths, "get", f"{tpa}/{{tpaId}}/identities", tag="Identities", summary="List identities on TPA",
+   operation_id="listTpaIdentities", scope="account-tpa-identities-read",
+   params=[ACCOUNT_ID, path_param("tpaId", "TPA ID"),
+           {"name": "is_card_holder", "in": "query", "schema": {"type": "boolean"}}],
+   description="Physical persons linked to this TPA. Use `id` as `identity_id` for instant card holder onboarding.",
+   responses=json_resp("200", "Identities", example=EX["paginated"]([EX["identity"]])))
 
 # Billings
-bill_base = "/accounts/{accountId}/billings"
-op("get", bill_base, tag="Billings", summary="List billings", operation_id="listBillings", scope="billings-read", params=[ACCOUNT_ID])
-op(
-    "post",
-    bill_base,
-    tag="Billings",
-    summary="Create billing profile",
-    operation_id="createBilling",
-    scope="billings-write",
-    params=[ACCOUNT_ID],
-    body=json_body(ref("BillingCreate")),
-    responses={"201": resp("201", "Billing created")},
-)
-op("get", f"{bill_base}/{{billingId}}", tag="Billings", summary="Get billing", operation_id="getBilling", scope="billings-read", params=[ACCOUNT_ID, path_param("billingId", "Billing ID")])
-op("put", f"{bill_base}/{{billingId}}", tag="Billings", summary="Update billing", operation_id="updateBilling", scope="billings-write", params=[ACCOUNT_ID, path_param("billingId", "Billing ID")])
+bill = "/accounts/{accountId}/billings"
+op(ems_paths, "post", bill, tag="Billings", summary="Create billing profile", operation_id="createBilling",
+   scope="billings-write", params=[ACCOUNT_ID],
+   body=json_body(ref("BillingCreate"), example={"name_display": "Acme AB", "name_legal": "Acme AB", "organization_number": "5561234567", "country": "SE"}),
+   responses=json_resp("201", "Billing created", example={"id": 1, "name_display": "Acme AB"}))
 
 # Card issuers on account
-ci_base = "/accounts/{accountId}/cardissuers"
-op("get", ci_base, tag="Account Card Issuers", summary="List enabled card issuers", operation_id="listAccountCardIssuers", scope="account-card-issuers-read", params=[ACCOUNT_ID])
-op("get", f"{ci_base}/{{cardIssuerId}}", tag="Account Card Issuers", summary="Check issuer enabled", operation_id="getAccountCardIssuer", scope="account-card-issuers-read", params=[ACCOUNT_ID, path_param("cardIssuerId", "Card issuer ID")])
-op("post", f"{ci_base}/{{cardIssuerId}}", tag="Account Card Issuers", summary="Enable card issuer", operation_id="attachCardIssuer", scope="account-card-issuers-write", params=[ACCOUNT_ID, path_param("cardIssuerId", "Card issuer ID")], responses={"201": resp("201", "Issuer attached")})
-op("delete", f"{ci_base}/{{cardIssuerId}}", tag="Account Card Issuers", summary="Disable card issuer", operation_id="detachCardIssuer", scope="account-card-issuers-delete", params=[ACCOUNT_ID, path_param("cardIssuerId", "Card issuer ID")])
+ci = "/accounts/{accountId}/cardissuers"
+op(ems_paths, "get", ci, tag="Card Issuers", summary="List enabled issuers", operation_id="listAccountCardIssuers",
+   scope="account-card-issuers-read", params=[ACCOUNT_ID],
+   responses=json_resp("200", "Issuers", example=EX["paginated"]([{"id": 1, "name_display": "Nordea FirstCard"}])))
+op(ems_paths, "post", f"{ci}/{{cardIssuerId}}", tag="Card Issuers", summary="Enable issuer", operation_id="attachCardIssuer",
+   scope="account-card-issuers-write", params=[ACCOUNT_ID, path_param("cardIssuerId", "Issuer ID")],
+   responses=json_resp("201", "Attached"))
 
 # Organizations
-org_base = "/accounts/{accountId}/organizations"
-op("get", org_base, tag="Organizations", summary="List organizations", operation_id="listOrganizations", scope="organizations-read", params=[ACCOUNT_ID])
-op(
-    "post",
-    org_base,
-    tag="Organizations",
-    summary="Create organization",
-    operation_id="createOrganization",
-    scope="organizations-write",
-    params=[ACCOUNT_ID],
-    body=json_body(ref("OrganizationCreate")),
-    responses={"201": resp("201", "Organization created", ref("Organization"))},
-)
-op("get", f"{org_base}/{{organizationId}}", tag="Organizations", summary="Get organization", operation_id="getOrganization", scope="organizations-read", params=[ACCOUNT_ID, ORG_ID])
-op("put", f"{org_base}/{{organizationId}}", tag="Organizations", summary="Update organization", operation_id="updateOrganization", scope="organizations-write", params=[ACCOUNT_ID, ORG_ID], body=json_body(ref("OrganizationCreate")))
-op("delete", f"{org_base}/{{organizationId}}", tag="Organizations", summary="Delete organization", operation_id="deleteOrganization", scope="organizations-delete", params=[ACCOUNT_ID, ORG_ID])
+org = "/accounts/{accountId}/organizations"
+op(ems_paths, "get", org, tag="Organizations", summary="List organizations", operation_id="listOrganizations",
+   scope="organizations-read", params=[ACCOUNT_ID],
+   responses=json_resp("200", "Organizations", example=EX["paginated"]([EX["organization"]])))
+op(ems_paths, "post", org, tag="Organizations", summary="Create organization", operation_id="createOrganization",
+   scope="organizations-write", params=[ACCOUNT_ID],
+   body=json_body(ref("OrganizationCreate"), example={"reference_id": "client_acme_001", "tpa_id": 42, "name": "Acme AB"}),
+   responses=json_resp("201", "Organization created", example=EX["organization"]))
+op(ems_paths, "get", f"{org}/{{organizationId}}", tag="Organizations", summary="Get organization", operation_id="getOrganization",
+   scope="organizations-read", params=[ACCOUNT_ID, ORG_ID], responses=json_resp("200", "Organization", example=EX["organization"]))
 
 # Card holders
-ch_base = f"{org_base}/{{organizationId}}/cardholders"
-op("get", ch_base, tag="Card Holders", summary="List card holders", operation_id="listCardHolders", scope="card-holders-read", params=[ACCOUNT_ID, ORG_ID])
-op(
-    "post",
-    ch_base,
-    tag="Card Holders",
-    summary="Create card holder + send PDPC email",
-    operation_id="createCardHolder",
-    scope="card-holders-write",
-    params=[ACCOUNT_ID, ORG_ID],
-    description="Two onboarding modes: (A) provide email — PDPC email sent, user signs with eID, transactions flow after identification. (B) provide identity_id from GET .../tpas/{tpaId}/identities — instant identification, retroactive transactions dispatched immediately. Provide email OR identity_id, not both required.",
-    body=json_body(ref("CardHolderCreate")),
-    responses={"201": resp("201", "Card holder created", ref("CardHolder"))},
-)
-op("put", f"{ch_base}/{{cardHolderId}}", tag="Card Holders", summary="Update card holder", operation_id="updateCardHolder", scope="card-holders-write", params=[ACCOUNT_ID, ORG_ID, path_param("cardHolderId", "Card holder ID")], body=json_body(ref("CardHolderUpdate")))
-op("delete", f"{ch_base}/{{cardHolderId}}", tag="Card Holders", summary="Delete card holder", operation_id="deleteCardHolder", scope="card-holders-delete", params=[ACCOUNT_ID, ORG_ID, path_param("cardHolderId", "Card holder ID")])
+ch = f"{org}/{{organizationId}}/cardholders"
+op(ems_paths, "get", ch, tag="Card Holders", summary="List card holders", operation_id="listCardHolders",
+   scope="card-holders-read", params=[ACCOUNT_ID, ORG_ID],
+   responses=json_resp("200", "Card holders", example=EX["paginated"]([EX["card_holder"]])))
+op(ems_paths, "post", ch, tag="Card Holders", summary="Create card holder", operation_id="createCardHolder",
+   scope="card-holders-write", params=[ACCOUNT_ID, ORG_ID],
+   description="Path A: `email` → PDPC email + eID. Path B: `identity_id` → instant, transactions flow immediately.",
+   body=json_body(ref("CardHolderCreate"), example={"reference_id": "employee_john_42", "email": "john@acme.se", "language": "sv"}),
+   responses=json_resp("201", "Card holder created", example=EX["card_holder"]))
 
 # Webhooks
-wh_base = f"{org_base}/{{organizationId}}/webhooks"
-op("get", wh_base, tag="Webhooks", summary="List webhooks", operation_id="listWebhooks", scope="webhooks-read", params=[ACCOUNT_ID, ORG_ID])
-op(
-    "post",
-    wh_base,
-    tag="Webhooks",
-    summary="Create webhook",
-    operation_id="createWebhook",
-    scope="webhooks-write",
-    params=[ACCOUNT_ID, ORG_ID],
-    description="Creates webhook and runs challenge verification. Returns active=false until challenge passes.",
-    body=json_body(ref("WebhookCreate")),
-    responses={"201": resp("201", "Webhook created", ref("Webhook"))},
-)
-op("get", f"{wh_base}/{{webhookId}}", tag="Webhooks", summary="Get webhook", operation_id="getWebhook", scope="webhooks-read", params=[ACCOUNT_ID, ORG_ID, path_param("webhookId", "Webhook ID")])
-op("put", f"{wh_base}/{{webhookId}}", tag="Webhooks", summary="Update webhook", operation_id="updateWebhook", scope="webhooks-write", params=[ACCOUNT_ID, ORG_ID, path_param("webhookId", "Webhook ID")], body=json_body(ref("WebhookCreate")))
-op(
-    "post",
-    f"{wh_base}/{{webhookId}}/test/{{event}}",
-    tag="Webhooks",
-    summary="Send test webhook event",
-    operation_id="testWebhook",
-    scope="webhooks-write",
-    params=[ACCOUNT_ID, ORG_ID, path_param("webhookId", "Webhook ID"), path_param("event", "Event name", "string")],
-)
-op("get", f"{wh_base}/{{webhookId}}/events", tag="Webhook Events", summary="List delivery log", operation_id="listWebhookEvents", scope="webhook-events-read", params=[ACCOUNT_ID, ORG_ID, path_param("webhookId", "Webhook ID")])
-
-# Webhook headers
-hdr_base = f"{wh_base}/{{webhookId}}/headers"
-op("get", hdr_base, tag="Webhook Headers", summary="List custom headers", operation_id="listWebhookHeaders", scope="webhook-headers-read", params=[ACCOUNT_ID, ORG_ID, path_param("webhookId", "Webhook ID")])
-op(
-    "post",
-    hdr_base,
-    tag="Webhook Headers",
-    summary="Add custom header",
-    operation_id="createWebhookHeader",
-    scope="webhook-headers-write",
-    params=[ACCOUNT_ID, ORG_ID, path_param("webhookId", "Webhook ID")],
-    body=json_body({"type": "object", "required": ["key", "value"], "properties": {"key": {"type": "string"}, "value": {"type": "string"}}}),
-)
-op("delete", f"{hdr_base}/{{headerId}}", tag="Webhook Headers", summary="Delete header", operation_id="deleteWebhookHeader", scope="webhook-headers-delete", params=[ACCOUNT_ID, ORG_ID, path_param("webhookId", "Webhook ID"), path_param("headerId", "Header ID")])
+wh = f"{org}/{{organizationId}}/webhooks"
+op(ems_paths, "get", wh, tag="Webhooks", summary="List webhooks", operation_id="listWebhooks",
+   scope="webhooks-read", params=[ACCOUNT_ID, ORG_ID],
+   responses=json_resp("200", "Webhooks", example=EX["paginated"]([EX["webhook"]])))
+op(ems_paths, "post", wh, tag="Webhooks", summary="Create webhook", operation_id="createWebhook",
+   scope="webhooks-write", params=[ACCOUNT_ID, ORG_ID],
+   body=json_body(ref("WebhookCreate"), example={"url": "https://your-app.com/hooks/opencard", "card_transaction_cleared": True, "card_transaction_authorized": True}),
+   responses=json_resp("201", "Webhook created", example=EX["webhook"]))
+op(ems_paths, "get", f"{wh}/{{webhookId}}/events", tag="Webhooks", summary="Delivery log", operation_id="listWebhookEvents",
+   scope="webhook-events-read", params=[ACCOUNT_ID, ORG_ID, path_param("webhookId", "Webhook ID")],
+   responses=json_resp("200", "Events", example=EX["paginated"]([{"event": "card.transaction.authorized", "status": 200}])))
 
 # Receipt scan
-op(
-    "post",
-    "/accounts/{accountId}/receipts/scan",
-    tag="Receipts",
-    summary="OCR scan a receipt image",
-    operation_id="scanReceipt",
-    scope="receipts-write",
-    params=[ACCOUNT_ID],
-    body=json_body(
-        {
-            "type": "object",
-            "required": ["receipt"],
-            "properties": {
-                "receipt": {"type": "string", "description": "Base64-encoded image. Recommended width ~800px."},
-                "include": {"type": "array", "items": {"type": "string", "enum": ["line_items", "environmental_impact"]}},
-            },
-        }
-    ),
-)
+op(ems_paths, "post", "/accounts/{accountId}/receipts/scan", tag="Receipt Scanner", summary="OCR scan receipt",
+   operation_id="scanReceipt", scope="receipts-write", params=[ACCOUNT_ID],
+   body=json_body({"type": "object", "required": ["receipt"], "properties": {"receipt": {"type": "string"}, "include": {"type": "array", "items": {"type": "string"}}}},
+                  example={"receipt": "base64-image...", "include": ["line_items"]}),
+   responses=json_resp("200", "OCR result", example={"merchant": "ICA", "total_amount": 109.38, "currency": "SEK", "line_items": [{"description": "Coffee", "amount": 45}]}))
 
-# Transactions
-op("get", "/transactions", tag="Transactions", summary="Query transactions (admin)", operation_id="listTransactions", scope="transactions-read")
-op("get", "/transactions/{transactionId}", tag="Transactions", summary="Get transaction", operation_id="getTransaction", scope="transactions-read", params=[path_param("transactionId", "Transaction ID")])
+EMS_SCOPES = {
+    "accounts-read": "Read your account",
+    "accounts-write": "Update your account",
+    "oauth-clients-read": "Read OAuth clients",
+    "oauth-clients-write": "Create OAuth clients",
+    "public-records-read": "Company registry lookup",
+    "account-tpas-read": "Read TPAs",
+    "account-tpas-write": "Create TPAs",
+    "account-tpas-delete": "Delete TPAs",
+    "account-tpa-signatories-read": "Read TPA signatories",
+    "account-tpa-signatories-write": "Add TPA signatories",
+    "account-tpa-identities-read": "List identities on TPA",
+    "billings-write": "Create billing profiles",
+    "account-card-issuers-read": "List enabled issuers",
+    "account-card-issuers-write": "Enable issuers",
+    "organizations-read": "Read organizations",
+    "organizations-write": "Create organizations",
+    "card-holders-read": "Read card holders",
+    "card-holders-write": "Create card holders",
+    "webhooks-read": "Read webhooks",
+    "webhooks-write": "Create webhooks",
+    "webhook-events-read": "Read webhook delivery log",
+    "receipts-write": "Scan receipts (OCR)",
+}
 
-# Open endpoints
-op("get", "/open/legaltexts", tag="Open", summary="List available legal text languages", operation_id="listLegalTextLanguages", security=False, params=[{"name": "type", "in": "query", "required": True, "schema": {"type": "string", "enum": ["tpa", "pdpc", "account"]}}])
-
-application_spec = {
+ems_spec = {
     "openapi": "3.0.3",
     "info": {
-        "title": "OpenCard Application API",
+        "title": "OpenCard EMS API",
         "version": "1.0",
-        "description": "EMS integration API. Generated from service.opencard.api source — not from legacy swagger.",
+        "description": "API for Expense Management Systems. Manage TPAs, organizations, card holders, and webhooks. Receive transaction data via webhooks — not by polling this API.",
         "contact": {"email": "support@opencard.io"},
     },
     "servers": [
         {"url": "https://api.opencard.io/api/v1/application", "description": "Production"},
         {"url": "https://sandbox-api.opencard.io/api/v1/application", "description": "Sandbox"},
     ],
-    "paths": paths,
+    "paths": ems_paths,
     "components": {
         "securitySchemes": {
             "opencard_auth": {
                 "type": "oauth2",
-                "flows": {
-                    "clientCredentials": {
-                        "tokenUrl": "https://api.opencard.io/oauth/token",
-                        "scopes": {
-                            "me-read": "Read profile",
-                            "me-write": "Write profile",
-                            "accounts-read": "Read account",
-                            "accounts-write": "Write account",
-                            "oauth-clients-read": "Read OAuth clients",
-                            "oauth-clients-write": "Write OAuth clients",
-                            "public-records-read": "Read company registry",
-                            "account-tpas-read": "Read TPAs",
-                            "account-tpas-write": "Write TPAs",
-                            "account-tpa-signatories-read": "Read TPA signatories",
-                            "account-tpa-signatories-write": "Write TPA signatories",
-                            "account-tpa-signatories-delete": "Delete TPA signatories",
-                            "billings-read": "Read billings",
-                            "billings-write": "Write billings",
-                            "account-card-issuers-read": "Read account card issuers",
-                            "account-card-issuers-write": "Write account card issuers",
-                            "organizations-read": "Read organizations",
-                            "organizations-write": "Write organizations",
-                            "organizations-delete": "Delete organizations",
-                            "card-holders-read": "Read card holders",
-                            "card-holders-write": "Write card holders",
-                            "card-holders-delete": "Delete card holders",
-                            "webhooks-read": "Read webhooks",
-                            "webhooks-write": "Write webhooks",
-                            "webhook-events-read": "Read webhook events",
-                            "webhook-headers-read": "Read webhook headers",
-                            "webhook-headers-write": "Write webhook headers",
-                            "webhook-headers-delete": "Delete webhook headers",
-                            "receipts-write": "Scan receipts",
-                            "transactions-read": "Read transactions",
-                        },
-                    }
-                },
+                "flows": {"clientCredentials": {"tokenUrl": "https://api.opencard.io/oauth/token", "scopes": EMS_SCOPES}},
             }
         },
         "parameters": {
-            "accountId": path_param("accountId", "Your OpenCard account ID"),
+            "accountId": path_param("accountId", "Your account ID"),
             "organizationId": path_param("organizationId", "Organization ID"),
         },
         "schemas": {
-            "TpaCreate": {
-                "type": "object",
-                "required": ["card_issuer_id", "name", "country", "organization_number"],
-                "properties": {
-                    "card_issuer_id": {"type": "integer"},
-                    "name": {"type": "string"},
-                    "country": {"type": "string", "enum": ["SE", "DK", "NO", "FI"]},
-                    "organization_number": {"type": "string", "description": "SE: 10 digits, NO: 9, DK: 8, FI: XXXXXXX-X"},
-                    "language": {"type": "string", "enum": ["sv", "no", "da", "en", "fi"]},
-                },
-            },
-            "Tpa": {
-                "type": "object",
-                "properties": {
-                    "id": {"type": "integer"},
-                    "account_id": {"type": "integer"},
-                    "card_issuer_id": {"type": "integer"},
-                    "name": {"type": "string"},
-                    "country": {"type": "string"},
-                    "organization_number": {"type": "string"},
-                    "activated": {"type": "boolean"},
-                    "signatures_verified": {"type": "boolean"},
-                    "signed_document_path": {"type": "string", "nullable": True},
-                    "status": {"type": "string", "enum": ["pending-signatures", "pending-approval", "pending-activation", "activated"]},
-                },
-            },
-            "TpaSignatoryCreate": {
-                "type": "object",
-                "required": ["email"],
-                "properties": {
-                    "email": {"type": "string", "format": "email"},
-                    "name": {"type": "string"},
-                    "country_code": {"type": "string"},
-                    "phone_number": {"type": "string"},
-                },
-            },
-            "TpaSignatory": {
-                "type": "object",
-                "properties": {
-                    "id": {"type": "integer"},
-                    "email": {"type": "string"},
-                    "name": {"type": "string"},
-                    "tpa_id": {"type": "integer"},
-                    "signed": {"type": "boolean"},
-                    "signed_at": {"type": "string", "format": "date-time", "nullable": True},
-                },
-            },
-            "OrganizationCreate": {
-                "type": "object",
-                "required": ["reference_id", "tpa_id"],
-                "properties": {
-                    "reference_id": {"type": "string", "description": "Your internal client ID"},
-                    "tpa_id": {"type": "integer"},
-                    "name": {"type": "string"},
-                },
-            },
-            "Organization": {
-                "type": "object",
-                "properties": {
-                    "id": {"type": "integer"},
-                    "reference_id": {"type": "string"},
-                    "tpa_id": {"type": "integer"},
-                    "account_id": {"type": "integer"},
-                },
-            },
-            "CardHolderCreate": {
-                "type": "object",
-                "required": ["reference_id"],
-                "properties": {
-                    "reference_id": {"type": "string"},
-                    "email": {"type": "string", "format": "email", "description": "Required unless identity_id provided"},
-                    "identity_id": {"type": "integer", "description": "Link existing identity from TPA"},
-                    "skip_pdpc_email": {"type": "boolean", "default": False},
-                    "language": {"type": "string", "enum": ["sv", "no", "da", "en", "fi"]},
-                },
-            },
-            "CardHolderUpdate": {
-                "type": "object",
-                "required": ["email", "reference_id"],
-                "properties": {
-                    "reference_id": {"type": "string"},
-                    "email": {"type": "string", "format": "email"},
-                    "skip_pdpc_email": {"type": "boolean"},
-                    "language": {"type": "string"},
-                },
-            },
-            "CardHolder": {
-                "type": "object",
-                "properties": {
-                    "id": {"type": "integer"},
-                    "reference_id": {"type": "string"},
-                    "organization_id": {"type": "integer"},
-                    "meta": {"type": "object", "description": "Includes signed, signed_at, pdpc_url, email delivery status"},
-                },
-            },
-            "BillingCreate": {
-                "type": "object",
-                "required": ["name_display", "name_legal", "organization_number", "country"],
-                "properties": {
-                    "name_display": {"type": "string"},
-                    "name_legal": {"type": "string"},
-                    "organization_number": {"type": "string"},
-                    "country": {"type": "string", "enum": ["SE", "DK", "NO", "FI"]},
-                    "email_invoice": {"type": "string"},
-                    "your_reference_invoice": {"type": "string"},
-                },
-            },
-            "WebhookCreate": {
-                "type": "object",
-                "required": ["url"],
-                "properties": {
-                    "url": {"type": "string", "format": "uri"},
-                    "secret": {"type": "string", "description": "Auto-generated if omitted"},
-                    "enabled": {"type": "boolean", "default": True},
-                    "authentication_type": {"type": "string", "enum": ["none", "basic", "oauth", "custom"]},
-                    "basic_username": {"type": "string"},
-                    "basic_password": {"type": "string"},
-                    "custom_key": {"type": "string"},
-                    "custom_value": {"type": "string"},
-                    "card_holder_created": {"type": "boolean"},
-                    "card_holder_identified": {"type": "boolean"},
-                    "card_holder_signed_pdpc": {"type": "boolean"},
-                    "card_holder_deleted": {"type": "boolean"},
-                    "card_holder_email_delivered": {"type": "boolean"},
-                    "card_holder_email_failed": {"type": "boolean"},
-                    "card_transaction_authorized": {"type": "boolean"},
-                    "card_transaction_cleared": {"type": "boolean"},
-                    "card_transaction_deleted": {"type": "boolean"},
-                    "card_transaction_invoiced": {"type": "boolean"},
-                    "receipt_fetched": {"type": "boolean"},
-                    "transaction_true_vat": {"type": "boolean"},
-                    "transaction_line_items": {"type": "boolean"},
-                    "aland_index": {"type": "boolean"},
-                    "deedster": {"type": "boolean"},
-                    "tpa_signed": {"type": "boolean"},
-                },
-            },
-            "Webhook": {
-                "allOf": [{"$ref": "#/components/schemas/WebhookCreate"}, {"type": "object", "properties": {"id": {"type": "integer"}, "active": {"type": "boolean"}, "organization_id": {"type": "integer"}}}],
-            },
+            "TpaCreate": {"type": "object", "required": ["card_issuer_id", "name", "country", "organization_number"],
+                "properties": {"card_issuer_id": {"type": "integer"}, "name": {"type": "string"}, "country": {"type": "string", "enum": ["SE", "DK", "NO", "FI"]},
+                    "organization_number": {"type": "string"}, "language": {"type": "string", "enum": ["sv", "no", "da", "en", "fi"]}}},
+            "TpaSignatoryCreate": {"type": "object", "required": ["email"], "properties": {"email": {"type": "string"}, "name": {"type": "string"}}},
+            "OrganizationCreate": {"type": "object", "required": ["reference_id", "tpa_id"],
+                "properties": {"reference_id": {"type": "string"}, "tpa_id": {"type": "integer"}, "name": {"type": "string"}}},
+            "CardHolderCreate": {"type": "object", "required": ["reference_id"],
+                "properties": {"reference_id": {"type": "string"}, "email": {"type": "string"}, "identity_id": {"type": "integer"},
+                    "skip_pdpc_email": {"type": "boolean"}, "language": {"type": "string"}}},
+            "BillingCreate": {"type": "object", "required": ["name_display", "name_legal", "organization_number", "country"],
+                "properties": {"name_display": {"type": "string"}, "name_legal": {"type": "string"}, "organization_number": {"type": "string"}, "country": {"type": "string"}}},
+            "WebhookCreate": {"type": "object", "required": ["url"], "properties": {
+                "url": {"type": "string"}, "card_transaction_authorized": {"type": "boolean"}, "card_transaction_cleared": {"type": "boolean"},
+                "card_transaction_deleted": {"type": "boolean"}, "receipt_fetched": {"type": "boolean"}, "transaction_true_vat": {"type": "boolean"}}},
         },
     },
     "x-tagGroups": [
-        {"name": "Profile", "tags": ["Me"]},
-        {"name": "Account Setup", "tags": ["Accounts", "OAuth Clients", "Public Records", "Billings", "Account Card Issuers"]},
-        {"name": "Legal", "tags": ["TPAs", "TPA Signatories"]},
-        {"name": "Organizations", "tags": ["Organizations", "Card Holders", "Webhooks", "Webhook Events", "Webhook Headers"]},
-        {"name": "Data", "tags": ["Transactions", "Receipts"]},
-        {"name": "Open", "tags": ["Open"]},
+        {"name": "Account", "tags": ["Account", "OAuth Clients", "Public Records", "Billings", "Card Issuers"]},
+        {"name": "Legal", "tags": ["TPAs", "TPA Signatories", "Identities"]},
+        {"name": "Organizations", "tags": ["Organizations", "Card Holders", "Webhooks"]},
+        {"name": "Enrichment", "tags": ["Receipt Scanner"]},
     ],
 }
 
-# ─── OAuth spec ──────────────────────────────────────────────────────────────
+# ─── OAuth ─────────────────────────────────────────────────────────────────────
 
 oauth_spec = {
     "openapi": "3.0.3",
-    "info": {"title": "OpenCard OAuth", "version": "1.0", "description": "Token endpoint for all OpenCard APIs."},
+    "info": {"title": "OpenCard OAuth", "version": "1.0", "description": "Get bearer tokens for EMS and Issuer APIs."},
     "servers": [
         {"url": "https://api.opencard.io", "description": "Production"},
         {"url": "https://sandbox-api.opencard.io", "description": "Sandbox"},
@@ -632,263 +343,184 @@ oauth_spec = {
                 "tags": ["OAuth"],
                 "summary": "Get access token",
                 "operationId": "getAccessToken",
-                "description": "Client credentials grant only. Request scopes as space-separated string.",
-                "requestBody": {
-                    "required": True,
-                    "content": {
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "type": "object",
-                                "required": ["grant_type", "client_id", "client_secret", "scope"],
-                                "properties": {
-                                    "grant_type": {"type": "string", "enum": ["client_credentials"]},
-                                    "client_id": {"type": "string"},
-                                    "client_secret": {"type": "string"},
-                                    "scope": {"type": "string", "description": "Space-separated scopes"},
-                                },
-                            }
-                        }
-                    },
-                },
-                "responses": {
-                    "200": {
-                        "description": "Token issued",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "token_type": {"type": "string", "example": "Bearer"},
-                                        "expires_in": {"type": "integer"},
-                                        "access_token": {"type": "string"},
-                                    },
-                                }
-                            }
-                        },
-                    }
-                },
+                "requestBody": json_body(
+                    {"type": "object", "required": ["grant_type", "client_id", "client_secret", "scope"],
+                     "properties": {"grant_type": {"type": "string", "enum": ["client_credentials"]}, "client_id": {"type": "string"},
+                         "client_secret": {"type": "string"}, "scope": {"type": "string"}}},
+                    example={"grant_type": "client_credentials", "client_id": "your-client-id", "client_secret": "your-secret",
+                             "scope": "organizations-write webhooks-write card-holders-write"},
+                ),
+                "responses": json_resp("200", "Token issued", example=EX["oauth_token"]),
             }
         }
     },
 }
 
-# ─── Issuer API ──────────────────────────────────────────────────────────────
+# ─── Issuer API (api.opencard.io/api/v1/issuers) ─────────────────────────────
 
-ISSUER_OAUTH_SCOPES = {
-    "issuer-zevoy-cards-read": "Read Zevoy cards",
-    "issuer-zevoy-cards-write": "Write Zevoy cards",
-    "issuer-zevoy-cards-delete": "Delete Zevoy cards",
-    "issuer-zevoy-transaction-states-write": "Write Zevoy transaction states",
+ISSUER_SCOPES = {
+    "issuer-zevoy-cards-read": "Read Zevoy cards", "issuer-zevoy-cards-write": "Write Zevoy cards",
+    "issuer-zevoy-cards-delete": "Delete Zevoy cards", "issuer-zevoy-transaction-states-write": "Write transaction states",
     "issuer-nordea-transaction-states-write": "Write Nordea transaction states",
 }
-
-DEFAULT_RESPONSES = {
-    "200": resp("200", "Success"),
-    "400": resp("400", "Bad request"),
-    "401": resp("401", "Unauthorized"),
-    "403": resp("403", "Forbidden"),
-}
+TX_EX = {"id": "TX-001", "state": "authorized", "type": "CARD_PURCHASE", "original_amount": 109.38, "original_currency": "SEK",
+         "accounting_amount": 109.38, "accounting_currency": "SEK", "exchange_rate": 1.0, "purchase_merchant": "Espresso House",
+         "purchase_time": "2026-06-08T11:12:14+02:00", "purchase_country": "SE", "mcc_code": "5814",
+         "merchant_number": "1234567890", "terminal_id": "T001", "rrn": "190102519907", "auth_code": "ABC123"}
 
 issuer_paths = {
-    "/v1/issuers/zevoy/cards": {
-        "get": {
-            "tags": ["Zevoy"],
-            "summary": "List cards",
-            "operationId": "zevoyListCards",
-            "security": [{"opencard_auth": ["issuer-zevoy-cards-read"]}],
-            "responses": DEFAULT_RESPONSES,
-        },
-        "post": {
-            "tags": ["Zevoy"],
-            "summary": "Create card",
-            "operationId": "zevoyCreateCard",
-            "security": [{"opencard_auth": ["issuer-zevoy-cards-write"]}],
-            "requestBody": json_body({"type": "object", "required": ["id", "last_four", "bin_number", "liability", "scheme", "identity"], "properties": {"id": {"type": "string"}, "last_four": {"type": "string"}, "bin_number": {"type": "string"}, "liability": {"type": "string"}, "scheme": {"type": "string"}, "identity": {"type": "object"}}}),
-            "responses": {"201": resp("201", "Card created"), "400": resp("400", "Bad request")},
-        },
-    },
-    "/v1/issuers/zevoy/cards/{cardId}": {
-        "get": {
-            "tags": ["Zevoy"],
-            "summary": "Get card",
-            "operationId": "zevoyGetCard",
-            "parameters": [path_param("cardId", "Zevoy external card ID", "string")],
-            "security": [{"opencard_auth": ["issuer-zevoy-cards-read"]}],
-            "responses": DEFAULT_RESPONSES,
-        },
-        "put": {
-            "tags": ["Zevoy"],
-            "summary": "Update card",
-            "operationId": "zevoyUpdateCard",
-            "parameters": [path_param("cardId", "Card ID", "string")],
-            "security": [{"opencard_auth": ["issuer-zevoy-cards-write"]}],
-            "responses": DEFAULT_RESPONSES,
-        },
-        "delete": {
-            "tags": ["Zevoy"],
-            "summary": "Delete card",
-            "operationId": "zevoyDeleteCard",
-            "parameters": [path_param("cardId", "Card ID", "string")],
-            "security": [{"opencard_auth": ["issuer-zevoy-cards-delete"]}],
-            "responses": {"204": resp("204", "Deleted"), "404": resp("404", "Not found")},
-        },
-    },
     "/v1/issuers/zevoy/cards/{cardId}/transaction_states": {
-        "post": {
-            "tags": ["Zevoy"],
-            "summary": "Post transaction state",
-            "operationId": "zevoyCreateTransactionState",
-            "parameters": [path_param("cardId", "Card ID", "string")],
+        "post": {"tags": ["Transaction States"], "summary": "Post transaction state", "operationId": "zevoyCreateTransactionState",
+            "parameters": [path_param("cardId", "Zevoy card ID", "string")],
             "security": [{"opencard_auth": ["issuer-zevoy-transaction-states-write"]}],
-            "requestBody": json_body(ref("IssuerTransactionState")),
-            "responses": {"202": resp("202", "Accepted")},
-        }
+            "requestBody": json_body(ref("IssuerTransactionState"), example=TX_EX),
+            "responses": json_resp("202", "Accepted for processing", example={"ok": True})},
     },
     "/v1/issuers/nordea/cards/{cardId}/transaction_states": {
-        "post": {
-            "tags": ["Nordea"],
-            "summary": "Post transaction state",
-            "operationId": "nordeaCreateTransactionState",
+        "post": {"tags": ["Transaction States"], "summary": "Post transaction state", "operationId": "nordeaCreateTransactionState",
             "parameters": [path_param("cardId", "OpenCard card ID")],
             "security": [{"opencard_auth": ["issuer-nordea-transaction-states-write"]}],
-            "requestBody": json_body(ref("IssuerTransactionState")),
-            "responses": {"202": resp("202", "Accepted")},
-        }
+            "requestBody": json_body(ref("IssuerTransactionState"), example=TX_EX),
+            "responses": json_resp("202", "Accepted", example={"ok": True})},
     },
     "/v1/issuer/nordea/partner-event": {
-        "post": {
-            "tags": ["Nordea"],
-            "summary": "Partner event batch (mTLS)",
-            "operationId": "nordeaPartnerEvent",
-            "description": "Requires mutual TLS. Headers: X-SSL-Client-CN, X-SSL-Client-Fingerprint. No OAuth token.",
-            "responses": {"201": resp("201", "Accepted"), "400": resp("400", "Invalid payload"), "500": resp("500", "Server error")},
-        }
-    },
-    "/v1/issuers/entercard/cards": {
-        "post": {
-            "tags": ["Entercard"],
-            "summary": "Create card",
-            "operationId": "entercardCreateCard",
-            "security": [OAUTH_SECURITY],
-            "responses": {"201": resp("201", "Created"), "400": resp("400", "Bad request")},
-        }
-    },
-    "/v1/issuers/entercard/cards/{cardId}": {
-        "delete": {"tags": ["Entercard"], "summary": "Delete card", "operationId": "entercardDeleteCard", "parameters": [path_param("cardId", "Card ID")], "security": [OAUTH_SECURITY], "responses": {"204": resp("204", "Deleted")}}
-    },
-    "/v1/issuers/entercard/cards/{cardId}/transaction_states": {
-        "post": {
-            "tags": ["Entercard"],
-            "summary": "Post transaction state",
-            "operationId": "entercardCreateTransactionState",
-            "parameters": [path_param("cardId", "Card ID")],
-            "security": [OAUTH_SECURITY],
-            "requestBody": json_body(ref("IssuerTransactionState")),
-            "responses": {"202": resp("202", "Accepted")},
-        }
+        "post": {"tags": ["Nordea"], "summary": "Partner event batch (mTLS)", "operationId": "nordeaPartnerEvent",
+            "description": "Mutual TLS. Headers: X-SSL-Client-CN, X-SSL-Client-Fingerprint",
+            "responses": json_resp("201", "Accepted")},
     },
 }
 
 issuer_spec = {
     "openapi": "3.0.3",
-    "info": {
-        "title": "OpenCard Card Issuer API",
-        "version": "1.0",
-        "description": "Card issuer integration API for delivering cards and transaction states.",
-        "contact": {"email": "support@opencard.io"},
-    },
+    "info": {"title": "OpenCard Issuer API", "version": "1.0",
+        "description": "Card issuers deliver transaction states to OpenCard. Base: api.opencard.io",
+        "contact": {"email": "support@opencard.io"}},
     "servers": [
         {"url": "https://api.opencard.io/api", "description": "Production"},
         {"url": "https://sandbox-api.opencard.io/api", "description": "Sandbox"},
     ],
-    "tags": [
-        {"name": "Zevoy", "description": "Zevoy card and transaction integration"},
-        {"name": "Nordea", "description": "Nordea FirstCard integration"},
-        {"name": "Entercard", "description": "Entercard integration"},
-    ],
+    "tags": [{"name": "Transaction States"}, {"name": "Nordea"}],
     "paths": issuer_paths,
     "components": {
-        "securitySchemes": {
-            "opencard_auth": {
-                "type": "oauth2",
-                "flows": {
-                    "clientCredentials": {
-                        "tokenUrl": "https://api.opencard.io/oauth/token",
-                        "scopes": ISSUER_OAUTH_SCOPES,
-                    }
-                },
-            }
+        "securitySchemes": {"opencard_auth": {"type": "oauth2", "flows": {"clientCredentials": {"tokenUrl": "https://api.opencard.io/oauth/token", "scopes": ISSUER_SCOPES}}}},
+        "schemas": {"IssuerTransactionState": {"type": "object", "required": ["id", "state", "type", "original_amount", "original_currency"],
+            "properties": {"id": {"type": "string"}, "state": {"type": "string", "enum": ["authorized", "cleared", "invoiced", "deleted"]},
+                "type": {"type": "string"}, "original_amount": {"type": "number"}, "original_currency": {"type": "string"},
+                "purchase_merchant": {"type": "string"}, "purchase_time": {"type": "string", "format": "date-time"},
+                "purchase_country": {"type": "string"}, "mcc_code": {"type": "string"}}}},
+    },
+}
+
+# ─── Digital Receipts API (receipts.opencard.io) — for card issuers ────────────
+
+CALLBACK_TX = {
+    "callback_path": "/transaction/123456789",
+    "callback_content_type": "text/xml",
+    "transaction": {
+        "id": "txn_001", "auth_amount": 99.95, "auth_currency": "SEK", "auth_date": "2026-06-08",
+        "auth_time": "11:12:14", "auth_timezone": "Europe/Stockholm", "reference_no": "190102519907",
+        "auth_code": "ABC123", "terminal_id": "0000000015745355", "merchant_no": "3462188",
+        "merchant_name": "Espresso House", "merchant_country": "SE", "clearing": "false",
+        "auth_masked_card_number": "****1234", "type": "CARD_PURCHASE", "state": "AUTHORIZED", "mcc": "5814",
+    },
+}
+
+receipts_spec = {
+    "openapi": "3.0.3",
+    "info": {
+        "title": "OpenCard Digital Receipts API",
+        "version": "1.0",
+        "description": "Card issuers and payment providers submit transaction data for digital receipt matching. Hosted at receipts.opencard.io — separate from the EMS and issuer transaction APIs.",
+        "contact": {"email": "support@opencard.io"},
+    },
+    "servers": [{"url": "https://receipts.opencard.io", "description": "Digital Receipts Service"}],
+    "tags": [
+        {"name": "Publishers", "description": "Merchants with active digital receipts"},
+        {"name": "Callback Requests", "description": "Submit transactions for receipt matching"},
+    ],
+    "paths": {
+        "/api/v1/marcet/publishers": {
+            "get": {"tags": ["Publishers"], "summary": "List active merchants", "operationId": "queryPublishers",
+                "security": [BEARER],
+                "responses": json_resp("200", "Publishers", example=[{
+                    "id": "79e59794-449e-4f3c-b584-0e9e9547501a", "partner_id": "3ab69d8c-3019-40e9-a6e9-afb5d3dfca5b",
+                    "caids": [{"caid": "00004172235", "activated": "2014-03-31"}],
+                }])},
         },
+        "/api/v1/marcet/callbackrequests": {
+            "post": {"tags": ["Callback Requests"], "summary": "Create callback request", "operationId": "createCallbackRequest",
+                "description": "Submit transaction for receipt matching. OpenCard calls your callback_url when matched.",
+                "security": [BEARER],
+                "requestBody": json_body({"type": "array", "items": {"$ref": "#/components/schemas/CallbackTransaction"}}, example=[CALLBACK_TX]),
+                "responses": json_resp("200", "Accepted", example=[CALLBACK_TX])},
+            "get": {"tags": ["Callback Requests"], "summary": "List callback requests", "operationId": "queryCallbackRequests",
+                "security": [BEARER], "responses": json_resp("200", "Callback requests", example=[CALLBACK_TX])},
+        },
+        "/api/v1/marcet/callbackrequests/{callbackRequestId}": {
+            "get": {"tags": ["Callback Requests"], "summary": "Get callback request", "operationId": "getCallbackRequest",
+                "parameters": [path_param("callbackRequestId", "Callback request ID", "string")],
+                "security": [BEARER], "responses": json_resp("200", "Callback request", example=CALLBACK_TX)},
+            "put": {"tags": ["Callback Requests"], "summary": "Update (e.g. clearing status)", "operationId": "updateCallbackRequest",
+                "parameters": [path_param("callbackRequestId", "Callback request ID", "string")],
+                "security": [BEARER], "requestBody": json_body({"type": "object"}, example={"transaction": {"clearing": "true"}}),
+                "responses": json_resp("200", "Updated", example=CALLBACK_TX)},
+            "delete": {"tags": ["Callback Requests"], "summary": "Delete callback request", "operationId": "deleteCallbackRequest",
+                "parameters": [path_param("callbackRequestId", "Callback request ID", "string")],
+                "security": [BEARER], "responses": json_resp("204", "Deleted")},
+        },
+    },
+    "components": {
+        "securitySchemes": {"bearer": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}},
         "schemas": {
-            "IssuerTransactionState": {
-                "type": "object",
-                "required": ["id", "state", "type", "original_amount", "original_currency", "accounting_amount", "accounting_currency", "exchange_rate", "purchase_merchant", "purchase_time", "purchase_country", "mcc_code", "merchant_number", "terminal_id", "rrn", "auth_code"],
-                "properties": {
-                    "id": {"type": "string"},
-                    "state": {"type": "string", "enum": ["authorized", "cleared", "invoiced", "deleted"]},
-                    "type": {"type": "string", "enum": ["CARD_PURCHASE", "CASH_WITHDRAWAL", "FEE_AND_DISCOUNT"]},
-                    "invoice_number": {"type": "string", "nullable": True},
-                    "original_amount": {"type": "number"},
-                    "original_currency": {"type": "string", "minLength": 3, "maxLength": 3},
-                    "accounting_amount": {"type": "number"},
-                    "accounting_currency": {"type": "string", "minLength": 3, "maxLength": 3},
-                    "exchange_rate": {"type": "number"},
-                    "vat_rate": {"type": "number", "nullable": True},
-                    "vat_amount": {"type": "number", "nullable": True},
-                    "vat_currency": {"type": "string", "nullable": True},
-                    "purchase_merchant": {"type": "string"},
-                    "purchase_time": {"type": "string", "format": "date-time"},
-                    "purchase_country": {"type": "string", "minLength": 2, "maxLength": 2},
-                    "purchase_city": {"type": "string", "nullable": True},
-                    "mcc_code": {"type": "string"},
-                    "merchant_number": {"type": "string"},
-                    "terminal_id": {"type": "string"},
-                    "rrn": {"type": "string"},
-                    "auth_code": {"type": "string"},
-                },
-            }
+            "CallbackTransaction": {"type": "object", "properties": {
+                "callback_path": {"type": "string"}, "callback_content_type": {"type": "string"},
+                "transaction": {"type": "object"}}},
+            "Error": ERR,
         },
     },
 }
 
-# ─── Receipt provider callback ───────────────────────────────────────────────
+# ─── Receipt provider callback (inbound to api.opencard.io) ───────────────────
 
-receipt_callback_spec = {
+provider_callback_spec = {
     "openapi": "3.0.3",
-    "info": {"title": "OpenCard Receipt Provider Callback", "version": "1.0", "description": "Inbound webhook for receipt enrichers delivering matched receipts to OpenCard."},
-    "servers": [{"url": "https://api.opencard.io/api"}, {"url": "https://sandbox-api.opencard.io/api"}],
-    "tags": [{"name": "Receipt Callback", "description": "Inbound enrichment delivery"}],
+    "info": {"title": "Receipt Provider Callback", "version": "1.0",
+        "description": "Inbound API for receipt enrichers delivering matched data back to OpenCard."},
+    "servers": [
+        {"url": "https://api.opencard.io/api", "description": "Production"},
+        {"url": "https://sandbox-api.opencard.io/api", "description": "Sandbox"},
+    ],
     "paths": {
         "/v1/service/marcet/callback/{referenceId}": {
-            "post": {
-                "tags": ["Receipt Callback"],
-                "summary": "Deliver receipt enrichment",
-                "operationId": "receiptProviderCallback",
+            "post": {"tags": ["Callback"], "summary": "Deliver receipt enrichment", "operationId": "receiptProviderCallback",
+                "description": "HMAC-SHA256 via X-Data-Signature header.",
                 "parameters": [
-                    path_param("referenceId", "Transaction reference ID", "string"),
+                    path_param("referenceId", "Transaction reference", "string"),
                     {"name": "X-Event", "in": "header", "required": True, "schema": {"type": "string", "enum": ["CallbackRequestResolved", "CallbackRequestDeleted"]}},
-                    {"name": "X-CallbackRequest-Id", "in": "header", "required": True, "schema": {"type": "string"}},
-                    {"name": "X-Data-Signature", "in": "header", "required": True, "schema": {"type": "string", "description": "HMAC-SHA256 of raw body using shared secret"}},
+                    {"name": "X-Data-Signature", "in": "header", "required": True, "schema": {"type": "string"}},
                 ],
-                "requestBody": {"required": True, "content": {"application/xml": {"schema": {"type": "string"}}, "application/json": {"schema": {"type": "object"}}}},
-                "responses": {"200": resp("200", "Accepted"), "403": resp("403", "Invalid signature")},
-            }
+                "responses": json_resp("200", "Accepted")},
         }
     },
 }
 
-# ─── Write files ─────────────────────────────────────────────────────────────
+# ─── Write ─────────────────────────────────────────────────────────────────────
 
 OUT.mkdir(parents=True, exist_ok=True)
 files = {
-    "application-api.json": application_spec,
+    "ems-api.json": ems_spec,
     "oauth.json": oauth_spec,
     "issuer-api.json": issuer_spec,
-    "receipt-provider-callback.json": receipt_callback_spec,
+    "receipts-api.json": receipts_spec,
+    "receipt-provider-callback.json": provider_callback_spec,
 }
-
 for name, spec in files.items():
-    path = OUT / name
-    with open(path, "w") as f:
+    with open(OUT / name, "w") as f:
         json.dump(spec, f, indent=2)
-    print(f"Wrote {path} ({len(spec.get('paths', {}))} paths)")
+    print(f"Wrote {OUT / name} ({len(spec.get('paths', {}))} paths)")
+
+# Remove legacy spec if present
+legacy = OUT / "application-api.json"
+if legacy.exists():
+    legacy.unlink()
+    print(f"Removed legacy {legacy}")

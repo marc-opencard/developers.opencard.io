@@ -27,13 +27,24 @@ sequenceDiagram
 
 ---
 
+## Two different "receipt" integrations
+
+| Role | API | You are |
+|------|-----|---------|
+| **Receipt Provider** (this section) | Callback to `api.opencard.io` | Merchant network / enricher |
+| **Card Issuer — Digital Receipts** | `receipts.opencard.io` | Bank requesting receipts for cardholders |
+
+If you're a **card issuer** wanting digital receipts for your app → [Digital Receipts](/card-issuers/digital-receipts), not this section.
+
+---
+
 ## What you implement
 
 1. Receive transaction data from OpenCard (outbound to your system)
 2. Match against your merchant receipt database
 3. **POST callback** to OpenCard when matched
 
-→ [Callback Delivery](/receipt-providers/callback-delivery) for the inbound API spec.
+→ [How it works](/receipt-providers/how-it-works) · [Callback Delivery](/receipt-providers/callback-delivery) · [Payload formats](/receipt-providers/payload-formats)
 
 ---
 

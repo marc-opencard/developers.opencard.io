@@ -33,8 +33,9 @@
   "api": {
     "openapi": [
       "openapi/oauth.json",
-      "openapi/application-api.json",
+      "openapi/ems-api.json",
       "openapi/issuer-api.json",
+      "openapi/receipts-api.json",
       "openapi/receipt-provider-callback.json"
     ],
     "playground": {
@@ -42,7 +43,7 @@
     },
     "examples": {
       "languages": ["curl", "javascript", "python", "php"],
-      "defaults": "required",
+      "defaults": "all",
       "prefill": true,
       "autogenerate": true
     }
@@ -72,69 +73,42 @@
         ]
       },
       {
-        "tab": "EMS Guide",
+        "tab": "EMS",
         "groups": [
           {
-            "group": "🧠 Core Concepts",
+            "group": "📖 Guides",
             "pages": [
               "ems/data-model",
               "ems/organizations",
               "ems/card-holders",
-              "ems/pdpc-flow"
-            ]
-          },
-          {
-            "group": "📜 Legal & Signing",
-            "pages": [
+              "ems/pdpc-flow",
               "ems/tpa-flow",
-              "ems/eid-signing"
-            ]
-          },
-          {
-            "group": "🔔 Webhooks",
-            "pages": [
+              "ems/eid-signing",
               "ems/webhooks/setup",
               "ems/webhooks/events",
-              "ems/webhooks/transactions"
-            ]
-          },
-          {
-            "group": "✨ Enrichment",
-            "pages": [
+              "ems/webhooks/transactions",
               "ems/receipts",
               "ems/receipt-scanner",
-              "ems/environmental-impact"
-            ]
-          },
-          {
-            "group": "🔧 Advanced",
-            "pages": [
+              "ems/environmental-impact",
               "ems/plugins",
               "ems/migrating-from-issuer",
               "ems/error-handling"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "API Reference",
-        "groups": [
-          {
-            "group": "Overview",
-            "pages": ["api-reference/overview"]
           },
           {
-            "group": "OAuth",
+            "group": "🔑 Authentication",
+            "pages": ["api-reference/ems/authentication"],
             "openapi": {
               "source": "openapi/oauth.json",
-              "directory": "api-reference/oauth"
+              "directory": "api-reference/ems/oauth"
             }
           },
           {
-            "group": "Application API",
+            "group": "EMS API",
+            "pages": ["api-reference/ems/overview"],
             "openapi": {
-              "source": "openapi/application-api.json",
-              "directory": "api-reference/application"
+              "source": "openapi/ems-api.json",
+              "directory": "api-reference/ems"
             }
           }
         ]
@@ -143,10 +117,11 @@
         "tab": "Card Issuers",
         "groups": [
           {
-            "group": "Integration",
+            "group": "📖 Guides",
             "pages": [
               "card-issuers/index",
               "card-issuers/transaction-states",
+              "card-issuers/digital-receipts",
               "card-issuers/nordea",
               "card-issuers/zevoy",
               "card-issuers/entercard"
@@ -154,9 +129,18 @@
           },
           {
             "group": "Issuer API",
+            "pages": ["api-reference/issuer/overview"],
             "openapi": {
               "source": "openapi/issuer-api.json",
               "directory": "api-reference/issuer"
+            }
+          },
+          {
+            "group": "Digital Receipts API",
+            "pages": ["api-reference/receipts/overview"],
+            "openapi": {
+              "source": "openapi/receipts-api.json",
+              "directory": "api-reference/receipts"
             }
           }
         ]
@@ -165,18 +149,13 @@
         "tab": "Receipt Providers",
         "groups": [
           {
-            "group": "Integration",
+            "group": "📖 Integration Guide",
             "pages": [
               "receipt-providers/index",
-              "receipt-providers/callback-delivery"
+              "receipt-providers/how-it-works",
+              "receipt-providers/callback-delivery",
+              "receipt-providers/payload-formats"
             ]
-          },
-          {
-            "group": "Callback API",
-            "openapi": {
-              "source": "openapi/receipt-provider-callback.json",
-              "directory": "api-reference/receipt-callback"
-            }
           }
         ]
       }
