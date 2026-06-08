@@ -14,17 +14,14 @@ It's the legal agreement that says "this company's card transaction data is allo
 | Status | Meaning |
 |--------|---------|
 | `pending-signatures` | Signatories added but not all signed yet |
-| `pending-approval` | All signed, but signatures not verified (DK/FI, or SE/NO mismatch) |
-| `pending-activation` | Verified + signed, waiting for issuer to confirm cards exist |
+| `pending-activation` | Fully signed, waiting for cards to be confirmed |
 | `activated` | Live. Transactions flow. |
 
 ```mermaid
 stateDiagram-v2
     [*] --> pending-signatures: POST /tpas
-    pending-signatures --> pending-approval: all signed, not verified
-    pending-signatures --> pending-activation: all signed + verified (SE/NO)
-    pending-approval --> pending-activation: admin approves
-    pending-activation --> activated: issuer confirms cards
+    pending-signatures --> pending-activation: all signed
+    pending-activation --> activated: cards confirmed
 ```
 
 ---
@@ -163,7 +160,7 @@ This is a **web flow**, not an API call. The signatory:
 1. Clicks email link → `GET /accounts/{accountId}/tpas/{tpaId}/sign/{token}`
 2. Sees TPA legal text (markdown rendered)
 3. Clicks "Sign" → Assently CoreID widget loads
-4. Picks their eID provider (BankID, MitID, etc.) — see [eID Signing](/ems/eid-signing)
+4. Signs with eID — see [eID Signing](/ems/eid-signing)
 5. Signs the document (mode: **sign** — legal text hash is bound to signature)
 6. Assently POSTs `identityToken` back → `POST .../sign/{token}`
 
@@ -172,27 +169,7 @@ This is a **web flow**, not an API call. The signatory:
 - Extracts: `ssn`, `country`, `name`, full signature claims
 - Sets signatory: `signed=true`, `signed_at=now()`, encrypted `ssn` + `signature`
 
-**Then checks if TPA is fully signed:**
-
-### 🇸🇪 SE + 🇳🇴 NO → auto-verify
-
-Compares signed signatories' `ssn_hash` against `public_info.signature_combinations`. If a complete combination matches → `signatures_verified=true` → `setSigned()` called automatically.
-
-### 🇩🇰 DK + 🇫🇮 FI → manual approval
-
-Auto-verify is **not** available. TPA stays `pending-approval` until OpenCard admin runs:
-
-```
-PUT /api/v1/application/tpas/{tpaId}
-Scope: tpas-write (admin)
-```
-
-```json
-{
-  "signatures_verified": true,
-  "signatures_approval_description": "Verified by support after document review"
-}
-```
+**When all required signatories have signed**, OpenCard verifies signing rights against `signature_combinations` from the registry and marks the TPA as signed.
 
 ---
 

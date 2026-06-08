@@ -15,7 +15,7 @@ There are **two ways** to create them. This is one of the most important decisio
 |---|----------------|---------------------------|
 | **Best for** | New employees, self-service | Person already known to OpenCard |
 | **You provide** | `email` | `identity_id` (from identities API) |
-| **User action** | Click email → sign PDPC with BankID/MitID | None — instant |
+| **User action** | Click email → sign PDPC with eID | None — instant |
 | **Transactions start** | After user completes eID | **Immediately** on create |
 | **Retroactive txs** | Yes, after eID sign | Yes, dispatched on create |
 | **Typical UX** | "Check your email to activate" | Bulk import from employee list |
@@ -70,7 +70,7 @@ Scope: card-holders-write
 1. Card holder + PDPC record created
 2. 📧 **Email queued** — subject: `We need your approval.`
 3. Link: `https://{env}/accounts/{accountId}/pdpcs/{pdpcId}/sign/{token}`
-4. User reads PDPC → checks consent → identifies with **eID** (BankID 🇸🇪, MitID 🇩🇰, BankID 🇳🇴, TUPAS 🇫🇮)
+4. User reads PDPC → checks consent → identifies with **eID**
 5. On eID success → identity linked → `card_holder.identified` webhook
 6. **Retroactive transactions** dispatched (everything since last card invoice)
 7. New transactions flow in real time
@@ -215,14 +215,6 @@ You:  GET identities ──► POST cardholder with identity_id ──► txs fl
 | `card.transaction.*` | After identified | **Immediately** (+ retroactive batch) |
 
 **Your integration should key off `card_holder.identified`** as the moment transactions are expected.
-
----
-
-## Switching from legacy issuer feed
-
-When you receive `card_holder.identified` (either path) → **stop the old issuer feed** for that person and dedupe on `card_issuer_reference` for cleared transactions.
-
-→ [Migrating from Direct Issuer](/ems/migrating-from-issuer)
 
 ---
 

@@ -91,7 +91,6 @@
               "ems/receipt-scanner",
               "ems/environmental-impact",
               "ems/plugins",
-              "ems/migrating-from-issuer",
               "ems/error-handling"
             ]
           },

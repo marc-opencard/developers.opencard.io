@@ -33,7 +33,7 @@ Account          ← you (the EMS partner)
 | **TPA** | Company's authorized signatories (CEO, board, etc.) | eID **sign** mode — they sign the actual legal document | Company-level permission |
 | **PDPC** | Individual cardholder (employee) | eID **auth** mode — identity verification + consent checkbox | Person-level GDPR consent |
 
-OpenCard handles all of this. For new users you provide an email — we send the link, they sign with BankID/MitID/etc. For users already in OpenCard you pass `identity_id` and skip the wait entirely.
+OpenCard handles all of this. For new users you provide an email — we send the link, they sign with eID. For users already in OpenCard you pass `identity_id` and skip the wait entirely.
 
 ## The full onboarding sequence
 
@@ -45,11 +45,7 @@ flowchart TD
     D --> E[5. Add TPA signatories]
     E --> F[6. Signatories get email]
     F --> G[7. They sign with eID]
-    G --> H{Country?}
-    H -->|SE or NO| I[Auto-verify signing rights]
-    H -->|DK or FI| J[Manual admin approval]
-    I --> K[TPA fully signed → tpa.signed webhook]
-    J --> K
+    G --> K[TPA fully signed → tpa.signed webhook]
     K --> L[8. Create organization linked to TPA]
     L --> M[9. Configure webhook]
     M --> N[10. Create card holders]
@@ -74,10 +70,10 @@ flowchart TD
 | You build | OpenCard builds |
 |-----------|-----------------|
 | Webhook endpoint + event handlers | Legal signing flows (TPA + PDPC) |
-| Org/cardholder CRUD in your UI | eID integration (BankID, MitID, etc.) |
+| Org/cardholder CRUD in your UI | eID signing flows |
 | Map `reference_id` to your DB | Issuer communication |
 | Transaction UI in your expense app | Receipt matching orchestration |
-| Cancel old issuer integrations | Webhook delivery + retry + logs |
+| | Webhook delivery + retry + logs |
 
 ## Reference IDs — your best friend
 

@@ -32,6 +32,5 @@ description: HTTP errors, webhook retries, and common gotchas.
 | Webhook `active=false` | Challenge failed | Implement HMAC challenge handler |
 | No transactions | TPA not activated | Wait for issuer card confirmation |
 | No transactions | PDPC not signed | Cardholder must sign consent |
-| Duplicate txs | Old issuer feed still running | Stop on `card_holder.identified` |
-| DK/FI TPA stuck | Needs manual approval | Contact OpenCard support |
+| Duplicate txs | Same transaction received twice | Upsert by transaction `id` |
 | Wrong VAT on tx | Network VAT, not merchant | Subscribe to `transaction.true.vat` |

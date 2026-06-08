@@ -147,14 +147,9 @@ Full signing details → [TPA Flow](/ems/tpa-flow) and [eID Signing](/ems/eid-si
 
 ## Step 6: Wait for TPA to be signed ✍️
 
-When all signatories have signed:
+When all signatories have signed, OpenCard verifies signing rights and marks the TPA as signed.
 
-| Country | Verification |
-|---------|-------------|
-| 🇸🇪 SE, 🇳🇴 NO | **Automatic** — eID `ssn_hash` matched against registry `signature_combinations` |
-| 🇩🇰 DK, 🇫🇮 FI | **Manual** — OpenCard admin approves via `PUT /tpas/{tpaId}` |
-
-On full signing:
+Then:
 - Signed PDF generated and stored
 - `tpa.signed` webhook fires (if subscribed)
 - TPA status → `pending-activation` (waiting for issuer to confirm cards)
@@ -237,7 +232,7 @@ curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUN
   }'
 ```
 
-John gets email → signs PDPC with BankID/MitID → `card_holder.identified` → transactions flow.
+John gets email → signs PDPC with eID → `card_holder.identified` → transactions flow.
 
 ### Path B: `identity_id` (instant — person already in OpenCard)
 
@@ -292,4 +287,3 @@ Once the issuer delivers transaction states and the cardholder has signed PDPC:
 - [Transaction states](/ems/webhooks/transactions) — how to handle authorized vs cleared vs deleted
 - [All webhook events](/ems/webhooks/events) — full payload reference
 - [Receipt enrichment](/ems/receipts) — digital receipts + true VAT
-- [Migrating from direct issuer](/ems/migrating-from-issuer) — avoid duplicate transactions

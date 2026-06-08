@@ -102,18 +102,6 @@ Verify with your client which card types to include. Common setup: corporate onl
 
 ---
 
-## Migrating from direct issuer feed
-
-When switching from a legacy issuer integration to OpenCard:
-
-1. Stop old feed when you get `card_holder.identified`
-2. OpenCard delivers all transactions since last credit card invoice
-3. Dedupe using `card_issuer_reference` on `cleared` events — if you already have it from the old feed, skip
-
-See [Migrating from Issuer](/ems/migrating-from-issuer).
-
----
-
 ## VAT caveat
 
 `vat_rate` and `vat_amount` on the transaction payload come from the **card network** — often wrong for restaurants, hotels, etc.

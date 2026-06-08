@@ -74,7 +74,7 @@ Web flow (not API). Cardholder:
 3. Checks ✅ "I have read the text above"
 4. Clicks "Approve & Identify"
 5. Assently CoreID loads in **`auth`** mode (identity verification, not document signing)
-6. Picks eID provider (BankID/MitID/etc — see [eID Signing](/ems/eid-signing))
+6. Signs with eID — see [eID Signing](/ems/eid-signing)
 7. Completes eID
 
 **Server-side:**
@@ -100,10 +100,6 @@ Web flow (not API). Cardholder:
 | `card_holder.deleted` | API delete | Remove from your system |
 | `card_holder.email.delivered` | PDPC email delivered | Track delivery |
 | `card_holder.email.failed` | Email bounced | Resend or fix email |
-
-<Tip>
-  Switch from legacy issuer integration to OpenCard when you receive `card_holder.identified` — that's when OpenCard starts delivering historical transactions since last invoice.
-</Tip>
 
 ---
 
