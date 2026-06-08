@@ -1,72 +1,74 @@
 ---
-title: OpenCard Developer Docs
-description: The API that feeds your EMS with card transactions, receipts, and vibes. All in real time.
+title: OpenCard Developers
+description: Real-time card data, digital receipts, and webhooks for EMS, card issuers, and receipt providers.
+mode: custom
 ---
 
-Yo. Welcome to OpenCard. 👋
+<div className="max-w-5xl mx-auto px-6 pt-16 pb-8">
+  <div className="text-center">
+    <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 sm:text-5xl">
+      Build on OpenCard
+    </h1>
+    <p className="mt-4 mx-auto max-w-2xl text-lg text-gray-600 dark:text-zinc-400">
+      Card transactions, receipts, VAT, and line items — pushed to your systems in real time.
+      Pick your integration path.
+    </p>
+    <div className="mt-8 flex flex-wrap gap-3 justify-center">
+      <a
+        href="https://sandbox-api.opencard.io/register"
+        className="inline-flex items-center rounded-lg bg-[#C9A9A9] px-5 py-2.5 text-sm font-semibold text-[#2C2C2C] hover:opacity-90 transition-opacity"
+      >
+        Get sandbox access
+      </a>
+      <a
+        href="/getting-started/quickstart"
+        className="inline-flex items-center rounded-lg border border-gray-200 dark:border-zinc-700 px-5 py-2.5 text-sm font-semibold text-gray-900 dark:text-zinc-50 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors"
+      >
+        EMS quickstart →
+      </a>
+    </div>
+  </div>
+</div>
 
-If you're building an **Expense Management System (EMS)**, you're in the right place. OpenCard is the pipe between card issuers (banks) and your app — transactions, receipts, VAT, line items, environmental impact — pushed to your webhook endpoint as stuff happens.
+<div className="max-w-5xl mx-auto px-6 pb-6">
+  <CardGroup cols={2}>
+    <Card title="EMS Integration" icon="building-2" href="/getting-started/quickstart">
+      Expense apps — orgs, card holders, webhooks. Receive `card.transaction.*` events in real time.
+    </Card>
+    <Card title="EMS API Reference" icon="code" href="/api-reference/ems/overview">
+      Full API on `api.opencard.io` — TPAs, organizations, card holders, webhooks.
+    </Card>
+    <Card title="Card Issuers" icon="credit-card" href="/card-issuers">
+      Fetch digital receipts for cardholders via `receipts.opencard.io`.
+    </Card>
+    <Card title="Receipt Providers" icon="store" href="/receipt-providers">
+      Collect merchant receipts and deliver them to OpenCard for EMS enrichment.
+    </Card>
+  </CardGroup>
+</div>
 
-No polling. No scraping PDFs. No negotiating with 7 different banks.
-
-## Who are you?
-
-Pick your lane:
-
-| You are... | Go here | What you do |
-|------------|---------|-------------|
-| 🏢 **EMS / expense app** | [Quickstart](/getting-started/quickstart) | Create orgs, card holders, webhooks. Receive transaction events. |
-| 💳 **Card issuer / bank** | [Card Issuers](/card-issuers) | Fetch digital receipts for cardholders via `receipts.opencard.io`. |
-| 🧾 **Receipt provider** | [Receipt Providers](/receipt-providers) | Collect receipts, deliver to OpenCard for EMS enrichment. |
-
-## The 30-second version
-
-```mermaid
-sequenceDiagram
-    participant Bank as Card Issuer
-    participant OC as OpenCard
-    participant You as Your EMS
-
-    Note over You,OC: Setup (once per client)
-    You->>OC: Create TPA + signatories sign with BankID
-    You->>OC: Create organization + webhook
-    You->>OC: Create card holders (PDPC email)
-
-    Note over Bank,You: Runtime (every purchase)
-    Bank->>OC: transaction state (authorized/cleared)
-    OC->>You: webhook card.transaction.*
-```
-
-## What you get pushed to your webhook
-
-- `card.transaction.authorized` — purchase just happened ⚡
-- `card.transaction.cleared` — settled, use this for accounting ✅
-- `card.transaction.deleted` — auth reversed, delete it 🗑️
-- `card.transaction.invoiced` — has invoice number 📄
-- `receipt.fetched` — digital receipt URL 🧾
-- `transaction.true.vat` — correct VAT from merchant 💰
-- `transaction.line_items` — what they actually bought 🛒
-- `card_holder.*` — lifecycle events for your users 👤
-- `tpa.signed` — legal agreement done ✍️
-
-## Environments
-
-| | Sandbox | Production |
-|---|---------|------------|
-| **API** | `sandbox-api.opencard.io` | `api.opencard.io` |
-| **Sign up** | [Register free](https://sandbox-api.opencard.io/register) | Email support@opencard.io |
-| **OAuth token** | `https://sandbox-api.opencard.io/oauth/token` | `https://api.opencard.io/oauth/token` |
-
-<Warning>
-  Sandbox and production are completely separate. Different OAuth clients, different data, different webhook secrets. Don't mix them.
-</Warning>
-
-## Supported countries
-
-OpenCard operates in **4 Nordic countries**: 🇸🇪 Sweden, 🇩🇰 Denmark, 🇳🇴 Norway, 🇫🇮 Finland.
-
-eID signing (BankID, MitID, etc.) works in all four. Org number formats differ per country — see [TPA Flow](/ems/tpa-flow).
-
-## Next step
-
-If you want to ship something today → **[Quickstart](/getting-started/quickstart)**. It's a full walkthrough from register to first webhook, with every API call spelled out.
+<div className="max-w-5xl mx-auto px-6 pb-16">
+  <p className="text-sm font-medium text-gray-500 dark:text-zinc-500 mb-4 uppercase tracking-wide">
+    Explore further
+  </p>
+  <CardGroup cols={3}>
+    <Card title="How it works" icon="workflow" href="/introduction/how-it-works">
+      Data model, event flow, and what OpenCard handles.
+    </Card>
+    <Card title="Authentication" icon="key" href="/getting-started/authentication">
+      OAuth2 account_client credentials and scopes.
+    </Card>
+    <Card title="Environments" icon="globe" href="/introduction/environments">
+      Sandbox vs production URLs.
+    </Card>
+    <Card title="Webhooks" icon="webhook" href="/ems/webhooks/setup">
+      Transactions, receipts, VAT, lifecycle events.
+    </Card>
+    <Card title="Digital Receipts API" icon="receipt" href="/api-reference/receipts/overview">
+      `receipts.opencard.io` — publishers and callback requests.
+    </Card>
+    <Card title="Glossary" icon="book-open" href="/introduction/glossary">
+      TPA, PDPC, card holder — every term explained.
+    </Card>
+  </CardGroup>
+</div>

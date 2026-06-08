@@ -1,0 +1,50 @@
+---
+title: About OpenCard
+description: What OpenCard does, who it's for, and what lands in your webhook.
+---
+
+OpenCard is the pipe between card programs and your app — transactions, receipts, VAT, line items, and environmental impact, pushed to your webhook as stuff happens.
+
+No polling. No scraping PDFs.
+
+## Who are you?
+
+| You are... | Go here | What you do |
+|------------|---------|-------------|
+| 🏢 **EMS / expense app** | [Quickstart](/getting-started/quickstart) | Create orgs, card holders, webhooks. Receive transaction events. |
+| 💳 **Card issuer / bank** | [Card Issuers](/card-issuers) | Fetch digital receipts via `receipts.opencard.io`. |
+| 🧾 **Receipt provider** | [Receipt Providers](/receipt-providers) | Collect receipts, deliver to OpenCard for EMS enrichment. |
+
+## The 30-second version
+
+```mermaid
+sequenceDiagram
+    participant Bank as Card Program
+    participant OC as OpenCard
+    participant You as Your EMS
+
+    Note over You,OC: Setup (once per client)
+    You->>OC: Create TPA + signatories sign with eID
+    You->>OC: Create organization + webhook
+    You->>OC: Create card holders
+
+    Note over Bank,You: Runtime (every purchase)
+    Bank->>OC: transaction data
+    OC->>You: webhook card.transaction.*
+```
+
+## What you get pushed to your webhook
+
+- `card.transaction.authorized` — purchase just happened
+- `card.transaction.cleared` — settled, use for accounting
+- `card.transaction.deleted` — auth reversed
+- `card.transaction.invoiced` — has invoice number
+- `receipt.fetched` — digital receipt URL
+- `transaction.true.vat` — correct VAT from merchant
+- `transaction.line.items` — purchase line items
+- `card_holder.*` — lifecycle events
+- `tpa.signed` — legal agreement done
+
+## Next step
+
+→ **[Quickstart](/getting-started/quickstart)** — full walkthrough from register to first webhook.

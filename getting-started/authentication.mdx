@@ -1,9 +1,13 @@
 ---
 title: Authentication
-description: OAuth2 client credentials. Scopes. Tokens. The works.
+description: OAuth2 account_client credentials for EMS integrations.
 ---
 
-OpenCard uses **OAuth2 client credentials** for machine-to-machine API access. No user login flow for API calls (signing pages are separate web flows).
+EMS integrations authenticate with an **`account_client`** OAuth client — machine-to-machine credentials tied to your partner account.
+
+<Note>
+  This docs site covers **account_client** only. Other client types (`organization_client`, `account_user`, etc.) exist internally but are not part of the EMS integration path.
+</Note>
 
 ---
 
@@ -23,6 +27,7 @@ curl -X POST https://sandbox-api.opencard.io/oauth/token \
 ```
 
 **Response:**
+
 ```json
 {
   "token_type": "Bearer",
@@ -31,89 +36,92 @@ curl -X POST https://sandbox-api.opencard.io/oauth/token \
 }
 ```
 
-Use it:
+Use on every API call:
+
 ```
 Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
 ```
 
 ---
 
-## Create OAuth client
+## Create an account_client
 
-Via dashboard or API:
+**Dashboard:** Account → OAuth Clients → Create New
+
+Or via API (requires an existing client with `oauth-clients-write`):
 
 ```
 POST /accounts/{accountId}/oauthclients
-Scope: oauth-clients-write
 ```
 
-Response includes `secret` in **plain text** — shown once. Store it.
+Response includes `secret` in **plain text** — shown once. Store it immediately.
 
 Update scopes later:
+
 ```
 PUT /accounts/{accountId}/oauthclients/{oauthclientId}
 { "scopes": ["organizations-read", "organizations-write", "webhooks-write"] }
 ```
 
+Clients created on an account **without** an `organization_id` are `account_client` — this is what you want.
+
 ---
 
-## Scopes you actually need
+## Recommended scopes for EMS
 
-### EMS integration starter pack
+Start with this set:
 
 ```
-account-tpas-write account-tpas-read account-tpa-signatories-write
+account-tpas-read account-tpas-write account-tpa-signatories-write account-tpa-identities-read
 organizations-read organizations-write
-card-holders-write card-holders-read
-webhooks-write webhooks-read
+card-holders-read card-holders-write
+webhooks-read webhooks-write webhook-events-read
 public-records-read
 account-card-issuers-read account-card-issuers-write
 oauth-clients-read
+billings-write
+receipts-write
 ```
 
-### Full list (Application API)
-
-| Scope | What it unlocks |
-|-------|----------------|
-| `me-read` / `me-write` | Your user profile |
-| `accounts-read` / `accounts-write` | Account settings |
-| `oauth-clients-read` / `oauth-clients-write` | OAuth client management |
-| `public-records-read` | Company registry lookup |
-| `account-tpas-read` / `account-tpas-write` / `account-tpas-delete` | TPA CRUD |
-| `account-tpa-signatories-read` / `-write` / `-delete` | TPA signatories |
-| `account-tpa-identities-read` | Identities on a TPA |
-| `organizations-read` / `-write` / `-delete` | Organizations |
-| `card-holders-read` / `-write` / `-delete` | Card holders |
-| `webhooks-read` / `webhooks-write` | Webhooks |
-| `webhook-events-read` | Delivery log |
-| `webhook-headers-read` / `-write` / `-delete` | Custom headers |
-| `webhook-groups-read` / `-write` / `-delete` | Buyer-party filters |
-| `billings-read` / `billings-write` | Billing profiles |
-| `account-card-issuers-read` / `-write` / `-delete` | Enable/disable issuers |
-| `receipts-write` | Receipt OCR scan |
-| `transactions-read` | Query transactions (admin/reconciliation) |
-| `files-read` | Download files |
-| `tpas-read` / `tpas-write` | Global TPA admin |
-
-## Access control
-
-Your token is tied to your **account**. The API checks:
-
-1. Token has required scope for the route
-2. Token owner has access to `accountId` / `organizationId` in the URL path
-
-You can only access your own account's resources. No cross-tenant access.
+Request only what you need. Scopes are space-separated in the token request.
 
 ---
 
-## Token types
+## All account_client scopes
 
-| Owner type | Use case |
-|------------|----------|
-| `account_client` | Machine-to-machine EMS integration (most common) |
-| `account_user` | Human user via dashboard |
-| `organization_client` | Scoped to one organization |
-| `card_issuer` | Issuer integration (restricted to `/api/v1/issuers/{slug}/...`) |
+| Scope | What it unlocks |
+|-------|----------------|
+| `accounts-read` / `accounts-write` | Your account settings |
+| `oauth-clients-read` / `oauth-clients-write` | Manage OAuth clients |
+| `public-records-read` | Company registry lookup |
+| `account-tpas-read` / `account-tpas-write` / `account-tpas-delete` | TPAs |
+| `account-tpa-signatories-read` / `-write` / `-delete` | TPA signatories |
+| `account-tpa-identities-read` | Identities on a TPA |
+| `account-card-issuers-read` / `-write` / `-delete` | Enable card programs |
+| `organizations-read` / `-write` / `-delete` | Organizations |
+| `card-holders-read` / `-write` / `-delete` | Card holders |
+| `webhooks-read` / `webhooks-write` | Webhooks |
+| `webhook-events-read` | Webhook delivery log |
+| `webhook-headers-read` / `-write` / `-delete` | Custom webhook headers |
+| `webhook-groups-read` / `-write` / `-delete` | Buyer-party webhook filters |
+| `billings-read` / `billings-write` | Billing profiles |
+| `receipts-write` | Receipt OCR scan |
+| `files-read` | Download files (e.g. receipt URLs) |
+| `card-issuers-read` | List available card programs |
+| `environmental-impacts-read` | CO₂ data on transactions |
+| `account-users-read` / `-write` / `-delete` | Account user management |
+| `account-statistics-read` | Account statistics |
+
+---
+
+## Access control
+
+Your `account_client` token is tied to your **account**. The API checks:
+
+1. Token has the required scope for the route
+2. Token owner has access to `accountId` / `organizationId` in the URL
+
+You can only access your own account's resources.
 
 ---
 
@@ -121,6 +129,6 @@ You can only access your own account's resources. No cross-tenant access.
 
 | Status | Meaning |
 |--------|---------|
-| `401` | Invalid/expired token |
+| `401` | Invalid or expired token |
 | `403` | Valid token but missing scope or no access to resource |
 | `404` | Resource doesn't exist (or you can't see it) |

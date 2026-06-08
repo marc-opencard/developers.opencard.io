@@ -12,7 +12,7 @@
     "light": "/logo/light.png",
     "dark": "/logo/dark.png"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon.png",
   "navbar": {
     "links": [
       {
@@ -56,6 +56,7 @@
             "group": "👋 Welcome",
             "pages": [
               "introduction/index",
+              "introduction/welcome",
               "introduction/how-it-works",
               "introduction/environments",
               "introduction/glossary"

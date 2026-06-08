@@ -19,11 +19,11 @@ Your `accountId` is in the dashboard URL or API responses.
 
 ---
 
-## Step 1: Create an OAuth client
+## Step 1: Create an account_client
 
 ```bash
-# After login, create via dashboard OR API once you have a session token.
-# Typically done in dashboard: Account → OAuth Clients → Create
+# Dashboard: Account → OAuth Clients → Create
+# This is an account_client — machine-to-machine credential for your EMS integration.
 
 # Then get a token:
 curl -X POST https://sandbox-api.opencard.io/oauth/token \

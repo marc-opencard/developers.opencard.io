@@ -1,4 +1,5 @@
 node_modules/
+.venv/
 .mintlify/
 .DS_Store
 *.log

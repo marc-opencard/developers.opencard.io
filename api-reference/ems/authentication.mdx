@@ -1,9 +1,9 @@
 ---
 title: EMS Authentication
-description: OAuth2 client credentials for the EMS API.
+description: OAuth2 account_client credentials for the EMS API.
 ---
 
-EMS integrations use **OAuth2 client credentials**.
+The EMS API uses **`account_client`** OAuth credentials — client credentials flow, no user login.
 
 ## Get a token
 
@@ -25,7 +25,7 @@ curl -X POST https://sandbox-api.opencard.io/oauth/token \
 }
 ```
 
-## Recommended scopes for EMS
+## account_client scopes for EMS
 
 ```
 organizations-read organizations-write
@@ -36,4 +36,6 @@ account-card-issuers-read account-card-issuers-write
 public-records-read oauth-clients-read billings-write receipts-write
 ```
 
-Create OAuth clients in your account dashboard or via `POST /accounts/{accountId}/oauthclients`.
+Create clients in the dashboard (Account → OAuth Clients) or via `POST /accounts/{accountId}/oauthclients`.
+
+Full scope reference → [Authentication](/getting-started/authentication)
