@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "willow",
+  "theme": "mint",
   "name": "OpenCard",
   "description": "Build on OpenCard. Real-time card data, digital receipts, zero bullshit.",
   "colors": {
@@ -8,28 +8,9 @@
     "light": "#E8D4D4",
     "dark": "#8B6B6B"
   },
-  "appearance": {
-    "default": "dark",
-    "strict": false
-  },
-  "fonts": {
-    "family": "Montserrat",
-    "weight": 500
-  },
-  "icons": {
-    "library": "lucide"
-  },
-  "background": {
-    "decoration": "gradient",
-    "color": {
-      "light": "#f4f4f4",
-      "dark": "#0a0a0a"
-    }
-  },
   "logo": {
     "light": "/logo/light.png",
-    "dark": "/logo/dark.png",
-    "href": "https://opencard.io"
+    "dark": "/logo/dark.png"
   },
   "favicon": "/favicon.png",
   "navbar": {

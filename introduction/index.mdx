@@ -4,27 +4,25 @@ description: Real-time card data, digital receipts, and webhooks for EMS, card i
 mode: custom
 ---
 
-<div className="max-w-5xl mx-auto px-6 pt-14 pb-6">
+<div className="max-w-5xl mx-auto px-6 pt-16 pb-8">
   <div className="text-center">
-    <p className="text-sm font-semibold uppercase tracking-widest text-[#C9A9A9] mb-3">
-      Developer docs
-    </p>
-    <h1 className="text-3xl font-semibold tracking-tight text-zinc-50 sm:text-4xl">
+    <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-zinc-50 sm:text-5xl">
       Build on OpenCard
     </h1>
-    <p className="mt-3 mx-auto max-w-xl text-base text-zinc-400">
-      Transactions, receipts, VAT, line items — pushed to your systems in real time. No polling. No bullshit.
+    <p className="mt-4 mx-auto max-w-2xl text-lg text-gray-600 dark:text-zinc-400">
+      Card transactions, receipts, VAT, and line items — pushed to your systems in real time.
+      Pick your integration path.
     </p>
-    <div className="mt-7 flex flex-wrap gap-3 justify-center">
+    <div className="mt-8 flex flex-wrap gap-3 justify-center">
       <a
         href="https://sandbox-api.opencard.io/register"
-        className="inline-flex items-center rounded-md bg-[#C9A9A9] px-5 py-2.5 text-sm font-semibold text-[#1a1a1a] hover:opacity-90 transition-opacity"
+        className="inline-flex items-center rounded-lg bg-[#C9A9A9] px-5 py-2.5 text-sm font-semibold text-[#2C2C2C] hover:opacity-90 transition-opacity"
       >
-        Get API access
+        Get sandbox access
       </a>
       <a
         href="/getting-started/quickstart"
-        className="inline-flex items-center rounded-md border border-zinc-700 px-5 py-2.5 text-sm font-semibold text-zinc-200 hover:border-[#C9A9A9] transition-colors"
+        className="inline-flex items-center rounded-lg border border-gray-200 dark:border-zinc-700 px-5 py-2.5 text-sm font-semibold text-gray-900 dark:text-zinc-50 hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors"
       >
         EMS quickstart →
       </a>
@@ -34,43 +32,43 @@ mode: custom
 
 <div className="max-w-5xl mx-auto px-6 pb-6">
   <CardGroup cols={2}>
-    <Card title="EMS Integration" icon="zap" href="/getting-started/quickstart">
-      Expense Management Systems — orgs, card holders, webhooks. `card.transaction.*` in real time.
+    <Card title="EMS Integration" icon="building" href="/getting-started/quickstart">
+      Expense Management Systems — orgs, card holders, webhooks. Receive `card.transaction.*` events in real time.
     </Card>
-    <Card title="EMS API" icon="code-2" href="/api-reference/ems/overview">
-      `api.opencard.io` — TPAs, organizations, card holders, webhooks.
+    <Card title="EMS API Reference" icon="code" href="/api-reference/ems/overview">
+      Full API on `api.opencard.io` — TPAs, organizations, card holders, webhooks.
     </Card>
     <Card title="Card Issuers" icon="credit-card" href="/card-issuers">
-      Digital receipts for cardholders via `receipts.opencard.io`.
+      Fetch digital receipts for cardholders via `receipts.opencard.io`.
     </Card>
-    <Card title="Receipt Providers" icon="package" href="/receipt-providers">
-      Collect merchant receipts, deliver to OpenCard for EMS enrichment.
+    <Card title="Receipt Providers" icon="store" href="/receipt-providers">
+      Collect merchant receipts and deliver them to OpenCard for EMS enrichment.
     </Card>
   </CardGroup>
 </div>
 
-<div className="max-w-5xl mx-auto px-6 pb-14">
-  <p className="text-xs font-bold text-[#C9A9A9] mb-3 uppercase tracking-widest">
-    Dig deeper
+<div className="max-w-5xl mx-auto px-6 pb-16">
+  <p className="text-sm font-medium text-gray-500 dark:text-zinc-500 mb-4 uppercase tracking-wide">
+    Explore further
   </p>
   <CardGroup cols={3}>
-    <Card title="How it works" icon="git-branch" href="/introduction/how-it-works">
-      Data model, event flow, division of labour.
+    <Card title="How it works" icon="sitemap" href="/introduction/how-it-works">
+      Data model, event flow, and what OpenCard handles.
     </Card>
-    <Card title="Authentication" icon="key-round" href="/getting-started/authentication">
-      OAuth2 account_client credentials.
+    <Card title="Authentication" icon="key" href="/getting-started/authentication">
+      OAuth2 account_client credentials and scopes.
     </Card>
     <Card title="Environments" icon="globe" href="/introduction/environments">
-      Sandbox vs production.
+      Sandbox vs production URLs.
     </Card>
-    <Card title="Webhooks" icon="radio" href="/ems/webhooks/setup">
-      Transactions, receipts, VAT, lifecycle.
+    <Card title="Webhooks" icon="webhook" href="/ems/webhooks/setup">
+      Transactions, receipts, VAT, lifecycle events.
     </Card>
     <Card title="Digital Receipts API" icon="receipt" href="/api-reference/receipts/overview">
-      `receipts.opencard.io` for card issuers.
+      `receipts.opencard.io` — publishers and callback requests.
     </Card>
     <Card title="Glossary" icon="book-open" href="/introduction/glossary">
-      TPA, PDPC, scopes — decoded.
+      TPA, PDPC, card holder — every term explained.
     </Card>
   </CardGroup>
 </div>
