@@ -34,7 +34,6 @@
     "openapi": [
       "openapi/oauth.json",
       "openapi/ems-api.json",
-      "openapi/issuer-api.json",
       "openapi/receipts-api.json",
       "openapi/receipt-provider-callback.json"
     ],
@@ -120,23 +119,11 @@
             "group": "📖 Guides",
             "pages": [
               "card-issuers/index",
-              "card-issuers/transaction-states",
-              "card-issuers/digital-receipts",
-              "card-issuers/nordea",
-              "card-issuers/zevoy",
-              "card-issuers/entercard"
+              "card-issuers/digital-receipts"
             ]
           },
           {
-            "group": "Issuer API",
-            "pages": ["api-reference/issuer/overview"],
-            "openapi": {
-              "source": "openapi/issuer-api.json",
-              "directory": "api-reference/issuer"
-            }
-          },
-          {
-            "group": "Digital Receipts API",
+            "group": "API",
             "pages": ["api-reference/receipts/overview"],
             "openapi": {
               "source": "openapi/receipts-api.json",

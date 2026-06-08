@@ -3,7 +3,7 @@
   "info": {
     "title": "OpenCard OAuth",
     "version": "1.0",
-    "description": "Get bearer tokens for EMS and Issuer APIs."
+    "description": "Get bearer tokens for the EMS API."
   },
   "servers": [
     {

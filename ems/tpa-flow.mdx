@@ -48,7 +48,7 @@ Scope: account-tpas-write
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| `card_issuer_id` | ✅ | Which card program (Nordea, Zevoy, etc.) |
+| `card_issuer_id` | ✅ | Which card program (from `GET /cardissuers`) |
 | `name` | ✅ | Overwritten by registry name if found |
 | `country` | ✅ | `SE`, `DK`, `NO`, or `FI` only |
 | `organization_number` | ✅ | Format depends on country (see below) |
@@ -203,7 +203,7 @@ When `setSigned()` runs:
 1. 📄 **Signed PDF generated** with all signatory eID approval blocks
 2. 💾 Stored at `legal_documents/{date}/{random}.pdf`
 3. 📧 **Email to each signatory** with signed PDF attached
-4. 📧 **Issuer notified** (e.g. Nordea gets the PDF)
+4. 📧 **Card issuer notified** (signed PDF delivered)
 5. 🔔 **`tpa.signed` webhook** fires on orgs that subscribed
 
 **Webhook payload:**

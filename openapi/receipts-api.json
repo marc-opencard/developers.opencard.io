@@ -3,7 +3,7 @@
   "info": {
     "title": "OpenCard Digital Receipts API",
     "version": "1.0",
-    "description": "Card issuers and payment providers submit transaction data for digital receipt matching. Hosted at receipts.opencard.io \u2014 separate from the EMS and issuer transaction APIs.",
+    "description": "Card issuers submit transaction data for digital receipt matching. Hosted at receipts.opencard.io.",
     "contact": {
       "email": "support@opencard.io"
     }

@@ -89,7 +89,7 @@ Plus any custom headers you configured, and auth headers if you set `authenticat
   "id": "10",
   "state": "authorized",
   "receiptable": true,
-  "card_issuer": "nordea",
+  "card_issuer": "corporate-card",
   "card_issuer_reference": "654321",
   "card_issuer_customer_number": null,
   "type": "card",
@@ -136,7 +136,7 @@ Plus any custom headers you configured, and auth headers if you set `authenticat
 | `id` | string | Unique transaction ID. **Use this as your primary key.** |
 | `state` | string | `authorized`, `cleared`, `deleted`, `invoiced` |
 | `receiptable` | boolean | Expect a digital receipt? |
-| `card_issuer` | string | e.g. `nordea`, `zevoy` |
+| `card_issuer` | string | Card program identifier |
 | `card_issuer_reference` | string | Issuer's reference for this state (not globally unique) |
 | `card_type` | string | `private`, `corporate`, `corporate_with_private_invoice` |
 | `original_amount` | float | Amount at merchant |
@@ -161,7 +161,7 @@ Plus any custom headers you configured, and auth headers if you set `authenticat
   "purchase_time": "14:30:00",
   "transaction": {
     "id": "10",
-    "card_issuer": "nordea"
+    "card_issuer": "corporate-card"
   },
   "card_holder": { "reference_id": "employee_john_42" },
   "organization": { "reference_id": "client_acme_001" }
@@ -176,7 +176,7 @@ Plus any custom headers you configured, and auth headers if you set `authenticat
 
 ```json
 {
-  "transaction": { "id": "10", "card_issuer": "nordea" },
+  "transaction": { "id": "10", "card_issuer": "corporate-card" },
   "organization": { "reference_id": "client_acme_001" },
   "card_holder": { "reference_id": "employee_john_42" },
   "purchase_country": "SE",
@@ -204,7 +204,7 @@ Plus any custom headers you configured, and auth headers if you set `authenticat
 
 ```json
 {
-  "transaction": { "id": "10", "card_issuer": "nordea" },
+  "transaction": { "id": "10", "card_issuer": "corporate-card" },
   "organization": { "reference_id": "client_acme_001" },
   "card_holder": { "reference_id": "employee_john_42" },
   "line_items": [
@@ -233,7 +233,7 @@ Plus any custom headers you configured, and auth headers if you set `authenticat
   "carbon_emission_in_grams": 0.66,
   "carbon_social_cost_amount": 2.1,
   "carbon_social_cost_currency": "SEK",
-  "transaction": { "id": "10", "card_issuer": "nordea" },
+  "transaction": { "id": "10", "card_issuer": "corporate-card" },
   "organization": { "reference_id": "client_acme_001" },
   "card_holder": { "reference_id": "employee_john_42" }
 }

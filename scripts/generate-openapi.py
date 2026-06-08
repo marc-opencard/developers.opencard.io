@@ -119,7 +119,7 @@ EX = {
         "id": 123,
         "name": "Anna Andersson",
         "employee_id": "001",
-        "cards": [{"id": 10, "last_four": "1234", "token": "zevoy-ext-abc", "type": "corporate"}],
+        "cards": [{"id": 10, "last_four": "1234", "token": "ext-card-abc", "type": "corporate"}],
         "card_holders": [],
     },
     "oauth_token": {
@@ -206,7 +206,7 @@ op(ems_paths, "post", bill, tag="Billings", summary="Create billing profile", op
 ci = "/accounts/{accountId}/cardissuers"
 op(ems_paths, "get", ci, tag="Card Issuers", summary="List enabled issuers", operation_id="listAccountCardIssuers",
    scope="account-card-issuers-read", params=[ACCOUNT_ID],
-   responses=json_resp("200", "Issuers", example=EX["paginated"]([{"id": 1, "name_display": "Nordea FirstCard"}])))
+   responses=json_resp("200", "Issuers", example=EX["paginated"]([{"id": 1, "name_display": "Corporate Card Program"}])))
 op(ems_paths, "post", f"{ci}/{{cardIssuerId}}", tag="Card Issuers", summary="Enable issuer", operation_id="attachCardIssuer",
    scope="account-card-issuers-write", params=[ACCOUNT_ID, path_param("cardIssuerId", "Issuer ID")],
    responses=json_resp("201", "Attached"))
@@ -332,7 +332,7 @@ ems_spec = {
 
 oauth_spec = {
     "openapi": "3.0.3",
-    "info": {"title": "OpenCard OAuth", "version": "1.0", "description": "Get bearer tokens for EMS and Issuer APIs."},
+    "info": {"title": "OpenCard OAuth", "version": "1.0", "description": "Get bearer tokens for the EMS API."},
     "servers": [
         {"url": "https://api.opencard.io", "description": "Production"},
         {"url": "https://sandbox-api.opencard.io", "description": "Sandbox"},
@@ -356,61 +356,6 @@ oauth_spec = {
     },
 }
 
-# ─── Issuer API (api.opencard.io/api/v1/issuers) ─────────────────────────────
-
-ISSUER_SCOPES = {
-    "issuer-zevoy-cards-read": "Read Zevoy cards", "issuer-zevoy-cards-write": "Write Zevoy cards",
-    "issuer-zevoy-cards-delete": "Delete Zevoy cards", "issuer-zevoy-transaction-states-write": "Write transaction states",
-    "issuer-nordea-transaction-states-write": "Write Nordea transaction states",
-}
-TX_EX = {"id": "TX-001", "state": "authorized", "type": "CARD_PURCHASE", "original_amount": 109.38, "original_currency": "SEK",
-         "accounting_amount": 109.38, "accounting_currency": "SEK", "exchange_rate": 1.0, "purchase_merchant": "Espresso House",
-         "purchase_time": "2026-06-08T11:12:14+02:00", "purchase_country": "SE", "mcc_code": "5814",
-         "merchant_number": "1234567890", "terminal_id": "T001", "rrn": "190102519907", "auth_code": "ABC123"}
-
-issuer_paths = {
-    "/v1/issuers/zevoy/cards/{cardId}/transaction_states": {
-        "post": {"tags": ["Transaction States"], "summary": "Post transaction state", "operationId": "zevoyCreateTransactionState",
-            "parameters": [path_param("cardId", "Zevoy card ID", "string")],
-            "security": [{"opencard_auth": ["issuer-zevoy-transaction-states-write"]}],
-            "requestBody": json_body(ref("IssuerTransactionState"), example=TX_EX),
-            "responses": json_resp("202", "Accepted for processing", example={"ok": True})},
-    },
-    "/v1/issuers/nordea/cards/{cardId}/transaction_states": {
-        "post": {"tags": ["Transaction States"], "summary": "Post transaction state", "operationId": "nordeaCreateTransactionState",
-            "parameters": [path_param("cardId", "OpenCard card ID")],
-            "security": [{"opencard_auth": ["issuer-nordea-transaction-states-write"]}],
-            "requestBody": json_body(ref("IssuerTransactionState"), example=TX_EX),
-            "responses": json_resp("202", "Accepted", example={"ok": True})},
-    },
-    "/v1/issuer/nordea/partner-event": {
-        "post": {"tags": ["Nordea"], "summary": "Partner event batch (mTLS)", "operationId": "nordeaPartnerEvent",
-            "description": "Mutual TLS. Headers: X-SSL-Client-CN, X-SSL-Client-Fingerprint",
-            "responses": json_resp("201", "Accepted")},
-    },
-}
-
-issuer_spec = {
-    "openapi": "3.0.3",
-    "info": {"title": "OpenCard Issuer API", "version": "1.0",
-        "description": "Card issuers deliver transaction states to OpenCard. Base: api.opencard.io",
-        "contact": {"email": "support@opencard.io"}},
-    "servers": [
-        {"url": "https://api.opencard.io/api", "description": "Production"},
-        {"url": "https://sandbox-api.opencard.io/api", "description": "Sandbox"},
-    ],
-    "tags": [{"name": "Transaction States"}, {"name": "Nordea"}],
-    "paths": issuer_paths,
-    "components": {
-        "securitySchemes": {"opencard_auth": {"type": "oauth2", "flows": {"clientCredentials": {"tokenUrl": "https://api.opencard.io/oauth/token", "scopes": ISSUER_SCOPES}}}},
-        "schemas": {"IssuerTransactionState": {"type": "object", "required": ["id", "state", "type", "original_amount", "original_currency"],
-            "properties": {"id": {"type": "string"}, "state": {"type": "string", "enum": ["authorized", "cleared", "invoiced", "deleted"]},
-                "type": {"type": "string"}, "original_amount": {"type": "number"}, "original_currency": {"type": "string"},
-                "purchase_merchant": {"type": "string"}, "purchase_time": {"type": "string", "format": "date-time"},
-                "purchase_country": {"type": "string"}, "mcc_code": {"type": "string"}}}},
-    },
-}
-
 # ─── Digital Receipts API (receipts.opencard.io) — for card issuers ────────────
 
 CALLBACK_TX = {
@@ -430,7 +375,7 @@ receipts_spec = {
     "info": {
         "title": "OpenCard Digital Receipts API",
         "version": "1.0",
-        "description": "Card issuers and payment providers submit transaction data for digital receipt matching. Hosted at receipts.opencard.io — separate from the EMS and issuer transaction APIs.",
+        "description": "Card issuers submit transaction data for digital receipt matching. Hosted at receipts.opencard.io.",
         "contact": {"email": "support@opencard.io"},
     },
     "servers": [{"url": "https://receipts.opencard.io", "description": "Digital Receipts Service"}],
@@ -510,7 +455,6 @@ OUT.mkdir(parents=True, exist_ok=True)
 files = {
     "ems-api.json": ems_spec,
     "oauth.json": oauth_spec,
-    "issuer-api.json": issuer_spec,
     "receipts-api.json": receipts_spec,
     "receipt-provider-callback.json": provider_callback_spec,
 }

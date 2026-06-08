@@ -614,7 +614,7 @@
                         {
                           "id": 10,
                           "last_four": "1234",
-                          "token": "zevoy-ext-abc",
+                          "token": "ext-card-abc",
                           "type": "corporate"
                         }
                       ],
@@ -710,7 +710,7 @@
                   "data": [
                     {
                       "id": 1,
-                      "name_display": "Nordea FirstCard"
+                      "name_display": "Corporate Card Program"
                     }
                   ],
                   "per_page": 15,

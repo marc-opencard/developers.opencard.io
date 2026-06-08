@@ -22,9 +22,8 @@ card-issuers/          # Issuer integration guides
 receipt-providers/     # Receipt provider guides
 api-reference/
   ems/                 # EMS API (api.opencard.io/application)
-  issuer/              # Issuer transaction states API
-  receipts/            # Digital Receipts API (receipts.opencard.io)
-openapi/               # Generated OpenAPI specs (ems, oauth, issuer, receipts, callback)
+  receipts/            # Digital Receipts API (receipts.opencard.io) — card issuers
+openapi/               # Generated OpenAPI specs (ems, oauth, receipts, callback)
 scripts/
   generate-openapi.py  # Generate specs from code inventory
   sync-openapi.sh      # Wrapper script
