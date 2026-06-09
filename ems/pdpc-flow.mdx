@@ -107,9 +107,20 @@ Web flow (not API). Cardholder:
 
 ```
 PUT .../cardholders/{cardHolderId}
+Scope: card-holders-write
 ```
 
-If PDPC is unsigned or no identity linked, and `skip_pdpc_email=false` → resends PDPC email.
+`reference_id` is **required**. `email` is **optional** — omit to leave unchanged (including identity-linked holders with no email).
+
+Resends PDPC email only when PDPC is unsigned or no identity is linked, `skip_pdpc_email=false`, **and** the card holder has an email address.
+
+**Reference ID only:**
+
+```json
+{ "reference_id": "employee_john_99" }
+```
+
+**Reference ID + new email (may trigger resend):**
 
 ```json
 {

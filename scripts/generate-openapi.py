@@ -254,6 +254,17 @@ op(ems_paths, "post", ch, tag="Card Holders", summary="Create card holder", oper
    description="Path A: `email` → PDPC email + eID. Path B: `identity_id` → instant, transactions flow immediately.",
    body=json_body(ref("CardHolderCreate"), example={"reference_id": "employee_john_42", "email": "john@acme.se", "language": "sv"}),
    responses=json_resp("201", "Card holder created", example=EX["card_holder"]))
+ch_one = f"{ch}/{{cardHolderId}}"
+op(ems_paths, "put", ch_one, tag="Card Holders", summary="Update card holder", operation_id="updateCardHolder",
+   scope="card-holders-write", params=[ACCOUNT_ID, ORG_ID, path_param("cardHolderId", "Card holder ID")],
+   description="`reference_id` is required. `email` is optional — omit to keep the current value (including null for identity-linked holders). Resends PDPC email only when unsigned/no identity, `skip_pdpc_email` is false, and an email address exists. Duplicate `reference_id` within the organization returns 400.",
+   body=json_body(ref("CardHolderUpdate"), example={"reference_id": "employee_john_99"}),
+   responses={**json_resp("200", "Updated card holder", example=EX["card_holder"]),
+              **json_resp("400", "Bad request", example={"error": "Card holder reference employee_john_42 already exists"})})
+op(ems_paths, "delete", ch_one, tag="Card Holders", summary="Delete card holder", operation_id="deleteCardHolder",
+   scope="card-holders-delete", params=[ACCOUNT_ID, ORG_ID, path_param("cardHolderId", "Card holder ID")],
+   description="Fires `card_holder.deleted` webhook.",
+   responses=json_resp("200", "Deleted"))
 
 # Webhooks
 wh = f"{org}/{{organizationId}}/webhooks"
@@ -293,7 +304,8 @@ EMS_SCOPES = {
     "organizations-read": "Read organizations",
     "organizations-write": "Create organizations",
     "card-holders-read": "Read card holders",
-    "card-holders-write": "Create card holders",
+    "card-holders-write": "Create and update card holders",
+    "card-holders-delete": "Delete card holders",
     "webhooks-read": "Read webhooks",
     "webhooks-write": "Create webhooks",
     "webhook-events-read": "Read webhook delivery log",
@@ -334,6 +346,14 @@ ems_spec = {
             "CardHolderCreate": {"type": "object", "required": ["reference_id"],
                 "properties": {"reference_id": {"type": "string"}, "email": {"type": "string"}, "identity_id": {"type": "integer"},
                     "skip_pdpc_email": {"type": "boolean"}, "language": {"type": "string"}}},
+            "CardHolderUpdate": {"type": "object", "required": ["reference_id"],
+                "description": "Update card holder. Only `reference_id` is required; other fields are optional.",
+                "properties": {
+                    "reference_id": {"type": "string"},
+                    "email": {"type": "string", "nullable": True, "format": "email", "description": "Omit to leave unchanged"},
+                    "skip_pdpc_email": {"type": "boolean"},
+                    "language": {"type": "string", "enum": ["sv", "no", "da", "en", "fi"]},
+                }},
             "CardHolderIdentity": {"type": "object", "nullable": True,
                 "description": "Linked identity summary on list responses. Only `name` and `employee_id` — nothing else.",
                 "properties": {

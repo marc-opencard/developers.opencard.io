@@ -1059,6 +1059,134 @@
         ]
       }
     },
+    "/accounts/{accountId}/organizations/{organizationId}/cardholders/{cardHolderId}": {
+      "put": {
+        "tags": [
+          "Card Holders"
+        ],
+        "summary": "Update card holder",
+        "operationId": "updateCardHolder",
+        "description": "`reference_id` is required. `email` is optional \u2014 omit to keep the current value (including null for identity-linked holders). Resends PDPC email only when unsigned/no identity, `skip_pdpc_email` is false, and an email address exists. Duplicate `reference_id` within the organization returns 400.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "cardHolderId",
+            "in": "path",
+            "required": true,
+            "description": "Card holder ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CardHolderUpdate"
+              },
+              "example": {
+                "reference_id": "employee_john_99"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated card holder",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 15,
+                  "reference_id": "employee_john_42",
+                  "organization_id": 3,
+                  "identity_id": 123,
+                  "email": "john@acme.se",
+                  "created_at": "2026-06-08T10:00:00.000000Z",
+                  "updated_at": "2026-06-08T10:30:00.000000Z",
+                  "meta": {
+                    "ssn": true,
+                    "signed": true,
+                    "signed_at": "2026-06-08T10:30:00.000000Z",
+                    "email_status": "delivered",
+                    "pdpc_url": "https://sandbox-api.opencard.io/accounts/1/pdpcs/8/sign/abc...",
+                    "system": "Acme EMS",
+                    "organization_number": "5561234567"
+                  },
+                  "identity": {
+                    "name": "Anna Andersson",
+                    "employee_id": "001"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "Card holder reference employee_john_42 already exists"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "card-holders-write"
+            ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Card Holders"
+        ],
+        "summary": "Delete card holder",
+        "operationId": "deleteCardHolder",
+        "description": "Fires `card_holder.deleted` webhook.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "cardHolderId",
+            "in": "path",
+            "required": true,
+            "description": "Card holder ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {}
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "card-holders-delete"
+            ]
+          }
+        ]
+      }
+    },
     "/accounts/{accountId}/organizations/{organizationId}/webhooks": {
       "get": {
         "tags": [
@@ -1319,7 +1447,8 @@
               "organizations-read": "Read organizations",
               "organizations-write": "Create organizations",
               "card-holders-read": "Read card holders",
-              "card-holders-write": "Create card holders",
+              "card-holders-write": "Create and update card holders",
+              "card-holders-delete": "Delete card holders",
               "webhooks-read": "Read webhooks",
               "webhooks-write": "Create webhooks",
               "webhook-events-read": "Read webhook delivery log",
@@ -1441,6 +1570,37 @@
           },
           "language": {
             "type": "string"
+          }
+        }
+      },
+      "CardHolderUpdate": {
+        "type": "object",
+        "required": [
+          "reference_id"
+        ],
+        "description": "Update card holder. Only `reference_id` is required; other fields are optional.",
+        "properties": {
+          "reference_id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "format": "email",
+            "description": "Omit to leave unchanged"
+          },
+          "skip_pdpc_email": {
+            "type": "boolean"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "sv",
+              "no",
+              "da",
+              "en",
+              "fi"
+            ]
           }
         }
       },

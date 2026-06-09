@@ -189,6 +189,7 @@ You:  GET identities ──► POST cardholder with identity_id ──► txs fl
 - `identity_id` must exist
 - Identity must belong to a **client linked to this TPA** — you can't use identities from a different client's TPA
 - Either `email` or `identity_id` required (not both required, but one must be present)
+- `reference_id` must be unique within the organization (create and update)
 
 ---
 
@@ -221,10 +222,44 @@ You:  GET identities ──► POST cardholder with identity_id ──► txs fl
 ## Update / delete
 
 ```
-GET    .../cardholders              ← list (includes identity name + employee_id)
-PUT    .../cardholders/{cardHolderId}   ← resends PDPC email if unsigned
-DELETE .../cardholders/{cardHolderId}  ← fires card_holder.deleted
+GET    .../cardholders                    ← list (includes identity name + employee_id)
+PUT    .../cardholders/{cardHolderId}     ← update reference_id and/or email
+DELETE .../cardholders/{cardHolderId}    ← fires card_holder.deleted
+Scope: card-holders-write (PUT), card-holders-delete (DELETE)
 ```
+
+### Update
+
+`reference_id` is **required**. `email` is **optional** — omit it to keep the current value (including `null` for identity-linked holders without email).
+
+**Change reference ID only** (no PDPC email if already identified / no email on record):
+
+```json
+PUT .../cardholders/15
+{ "reference_id": "employee_john_99" }
+```
+
+**Change reference ID and email** (may resend PDPC email — see below):
+
+```json
+{
+  "reference_id": "employee_john_42",
+  "email": "john.newemail@acme.se",
+  "skip_pdpc_email": false,
+  "language": "sv"
+}
+```
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `reference_id` | ✅ | Your internal user ID |
+| `email` | ❌ | Only sent when you want to change it |
+| `skip_pdpc_email` | ❌ | Default unchanged if omitted |
+| `language` | ❌ | PDPC mail language if a resend is triggered |
+
+PDPC email is resent only when **all** of: PDPC unsigned or no `identity_id`, `skip_pdpc_email` is false, and the card holder has an email address.
+
+`reference_id` must be unique within the organization. Duplicate → `400 Bad Request` with message `Card holder reference … already exists` (same as create).
 
 ---
 
