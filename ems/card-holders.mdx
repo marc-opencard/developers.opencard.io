@@ -221,9 +221,59 @@ You:  GET identities ──► POST cardholder with identity_id ──► txs fl
 ## Update / delete
 
 ```
+GET    .../cardholders              ← list (includes identity name + employee_id)
 PUT    .../cardholders/{cardHolderId}   ← resends PDPC email if unsigned
 DELETE .../cardholders/{cardHolderId}  ← fires card_holder.deleted
 ```
+
+---
+
+## List card holders
+
+```
+GET /accounts/{accountId}/organizations/{organizationId}/cardholders
+Scope: card-holders-read
+```
+
+Supports the same filters as before (`q`, `reference_id`, `where_ssn_set`, `where_signed_pdpc`, `where_email_delivered`).
+
+**Response (per item):**
+
+```json
+{
+  "id": 15,
+  "reference_id": "employee_john_42",
+  "organization_id": 3,
+  "identity_id": 123,
+  "email": "john@acme.se",
+  "created_at": "2026-06-08T10:00:00.000000Z",
+  "updated_at": "2026-06-08T10:30:00.000000Z",
+  "meta": {
+    "ssn": true,
+    "signed": true,
+    "signed_at": "2026-06-08T10:30:00.000000Z",
+    "email_status": "delivered",
+    "pdpc_url": "https://api.opencard.io/accounts/1/pdpcs/8/sign/abc...",
+    "system": "Acme EMS",
+    "organization_number": "5561234567"
+  },
+  "identity": {
+    "name": "Anna Andersson",
+    "employee_id": "001"
+  }
+}
+```
+
+| Field | What it tells you |
+|-------|-------------------|
+| `identity_id` | OpenCard identity ID when linked (null before eID sign on Path 🅰️) |
+| `identity.name` | Person name from eID — use for display in your UI |
+| `identity.employee_id` | Employee ID on the TPA client (if set on `client_identity`) |
+| `identity` | `null` when not yet linked to an identity |
+
+<Tip>
+  You no longer need a separate `GET .../tpas/{tpaId}/identities` call just to show names in a card holder list — read `identity` from this endpoint. Keep the identities endpoint for Path 🅱️ onboarding (finding `identity_id` to create with).
+</Tip>
 
 ---
 
@@ -236,11 +286,17 @@ Check consent status without polling webhooks:
   "id": 7,
   "reference_id": "employee_john_42",
   "meta": {
+    "ssn": true,
     "signed": true,
     "signed_at": "2026-06-08T10:30:00Z",
+    "email_status": "delivered",
     "pdpc_url": "https://api.opencard.io/accounts/1/pdpcs/3/sign/abc...",
-    "email_delivered": true,
-    "email_failed": false
+    "system": "Acme EMS",
+    "organization_number": "5561234567"
+  },
+  "identity": {
+    "name": "John Doe",
+    "employee_id": "042"
   }
 }
 ```

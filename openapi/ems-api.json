@@ -910,6 +910,7 @@
         ],
         "summary": "List card holders",
         "operationId": "listCardHolders",
+        "description": "Paginated list. Each item includes `identity` (`name`, `employee_id`) when linked \u2014 no separate identities call needed for display.",
         "parameters": [
           {
             "$ref": "#/components/parameters/accountId"
@@ -923,6 +924,29 @@
             "description": "Card holders",
             "content": {
               "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "current_page": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CardHolder"
+                      }
+                    },
+                    "per_page": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "last_page": {
+                      "type": "integer"
+                    }
+                  }
+                },
                 "example": {
                   "current_page": 1,
                   "data": [
@@ -930,10 +954,22 @@
                       "id": 15,
                       "reference_id": "employee_john_42",
                       "organization_id": 3,
+                      "identity_id": 123,
+                      "email": "john@acme.se",
+                      "created_at": "2026-06-08T10:00:00.000000Z",
+                      "updated_at": "2026-06-08T10:30:00.000000Z",
                       "meta": {
-                        "signed": false,
+                        "ssn": true,
+                        "signed": true,
+                        "signed_at": "2026-06-08T10:30:00.000000Z",
+                        "email_status": "delivered",
                         "pdpc_url": "https://sandbox-api.opencard.io/accounts/1/pdpcs/8/sign/abc...",
-                        "email_delivered": true
+                        "system": "Acme EMS",
+                        "organization_number": "5561234567"
+                      },
+                      "identity": {
+                        "name": "Anna Andersson",
+                        "employee_id": "001"
                       }
                     }
                   ],
@@ -992,10 +1028,22 @@
                   "id": 15,
                   "reference_id": "employee_john_42",
                   "organization_id": 3,
+                  "identity_id": 123,
+                  "email": "john@acme.se",
+                  "created_at": "2026-06-08T10:00:00.000000Z",
+                  "updated_at": "2026-06-08T10:30:00.000000Z",
                   "meta": {
-                    "signed": false,
+                    "ssn": true,
+                    "signed": true,
+                    "signed_at": "2026-06-08T10:30:00.000000Z",
+                    "email_status": "delivered",
                     "pdpc_url": "https://sandbox-api.opencard.io/accounts/1/pdpcs/8/sign/abc...",
-                    "email_delivered": true
+                    "system": "Acme EMS",
+                    "organization_number": "5561234567"
+                  },
+                  "identity": {
+                    "name": "Anna Andersson",
+                    "employee_id": "001"
                   }
                 }
               }
@@ -1393,6 +1441,93 @@
           },
           "language": {
             "type": "string"
+          }
+        }
+      },
+      "CardHolderIdentity": {
+        "type": "object",
+        "nullable": true,
+        "description": "Linked identity summary on list responses. Only `name` and `employee_id` \u2014 nothing else.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "Person name from eID"
+          },
+          "employee_id": {
+            "type": "string",
+            "nullable": true,
+            "description": "Employee ID on the TPA client"
+          }
+        }
+      },
+      "CardHolder": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "reference_id": {
+            "type": "string"
+          },
+          "organization_id": {
+            "type": "integer"
+          },
+          "identity_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "nullable": true,
+            "format": "email"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "ssn": {
+                "type": "boolean"
+              },
+              "signed": {
+                "type": "boolean"
+              },
+              "signed_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "email_status": {
+                "type": "string",
+                "nullable": true,
+                "enum": [
+                  "delivered",
+                  "failed"
+                ]
+              },
+              "pdpc_url": {
+                "type": "string",
+                "nullable": true
+              },
+              "system": {
+                "type": "string",
+                "nullable": true
+              },
+              "organization_number": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          },
+          "identity": {
+            "$ref": "#/components/schemas/CardHolderIdentity"
           }
         }
       },
