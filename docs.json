@@ -80,6 +80,7 @@
             "group": "Platform",
             "pages": [
               "ems/data-model",
+              "ems/billing",
               "ems/organizations",
               "ems/error-handling"
             ]

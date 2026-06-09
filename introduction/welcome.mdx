@@ -24,8 +24,9 @@ sequenceDiagram
     participant You as Your EMS
 
     Note over You,OC: Setup (once per client)
+    You->>OC: Create billing profile (invoice grouping)
     You->>OC: Create TPA + signatories sign with eID
-    You->>OC: Create organization + webhook
+    You->>OC: Create organization + webhook (linked to billing)
     You->>OC: Create card holders
 
     Note over Bank,You: Runtime (every purchase)

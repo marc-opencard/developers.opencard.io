@@ -220,10 +220,15 @@ html.dark card {
 /* Sidebar */
 sidebar-group-header {
   font-size: 0.6875rem !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
   letter-spacing: 0.06em !important;
   text-transform: uppercase !important;
-  color: #737373 !important;
+  color: #404040 !important;
+}
+
+.dark sidebar-group-header,
+html.dark sidebar-group-header {
+  color: #d4d4d4 !important;
 }
 
 #sidebar-content li[data-active] a {

@@ -7,16 +7,20 @@ description: The OpenCard data model and event flow, explained without corporate
 
 ```
 Account          ← you (the EMS partner)
+├── Billing      ← how OpenCard invoices YOU (group orgs on one invoice)
 └── Organization ← your end-client company
-    ├── Webhook  ← where events get POSTed
+    ├── billing_id → links to a Billing profile
+    ├── Webhook    ← where events get POSTed
     ├── CardHolder ← employee whose card data you want
     │   └── Card ← actual credit card (managed by issuer)
     │       └── Transaction
     │           └── TransactionState (authorized → cleared → invoiced)
-    └── TPA      ← legal agreement (signed by client's authorized signatories)
+    └── TPA        ← legal agreement (signed by client's authorized signatories)
 ```
 
 **Account** = your OpenCard partner account. One per EMS.
+
+**Billing** = invoice grouping for **your** OpenCard bill. One billing profile can cover one or many organizations. Example: three orgs share `billing_id: 1` → one combined invoice from OpenCard to your finance team. → [Billing](/ems/billing)
 
 **Organization** = one of your customers. You set `reference_id` to your internal client ID. Most EMSs map 1:1 (one org per client), but you can split one client into multiple orgs if you need different webhook configs or card type filters.
 
@@ -41,12 +45,12 @@ OpenCard handles all of this. For new users you provide an email — we send the
 flowchart TD
     A[1. Register account] --> B[2. Create OAuth client]
     B --> C[3. Enable card issuer on account]
-    C --> D[4. Create TPA for client]
-    D --> E[5. Add TPA signatories]
-    E --> F[6. Signatories get email]
+    C --> D[4. Create billing profile]
+    D --> E[5. Create TPA for client]
+    E --> F[6. Add TPA signatories]
     F --> G[7. They sign with eID]
     G --> K[TPA fully signed → tpa.signed webhook]
-    K --> L[8. Create organization linked to TPA]
+    K --> L[8. Create organization + billing_id]
     L --> M[9. Configure webhook]
     M --> N[10. Create card holders]
     N --> O[11. Cardholders get PDPC email]
