@@ -11,9 +11,9 @@ No polling. No scraping PDFs.
 
 | You are... | Go here | What you do |
 |------------|---------|-------------|
-| 🏢 **EMS / expense app** | [Quickstart](/getting-started/quickstart) | Create orgs, card holders, webhooks. Receive transaction events. |
+| 🏢 **Expense Management System** | [Quickstart](/getting-started/quickstart) | Create orgs, card holders, webhooks. Receive transaction events. |
 | 💳 **Card issuer / bank** | [Card Issuers](/card-issuers) | Fetch digital receipts via `receipts.opencard.io`. |
-| 🧾 **Receipt provider** | [Receipt Providers](/receipt-providers) | Collect receipts, deliver to OpenCard for EMS enrichment. |
+| 🧾 **Receipt provider** | [Receipt Providers](/receipt-providers) | Collect receipts, deliver to OpenCard for Expense Management System enrichment. |
 
 ## The 30-second version
 
@@ -21,7 +21,7 @@ No polling. No scraping PDFs.
 sequenceDiagram
     participant Bank as Card Program
     participant OC as OpenCard
-    participant You as Your EMS
+    participant You as Your Expense Management System
 
     Note over You,OC: Setup (once per client)
     You->>OC: Create billing profile (invoice grouping)

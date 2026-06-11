@@ -5,7 +5,8 @@ description: Every term you'll see in the API and docs.
 
 | Term | What it means |
 |------|---------------|
-| **Account** | Your EMS partner account. Top of the hierarchy. |
+| **EMS** | Expense Management System — software for corporate card spend, expenses, and receipts. |
+| **Account** | Your Expense Management System partner account. Top of the hierarchy. |
 | **Organization** | Your end-client. You set `reference_id`. Has webhooks + card holders. |
 | **Billing** | Invoice grouping profile. Tells OpenCard how to roll up one or more organizations on the invoice you receive from us. |
 | **Card Holder** | Individual whose transactions you receive. You set `reference_id`. |
@@ -15,7 +16,7 @@ description: Every term you'll see in the API and docs.
 | **Transaction** | One purchase. ID stays same across all states. |
 | **Transaction State** | Snapshot: `authorized`, `cleared`, `deleted`, `invoiced`. |
 | **Card Issuer** | Bank or card program. Uses `receipts.opencard.io` for digital receipt matching. |
-| **Receipt Provider** | Collects receipts from merchants and delivers them to OpenCard. OpenCard forwards enriched data to EMS. |
+| **Receipt Provider** | Collects receipts from merchants and delivers them to OpenCard. OpenCard forwards enriched data to Expense Management Systems. |
 | **Webhook** | HTTP POST from OpenCard when stuff happens. |
 | **Reference ID** | Your string ID on orgs/cardholders. In every webhook. |
 | **Challenge** | Webhook verification handshake on setup. |
