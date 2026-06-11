@@ -1,0 +1,28 @@
+---
+title: Receipt Provider Callback API
+description: Inbound callback endpoint for delivering matched receipts to OpenCard.
+---
+
+Receipt providers POST enriched receipt data to OpenCard when a match is found.
+
+<Info>
+  This is the **inbound** callback API. For the full delivery flow (headers, HMAC, payloads) see [Callback delivery](/receipt-providers/callback-delivery).
+</Info>
+
+## Base URL
+
+```
+https://api.opencard.io/api
+```
+
+Sandbox: `https://sandbox-api.opencard.io/api`
+
+## Auth
+
+`X-Data-Signature` header — HMAC-SHA256 of the raw request body with your client secret.
+
+## Key endpoint
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `POST` | `/v1/service/marcet/callback/{referenceId}` | Deliver matched receipt data |

@@ -24,6 +24,13 @@
     "dark": "/logo/dark.png"
   },
   "favicon": "/favicon.png",
+  "seo": {
+    "indexing": "all"
+  },
+  "contextual": {
+    "display": "header",
+    "options": ["copy", "view", "mcp", "add-mcp", "cursor", "vscode"]
+  },
   "navbar": {
     "primary": {
       "type": "button",
@@ -170,6 +177,14 @@
               "receipt-providers/callback-delivery",
               "receipt-providers/payload-formats"
             ]
+          },
+          {
+            "group": "Callback API",
+            "pages": ["api-reference/receipt-providers/overview"],
+            "openapi": {
+              "source": "openapi/receipt-provider-callback.json",
+              "directory": "api-reference/receipt-providers"
+            }
           }
         ]
       }
