@@ -9,8 +9,17 @@
     "dark": "#8B6B6B"
   },
   "fonts": {
-    "family": "Montserrat",
-    "weight": 500
+    "heading": {
+      "family": "Montserrat",
+      "weight": 600
+    },
+    "body": {
+      "family": "Inter",
+      "weight": 400
+    }
+  },
+  "appearance": {
+    "default": "system"
   },
   "background": {
     "decoration": "gradient",
@@ -18,6 +27,9 @@
       "light": "#FAFAF9",
       "dark": "#121212"
     }
+  },
+  "search": {
+    "prompt": "Search OpenCard docs..."
   },
   "logo": {
     "light": "/logo/light.png",
