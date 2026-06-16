@@ -103,7 +103,8 @@
             "pages": [
               "ems/tpa-flow",
               "ems/eid-signing",
-              "ems/card-holders"
+              "ems/card-holders",
+              "ems/parallel-transaction-feeds"
             ]
           },
           {
