@@ -1,6 +1,6 @@
 ---
 title: Transaction
-description: One card purchase in OpenCard — same id across all states, delivered via webhook not API polling.
+description: Transaction entity in the OpenCard EMS data model — one card purchase with a stable id across all states, delivered via webhook rather than API polling.
 ---
 
 One purchase. Same OpenCard `id` across all states (`authorized` → `cleared` → `invoiced`, etc.). Delivered via **webhook**, not by polling the API.
