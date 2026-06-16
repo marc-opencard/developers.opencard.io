@@ -19,7 +19,7 @@ There are **two ways** to create them. This is one of the most important decisio
 | **Transactions start** | After user completes eID | **Immediately** on create |
 | **Retroactive txs** | Yes, after eID sign | Yes, dispatched on create |
 | **Typical UX** | "Check your email to activate" | Bulk import from employee list |
-| **Client already has issuer feed?** | → [Parallel transaction feeds](/ems/parallel-transaction-feeds) | Same |
+| **Client already has issuer feed?** | → [Current card issuer integration](/ems/current-card-issuer-integration) | Same |
 
 ```mermaid
 sequenceDiagram
@@ -227,7 +227,7 @@ You:  GET identities ──► POST cardholder with identity_id ──► txs fl
 ---
 
 <Note>
-  Client already receives transactions from the issuer another way? See [Parallel transaction feeds](/ems/parallel-transaction-feeds).
+  Client already receives transactions from the issuer another way? See [Current card issuer integration](/ems/current-card-issuer-integration).
 </Note>
 
 ## Webhooks to handle
