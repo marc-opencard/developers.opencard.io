@@ -27,14 +27,14 @@ The individual employee signs a separate document — [PDPC](/ems/eid-signing) �
 | Status | Meaning |
 |--------|---------|
 | `pending-signatures` | Signatories added, not all signed |
-| `pending-activation` | Fully signed, waiting for issuer to confirm cards |
+| `pending-activation` | Waiting for TPA to be confirmed |
 | `activated` | Live — transactions can flow |
 
 ```mermaid
 stateDiagram-v2
     [*] --> pending-signatures: create TPA
     pending-signatures --> pending-activation: all signed
-    pending-activation --> activated: issuer confirms cards
+    pending-activation --> activated: TPA confirmed
 ```
 
 ---

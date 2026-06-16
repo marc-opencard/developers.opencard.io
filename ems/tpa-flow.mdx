@@ -14,14 +14,14 @@ It's the legal agreement that says "this company's card transaction data is allo
 | Status | Meaning |
 |--------|---------|
 | `pending-signatures` | Signatories added but not all signed yet |
-| `pending-activation` | Fully signed, waiting for cards to be confirmed |
+| `pending-activation` | Waiting for TPA to be confirmed |
 | `activated` | Live. Transactions flow. |
 
 ```mermaid
 stateDiagram-v2
     [*] --> pending-signatures: POST /tpas
     pending-signatures --> pending-activation: all signed
-    pending-activation --> activated: cards confirmed
+    pending-activation --> activated: TPA confirmed
 ```
 
 ---
@@ -210,7 +210,7 @@ GET /accounts/{accountId}/tpas/{tpaId}/signeddocuments
 
 ## Step 6: Activation
 
-TPA moves to `activated` when the card issuer confirms cards exist for this buyer/seller party. This is triggered by issuer-side card processing — not something you call directly.
+TPA moves to `activated` when the TPA is confirmed — triggered on the issuer side, not something you call directly.
 
 Until activated, transactions won't flow even if TPA is signed.
 
