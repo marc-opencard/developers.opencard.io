@@ -19,6 +19,7 @@ There are **two ways** to create them. This is one of the most important decisio
 | **Transactions start** | After user completes eID | **Immediately** on create |
 | **Retroactive txs** | Yes, after eID sign | Yes, dispatched on create |
 | **Typical UX** | "Check your email to activate" | Bulk import from employee list |
+| **Client already has issuer feed?** | See [parallel feeds](#when-the-client-already-has-another-transaction-feed) | Same |
 
 ```mermaid
 sequenceDiagram
@@ -225,20 +226,35 @@ You:  GET identities ──► POST cardholder with identity_id ──► txs fl
 
 ---
 
-## Existing card issuer integration
+## When the client already has another transaction feed
 
-Your client may already receive transactions from the same card program through another integration. Running OpenCard in parallel is common during rollout — you do not need to wait for the old feed to be switched off.
+Your client may already receive card transactions from the same card program through a direct issuer integration or another middleware. That is common during rollout.
 
-**Who disables the old integration?** That is between your client and their card issuer. OpenCard does not require the client to turn off an existing connection, and you are not responsible for shutting it down. If they want a single source only, the client coordinates that with the issuer.
+**Who turns integrations on or off?** Your **client** enables the OpenCard connection with their card issuer. You do not need them to disable the old feed before you go live, and **you are not responsible** for shutting it down. If they want a single source of transactions, that is between the client and the issuer — not something OpenCard requires or manages for you.
 
-**Handling two feeds at once:**
+### What to expect with two feeds
 
-- OpenCard delivers `card.transaction.authorized` in real time. Many legacy integrations only send `cleared`, so you may see authorised events from OpenCard that never existed on the old feed.
-- When a card holder is onboarded (`card_holder.identified`), OpenCard replays historical transaction states since the latest card invoice — see Path 🅰️ and Path 🅱️ above. Expect overlap with transactions your client already has from the other integration.
-- Use `card_issuer_reference` on **`card.transaction.cleared`** to deduplicate against your existing store. **Cleared matches cleared** — compare cleared references only, not authorised ones. The same purchase can carry different `card_issuer_reference` values on `authorized` vs `cleared`; that varies by card issuer and OpenCard cannot normalize it across issuers.
-- Upsert on OpenCard transaction `id` as your primary key. Use `card_issuer_reference` as a secondary dedup key on cleared events when merging with another feed.
+| | Existing integration | OpenCard |
+|---|---------------------|----------|
+| **Typical states** | Often `cleared` only | `authorized` → `cleared` → `invoiced` |
+| **Starts per card holder** | Varies | On `card_holder.identified` |
+| **Historical replay** | Usually no | Yes — since latest card invoice |
 
-**Gradual migration.** A practical pattern: start processing OpenCard per card holder when `card_holder.identified` arrives, deduplicate cleared events with `card_issuer_reference`, and let the client decide when — or if — to retire the old integration with the issuer.
+**Authorized events are OpenCard-specific.** Many legacy feeds never send authorisations. You will see `card.transaction.authorized` from OpenCard that have no counterpart on the old feed — use them for in-app previews, not for deduplication against the other source.
+
+**Retroactive batch on onboard.** When `card_holder.identified` fires, OpenCard replays transaction states since the latest card invoice for that person's cards on the TPA (Path 🅰️ and Path 🅱️ above). The same cleared purchases may already exist in your system from the other integration.
+
+### Deduplicating with `card_issuer_reference`
+
+The practical way to run both feeds in parallel:
+
+1. Start processing OpenCard per card holder when **`card_holder.identified`** arrives.
+2. **Upsert on OpenCard transaction `id`** as your primary key for the OpenCard feed.
+3. On **`card.transaction.cleared`**, check whether you already stored the purchase from the other feed using **`card_issuer_reference`** on the cleared payload.
+
+**Cleared matches cleared** — compare `card_issuer_reference` only on `card.transaction.cleared`, not on `authorized`. The same purchase can carry **different** `card_issuer_reference` values on `authorized` vs `cleared`; that depends on the card issuer and OpenCard cannot normalize it.
+
+4. Let the client decide whether — or when — to retire the old integration with the issuer.
 
 → [Transaction webhook upsert rules](/ems/webhooks/transactions)
 

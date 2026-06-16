@@ -59,9 +59,19 @@ async function handleTransaction(event, payload) {
 2. **`authorized` + `deleted` + `cleared`** = best UX (users see purchases instantly, deletions handled)
 3. **`authorized` alone** = you'll miss transactions that clear without prior auth (rare but possible)
 4. **Use `id` as primary key** — same `id` across all states for one transaction
-5. **`card_issuer_reference` differs per state** — don't use it as your primary key
+5. **`card_issuer_reference` differs per state** — don't use it as your primary key; when merging with another feed, compare cleared-to-cleared only → [parallel feeds](/ems/card-holders#when-the-client-already-has-another-transaction-feed)
 
 ---
+
+## Parallel transaction feeds
+
+If your client already receives transactions from the same card program through another integration, you can run both feeds at once. OpenCard is often added while the old feed is still active — you do not need to wait for it to be switched off.
+
+- Start the OpenCard feed per card holder on **`card_holder.identified`** (includes a retroactive batch).
+- **Upsert on transaction `id`** for OpenCard events.
+- On **`card.transaction.cleared`**, deduplicate against your other store with **`card_issuer_reference`** — cleared matches cleared only; auth and cleared references may differ per issuer.
+
+Full guidance → [Card holder onboarding — parallel feeds](/ems/card-holders#when-the-client-already-has-another-transaction-feed)
 
 ## Upsert logic detail
 

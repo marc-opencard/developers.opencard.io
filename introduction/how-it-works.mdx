@@ -91,3 +91,11 @@ Every organization and card holder has a `reference_id` **you define**. Put your
 ```
 
 Map straight to your DB. Done. 🎯
+
+## Client already has another transaction feed?
+
+Common during rollout. Your client enables OpenCard with the issuer — they do not have to disable an existing connection first, and you are not responsible for that. If they want one feed only, the client coordinates with the issuer.
+
+OpenCard sends **`authorized`** events (many other integrations do not) and replays history on **`card_holder.identified`**. Deduplicate **`cleared`** events with `card_issuer_reference` when merging with your existing store.
+
+→ [Parallel transaction feeds](/ems/card-holders#when-the-client-already-has-another-transaction-feed)
