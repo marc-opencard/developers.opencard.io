@@ -1,11 +1,9 @@
 ---
 title: Current Card Issuer Integration
-description: Integrate OpenCard when a client already has another card issuer feed — who disables what, retroactive replay, and deduplicating cleared transaction events.
+description: Integrate OpenCard when a client already has another card issuer feed — retroactive replay and deduplicating cleared transaction events.
 ---
 
 Your client may already receive card transactions from the same card program through a direct issuer integration or another middleware. That is common during rollout.
-
-**Who turns integrations on or off?** Your **client** enables the OpenCard connection with their card issuer. You do not need them to disable the old feed before you go live, and **you are not responsible** for shutting it down. If they want a single source of transactions, that is between the client and the issuer — not something OpenCard requires or manages for you.
 
 ---
 
