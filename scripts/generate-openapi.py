@@ -77,7 +77,10 @@ EX = {
         "organization_number": "5561234567",
         "activated": False,
         "signatures_verified": False,
-        "status": "pending-signatures",
+        "signed_document_path": None,
+        "signatures_verified_at": None,
+        "created_at": "2026-06-08T10:00:00.000000Z",
+        "updated_at": "2026-06-08T10:00:00.000000Z",
     },
     "tpa_signatory": {
         "id": 7,

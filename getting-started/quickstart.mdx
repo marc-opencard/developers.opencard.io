@@ -91,11 +91,11 @@ curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUN
 ```
 
 **What happens server-side:**
-1. Fetches company info from public registry (Roaring API in prod, test data in sandbox)
-2. Overrides `name` with registry name if found
-3. Creates TPA record with status `pending-signatures`
-4. Generates legal text snapshot from latest `tpa` template in that language
-5. Links card issuer + creates client record
+
+1. Looks up company in the public registry (sandbox returns test data)
+2. Overrides `name` with registry name when found
+3. Creates the TPA record
+4. Snapshots legal text from the latest `tpa` template in the requested language
 
 **Org number formats:**
 

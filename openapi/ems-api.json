@@ -292,7 +292,10 @@
                       "organization_number": "5561234567",
                       "activated": false,
                       "signatures_verified": false,
-                      "status": "pending-signatures"
+                      "signed_document_path": null,
+                      "signatures_verified_at": null,
+                      "created_at": "2026-06-08T10:00:00.000000Z",
+                      "updated_at": "2026-06-08T10:00:00.000000Z"
                     }
                   ],
                   "per_page": 15,
@@ -354,7 +357,10 @@
                   "organization_number": "5561234567",
                   "activated": false,
                   "signatures_verified": false,
-                  "status": "pending-signatures"
+                  "signed_document_path": null,
+                  "signatures_verified_at": null,
+                  "created_at": "2026-06-08T10:00:00.000000Z",
+                  "updated_at": "2026-06-08T10:00:00.000000Z"
                 }
               }
             }
@@ -404,7 +410,10 @@
                   "organization_number": "5561234567",
                   "activated": false,
                   "signatures_verified": false,
-                  "status": "pending-signatures"
+                  "signed_document_path": null,
+                  "signatures_verified_at": null,
+                  "created_at": "2026-06-08T10:00:00.000000Z",
+                  "updated_at": "2026-06-08T10:00:00.000000Z"
                 }
               }
             }

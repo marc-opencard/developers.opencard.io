@@ -31,6 +31,12 @@
     "display": "header",
     "options": ["copy", "view", "mcp", "add-mcp", "cursor", "vscode"]
   },
+  "redirects": [
+    {
+      "source": "/ems/pdpc-flow",
+      "destination": "/ems/card-holders"
+    }
+  ],
   "navbar": {
     "primary": {
       "type": "button",
@@ -97,8 +103,7 @@
             "pages": [
               "ems/tpa-flow",
               "ems/eid-signing",
-              "ems/card-holders",
-              "ems/pdpc-flow"
+              "ems/card-holders"
             ]
           },
           {

@@ -21,20 +21,28 @@ There are **two ways** to create them. This is one of the most important decisio
 | **Typical UX** | "Check your email to activate" | Bulk import from employee list |
 
 ```mermaid
-flowchart TD
-    subgraph pathA [Path A: Email + eID]
-        A1[POST cardholders with email] --> A2[PDPC email sent]
-        A2 --> A3[User signs with eID]
-        A3 --> A4[card_holder.identified]
-        A4 --> A5[Transactions flow]
-    end
+sequenceDiagram
+    participant You as Your EMS
+    participant OC as OpenCard
+    participant User as Card holder
 
-    subgraph pathB [Path B: identity_id]
-        B1[GET .../tpas/id/identities] --> B2[Pick identity.id]
-        B2 --> B3[POST cardholders with identity_id]
-        B3 --> B4[card_holder.identified immediately]
-        B4 --> B5[Transactions flow + retroactive burst]
-    end
+    You->>OC: POST cardholder (email)
+    OC->>User: PDPC email
+    User->>OC: Sign PDPC with eID
+    OC->>You: card_holder.identified
+    OC->>You: card.transaction.*
+```
+
+```mermaid
+sequenceDiagram
+    participant You as Your EMS
+    participant OC as OpenCard
+
+    You->>OC: GET .../tpas/{id}/identities
+    You->>OC: POST cardholder (identity_id)
+    OC->>You: card_holder.identified
+    OC->>You: Retroactive card.transaction.*
+    OC->>You: Ongoing card.transaction.*
 ```
 
 ---
@@ -87,7 +95,18 @@ OpenCard:                                    identified ──► txs flow ⚡
   Subscribe to `card_holder.identified` — that's your signal that transactions are coming (including a retroactive batch). Don't wait for `card_holder.signed.pdpc` alone; identification is what unlocks the pipe.
 </Tip>
 
-Full eID details → [eID Signing](/ems/eid-signing) · PDPC details → [PDPC Flow](/ems/pdpc-flow)
+Full eID details → [eID Signing](/ems/eid-signing)
+
+### PDPC legal text variables
+
+Templates use placeholders replaced at creation time:
+
+| Placeholder | Replaced with |
+|-------------|---------------|
+| `{{issuer.name_display}}` | Card issuer display name |
+| `{{organization.name}}` | `{tpa.name} ({tpa.organization_number})` |
+| `{{issuer.name_legal}}` | Card issuer legal name |
+| `{{system.name}}` | `{account.name_system}, {account.name_legal} ({account.organization_number})` |
 
 ---
 
@@ -203,6 +222,25 @@ You:  GET identities ──► POST cardholder with identity_id ──► txs fl
 | Re-adding person to a **new** organization under same TPA | 🅱️ `identity_id` |
 | You want user to explicitly consent via email link | 🅰️ Email |
 | Self-service "activate your card" flow in your app | 🅰️ Email |
+
+---
+
+## Existing card issuer integration
+
+Your client may already receive transactions from the same card program through another integration. Running OpenCard in parallel is common during rollout — you do not need to wait for the old feed to be switched off.
+
+**Who disables the old integration?** That is between your client and their card issuer. OpenCard does not require the client to turn off an existing connection, and you are not responsible for shutting it down. If they want a single source only, the client coordinates that with the issuer.
+
+**Handling two feeds at once:**
+
+- OpenCard delivers `card.transaction.authorized` in real time. Many legacy integrations only send `cleared`, so you may see authorised events from OpenCard that never existed on the old feed.
+- When a card holder is onboarded (`card_holder.identified`), OpenCard replays historical transaction states since the latest card invoice — see Path 🅰️ and Path 🅱️ above. Expect overlap with transactions your client already has from the other integration.
+- Use `card_issuer_reference` on **`card.transaction.cleared`** to deduplicate against your existing store. **Cleared matches cleared** — compare cleared references only, not authorised ones. The same purchase can carry different `card_issuer_reference` values on `authorized` vs `cleared`; that varies by card issuer and OpenCard cannot normalize it across issuers.
+- Upsert on OpenCard transaction `id` as your primary key. Use `card_issuer_reference` as a secondary dedup key on cleared events when merging with another feed.
+
+**Gradual migration.** A practical pattern: start processing OpenCard per card holder when `card_holder.identified` arrives, deduplicate cleared events with `card_issuer_reference`, and let the client decide when — or if — to retire the old integration with the issuer.
+
+→ [Transaction webhook upsert rules](/ems/webhooks/transactions)
 
 ---
 

@@ -1,9 +1,9 @@
 ---
 title: eID Signing — 4 Countries
-description: How OpenCard handles TPA and PDPC eID signing via Assently CoreID — sign and auth modes, BankID, MitID, and providers in Sweden, Norway, Denmark, Finland.
+description: How OpenCard handles TPA and PDPC eID signing — sign and auth modes across Sweden, Norway, Denmark, and Finland.
 ---
 
-OpenCard uses **[Assently CoreID](https://coreid.assently.com)** for electronic identity across all four Nordic countries.
+OpenCard uses **national eID** for electronic identity and signing across all four Nordic countries.
 
 Two modes:
 
@@ -16,14 +16,14 @@ Two modes:
 
 ## Countries
 
-| Country | Location | Default provider | UI language |
-|---------|----------|------------------|-------------|
-| 🇸🇪 Sweden | `se` | `se-bankid` | `sv` |
-| 🇳🇴 Norway | `no` | `no-bankid-oidc` | `no` |
-| 🇩🇰 Denmark | `dk` | `dk-mitid` | `da` |
-| 🇫🇮 Finland | `fi` | user picks | `fi` |
+| Country | Supported |
+|---------|-----------|
+| 🇸🇪 Sweden | ✅ |
+| 🇳🇴 Norway | ✅ |
+| 🇩🇰 Denmark | ✅ |
+| 🇫🇮 Finland | ✅ |
 
-Finland: user selects from `fi-mv-telia`, `fi-tupas`, or `fi-vrk`. Denmark also supports legacy `dk-nemid`.
+Legal text and the signing UI follow the country on the TPA or PDPC. In Finland the user may choose between available national eID options.
 
 ---
 
@@ -33,39 +33,18 @@ Finland: user selects from `fi-mv-telia`, `fi-tupas`, or `fi-vrk`. Denmark also 
 sequenceDiagram
     participant User as Signatory/Cardholder
     participant Page as OpenCard signing page
-    participant Assently as Assently CoreID
+    participant eID as National eID
     participant API as OpenCard API
 
     User->>Page: Click email link (token in URL)
-    Page->>Assently: Load CoreID widget with eID token
-    Assently->>User: Show eID provider picker
-    User->>Assently: Complete eID authentication
-    Assently->>Page: POST identityToken (JWT)
-    Page->>API: POST /sign/{token} with identityToken
-    API->>API: Validate JWT, extract ssn/name/country
+    Page->>eID: Load eID widget
+    eID->>User: Authenticate with national eID
+    eID->>Page: Identity result
+    Page->>API: POST /sign/{token}
     API->>User: Redirect back with success
 ```
 
-### Server-side token generation
-
-OpenCard generates an outbound JWT for Assently with claims:
-- `iss`, `aud`, `jti`, `iat`, `exp`
-- `hst`, `dnm` (host/domain binding)
-- `response_mode: form_post`
-- `redirect_uri` → the POST sign endpoint
-
-### Inbound validation
-
-When Assently returns `identityToken`:
-- Validated against `ASSENTLY_IDENTITY` public key
-- Claims extracted:
-
-| JWT claim | Stored as |
-|-----------|-----------|
-| `sub.national_id` | `ssn` (encrypted) |
-| `provider` (first 2 chars) | country |
-| `sub.full_name` or name parts | `name` |
-| Full claims JSON | `signature` (encrypted) |
+The signatory or card holder never needs an OpenCard account. The token in the email link is their authentication.
 
 ---
 
@@ -73,30 +52,16 @@ When Assently returns `identityToken`:
 
 **URL:** `GET /accounts/{accountId}/tpas/{tpaId}/sign/{token}`
 
-No login required. The 40-char token in the URL **is** the authentication.
-
 **What the user sees:**
+
 1. TPA legal text (rendered markdown)
-2. "Sign" button → Assently widget
-3. eID provider selection (country-specific)
-4. Document signing with legal text hash:
+2. "Sign" button → eID widget
+3. National eID provider for the company's country
+4. Document signing (legal text is bound to the signature)
 
-```javascript
-// TPA sign config sent to Assently
-{
-  mode: 'sign',
-  sign: {
-    title: 'Sign Transaction Processing Authorisation',
-    data: legalTextHash,  // SHA-256 of legal text content
-    type: 'text'
-  }
-}
-```
+On success the signatory is marked signed and OpenCard checks whether the TPA is fully signed.
 
-**POST:** `POST /accounts/{accountId}/tpas/{tpaId}/sign/{token}`
-Body: `identityToken={assently_jwt}`
-
-CSRF exempt on POST (external redirect from Assently).
+Full TPA flow → [TPA Flow](/ems/tpa-flow)
 
 ---
 
@@ -105,19 +70,21 @@ CSRF exempt on POST (external redirect from Assently).
 **URL:** `GET /accounts/{accountId}/pdpcs/{pdpcId}/sign/{token}`
 
 **What the user sees:**
+
 1. PDPC legal text
 2. Checkbox: "I have read the text above"
 3. "Approve & Identify" button
-4. Assently widget in **`auth`** mode (identity only, no document hash)
-
-**POST:** same pattern with `identityToken`
+4. eID widget in **`auth`** mode (identity only, no document hash)
 
 On success:
-- Identity created/found by SSN
+
+- Identity created or matched
 - Card holder linked
 - PDPC marked signed
-- Signed PDF generated + emailed to cardholder
+- Signed PDF generated and emailed to the cardholder
 - `card_holder.signed.pdpc` webhook fires
+
+Full card holder flow → [Card Holder Onboarding](/ems/card-holders)
 
 ---
 
@@ -126,6 +93,7 @@ On success:
 Templates available in: `sv`, `no`, `da`, `en`, `fi`
 
 Query available languages:
+
 ```
 GET /api/v1/application/open/legaltexts?type=tpa
 GET /api/v1/application/open/legaltexts?type=pdpc

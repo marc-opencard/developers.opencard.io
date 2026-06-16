@@ -51,14 +51,8 @@ Scope: account-tpas-write
 | `organization_number` | ✅ | Format depends on country (see below) |
 | `language` | ❌ | `sv`, `no`, `da`, `en`, `fi`. Defaults from country |
 
-**Server-side magic:**
-1. Looks up company in public registry (Roaring in prod)
-2. Stores `signature_combinations` in `public_info` (who can sign)
-3. Sets `seller_party` from issuer config
-4. Creates/finds `client` record
-5. Snapshots legal text from latest `type=tpa` template
-
 **Response `201`:**
+
 ```json
 {
   "id": 42,
@@ -69,7 +63,10 @@ Scope: account-tpas-write
   "organization_number": "5561234567",
   "activated": false,
   "signatures_verified": false,
-  "signed_document_path": null
+  "signed_document_path": null,
+  "signatures_verified_at": null,
+  "created_at": "2026-06-08T10:00:00.000000Z",
+  "updated_at": "2026-06-08T10:00:00.000000Z"
 }
 ```
 
@@ -86,27 +83,38 @@ Scope: account-tpas-write
 
 ## Step 2: Check who can sign (recommended)
 
-Before adding signatories, query the registry:
+Before adding signatories, query the public registry:
 
 ```
 GET /accounts/{accountId}/publicrecords?country=SE&organization_number=5561234567
 Scope: public-records-read
 ```
 
-Response includes `signature_combinations` — groups of people where **all members of a group** must sign. Example:
+**Example response:**
 
 ```json
 {
+  "organization_number": "5561234567",
+  "name": "Acme AB",
+  "address_street": "Storgatan 1",
+  "address_zip": "111 22",
+  "address_city": "Stockholm",
   "signature_combinations": [
-    [
-      { "name": "Anna Andersson", "ssn_hash": "abc123..." },
-      { "name": "Erik Eriksson", "ssn_hash": "def456..." }
-    ]
+    {
+      "signatories": [
+        { "admin_sign": false, "name": "Anna Andersson", "ssn_hash": null },
+        { "admin_sign": false, "name": "Erik Eriksson", "ssn_hash": null }
+      ]
+    }
   ]
 }
 ```
 
-Add each person as a signatory. When they sign with eID, their `ssn_hash` is checked against these combinations.
+Each entry in `signature_combinations` is one valid signing group — **everyone listed in that group** must sign for the combination to be satisfied.
+
+<Note>
+  The registry does not always list who may sign. Many organization types — foundations, associations, and similar entities — are not fully registered as companies in public records across the Nordic countries. The response may include company details but an **empty** `signature_combinations` array. In that case OpenCard cannot suggest signatories; your client must decide internally who is authorized to sign and you add them as signatories manually.
+</Note>
 
 ---
 
@@ -149,7 +157,7 @@ DELETE .../signatories/{tpaSignatoryId} ← only if signed=false
 
 ### Reminder emails
 
-If unsigned after 7+ days, a reminder job re-sends the email (if `SCHEDULE_REMIND_TPA_SIGNATORIES=true`).
+If a signatory has not signed after 7+ days, OpenCard may send a reminder email automatically.
 
 ---
 
@@ -159,29 +167,24 @@ This is a **web flow**, not an API call. The signatory:
 
 1. Clicks email link → `GET /accounts/{accountId}/tpas/{tpaId}/sign/{token}`
 2. Sees TPA legal text (markdown rendered)
-3. Clicks "Sign" → Assently CoreID widget loads
-4. Signs with eID — see [eID Signing](/ems/eid-signing)
-5. Signs the document (mode: **sign** — legal text hash is bound to signature)
-6. Assently POSTs `identityToken` back → `POST .../sign/{token}`
+3. Clicks "Sign" → eID widget loads
+4. Completes signing with national eID — see [eID Signing](/ems/eid-signing)
+5. eID result is posted back → `POST .../sign/{token}`
 
-**Server validates:**
-- `identityToken` JWT from Assently
-- Extracts: `ssn`, `country`, `name`, full signature claims
-- Sets signatory: `signed=true`, `signed_at=now()`, encrypted `ssn` + `signature`
+**When all required signatories have signed**, OpenCard verifies signing rights against `signature_combinations` from the registry (stored on the TPA at creation) for Sweden and Norway.
 
-**When all required signatories have signed**, OpenCard verifies signing rights against `signature_combinations` from the registry and marks the TPA as signed.
+If no signatory combinations were available from the registry, OpenCard cannot verify automatically — the TPA goes through **manual review** before `signatures_verified` is set.
 
 ---
 
 ## Step 5: TPA fully signed → stuff happens
 
-When `setSigned()` runs:
+When signing is complete:
 
 1. 📄 **Signed PDF generated** with all signatory eID approval blocks
-2. 💾 Stored at `legal_documents/{date}/{random}.pdf`
-3. 📧 **Email to each signatory** with signed PDF attached
-4. 📧 **Card issuer notified** (signed PDF delivered)
-5. 🔔 **`tpa.signed` webhook** fires on orgs that subscribed
+2. 📧 **Email to each signatory** with signed PDF attached
+3. 📧 **Card issuer notified** (signed PDF delivered)
+4. 🔔 **`tpa.signed` webhook** fires on orgs that subscribed
 
 **Webhook payload:**
 ```json
