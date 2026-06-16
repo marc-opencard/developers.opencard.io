@@ -1,6 +1,6 @@
 ---
 title: Data Model
-description: Complete OpenCard EMS data model — accounts, billings, TPAs, organizations, card holders, transactions, and webhooks shown as a single text hierarchy diagram.
+description: OpenCard EMS data model — accounts, billing, TPAs, organizations, card holders, transactions, webhooks, and how the entities relate.
 ---
 
 ```
@@ -8,66 +8,173 @@ Account (you)
 ├── OAuth Clients
 ├── Users (your team)
 ├── Billings ← invoice recipient; groups orgs on YOUR OpenCard invoice
-│   ├── name_legal, organization_number
-│   ├── email_invoice, your_reference_invoice
 │   └── Organizations (many orgs → one billing_id)
-├── Card Issuers (enabled list)
-├── TPAs
-│   ├── Signatories (email → eID sign)
-│   ├── Legal Text (snapshot)
-│   └── Signed Document (PDF)
-└── Organizations
-    ├── reference_id ← YOUR ID
-    ├── billing_id → which invoice group this org belongs to
-    ├── Webhooks
-    │   ├── Headers (custom)
-    │   ├── Groups (buyer-party filter)
-    │   └── Events (delivery log)
-    └── Card Holders
-        ├── reference_id ← YOUR ID
-        ├── PDPC (email → eID consent)
-        └── Cards (from issuer)
-            └── Transactions
-                ├── TransactionStates
-                ├── Receipts
-                ├── TrueVAT
-                ├── LineItems
-                └── EnvironmentalImpact
+├── Card Issuers (enabled on account)
+└── TPAs ← legal agreement per client company + card issuer
+    ├── Signatories (email → eID sign)
+    ├── Legal Text (snapshot at creation)
+    └── Signed Document (PDF)
+        └── Organizations ← your end-client
+            ├── reference_id ← YOUR ID
+            ├── billing_id → invoice grouping
+            ├── Webhook
+            │   ├── Headers, Groups, Event log
+            └── Card Holders
+                ├── reference_id ← YOUR ID
+                ├── Identity (person via eID)
+                ├── PDPC (individual GDPR consent)
+                └── Cards (from issuer)
+                    └── Transactions
+                        ├── Transaction States
+                        ├── Receipts
+                        ├── True VAT
+                        ├── Line Items
+                        └── Environmental Impact
 ```
 
 ## Entity details
 
 ### Account
-Your partner account. Created at registration. Contains billing profiles, OAuth clients, enabled issuers.
+
+Your EMS partner account. Created at registration. Owns billing profiles, OAuth clients, enabled card issuers, TPAs, and organizations.
+
+**Key fields:** `id`, `name_system`, `name_legal`, `organization_number`, `country`
+
+→ [Register](/getting-started/register)
+
+### OAuth client
+
+Machine-to-machine credential (`account_client`) for the Application API. Scoped per integration.
+
+**Key fields:** `client_id`, `secret` (shown once), scopes
+
+→ [Authentication](/getting-started/authentication)
 
 ### Billing
-How OpenCard invoices your EMS. Legal entity + invoice email. Multiple organizations can share one `billing_id` so their usage rolls up on a single invoice from OpenCard.
+
+How OpenCard invoices **you**. Legal entity + invoice email. Multiple organizations can share one `billing_id` so their usage rolls up on a single invoice.
 
 **Key fields:** `id`, `name_legal`, `organization_number`, `email_invoice`, `your_reference_invoice`
 
-→ [Billing guide](/ems/billing)
-
-### Organization
-One of your clients. Links to a TPA and a billing profile. Has its own webhook config.
-
-**Key fields:** `id`, `reference_id`, `tpa_id`, `billing_id`, `account_id`, `name`
-
-### Card Holder
-A person. Links to organization. Has PDPC consent.
-
-**Key fields:** `id`, `reference_id`, `organization_id`, `identity_id`, `meta.signed`, `meta.pdpc_url`, `identity.name`, `identity.employee_id` (on list)
+→ [Billing](/ems/billing)
 
 ### TPA
-Legal agreement per client company + card issuer combo.
+
+**Transaction Processing Authorization** — company-level legal agreement that card transaction data may flow from a card program to your EMS via OpenCard. One TPA per client company + card issuer combination.
 
 **Statuses:** `pending-signatures` → `pending-activation` → `activated`
 
+**Key fields:** `id`, `card_issuer_id`, `name`, `country`, `organization_number`, `activated`, `signatures_verified`, `signed_document_path`
+
+→ [TPA flow](/ems/tpa-flow)
+
+### TPA signatory
+
+Authorized person who signs the TPA on behalf of the client company. Receives email with signing link; signs with eID.
+
+**Key fields:** `id`, `email`, `name`, `signed`, `signed_at`
+
+### PDPC
+
+**Personal Data Processing Consent** — individual GDPR consent from the cardholder (employee). Required before their transactions flow to you (unless onboarded via `identity_id`).
+
+Created automatically with Path 🅰️ card holder onboarding. Signed via email link + eID.
+
+→ [Card holder onboarding](/ems/card-holders) · [eID signing](/ems/eid-signing)
+
+### Organization
+
+One of your end-clients. Container for webhook config and card holders. Links to a TPA and a billing profile.
+
+**Key fields:** `id`, `reference_id`, `tpa_id`, `billing_id`, `account_id`, `name`
+
+→ [Organizations](/ems/organizations)
+
 ### Webhook
-Per-organization event subscription. Must pass challenge before `active=true`.
+
+Per-organization HTTP endpoint for events. Must pass the challenge handshake before `active=true`.
 
 **Key fields:** `url`, `secret`, `active`, `enabled`, event boolean flags, `authentication_type`
 
-### Transaction
-One purchase. Same `id` across all states.
+Optional **groups** filter events by buyer party. **Headers** add custom HTTP headers on delivery.
 
-**Comes via webhook**, not primarily via API query.
+→ [Webhook setup](/ems/webhooks/setup) · [Events](/ems/webhooks/events)
+
+### Identity
+
+Physical person in OpenCard, linked via national eID (SSN). May already have cards on a TPA before you create a card holder. Use `identity_id` for instant onboarding.
+
+**Key fields:** `id`, `name`, `employee_id`, `cards[]`
+
+→ [Card holder onboarding — Path 🅱️](/ems/card-holders)
+
+### Card holder
+
+Individual whose card transactions you receive. Belongs to one organization. You set `reference_id` — it appears in every webhook for that person.
+
+**Key fields:** `id`, `reference_id`, `organization_id`, `identity_id`, `email`, `meta.signed`, `meta.pdpc_url`, `identity.name`
+
+→ [Card holder onboarding](/ems/card-holders)
+
+### Card
+
+Physical or virtual card from the issuer, linked to an identity. You do not create cards via API — the issuer attaches them when the TPA is activated.
+
+Surfaces on the identity list (`GET .../tpas/{tpaId}/identities`) and in transaction webhooks as `card_last_four`, `card_type`.
+
+### Transaction
+
+One purchase. Same OpenCard `id` across all states (`authorized` → `cleared` → `invoiced`, etc.). Delivered via **webhook**, not by polling the API.
+
+**Key fields:** `id`, `reference_id` (from card holder), amounts, merchant, `receiptable`, `card_issuer_reference`
+
+→ [Transaction webhooks](/ems/webhooks/transactions)
+
+### Transaction state
+
+Point-in-time snapshot of a transaction. Each state change fires a separate `card.transaction.*` webhook.
+
+| State | Meaning |
+|-------|---------|
+| `authorized` | Purchase just happened — preview only |
+| `cleared` | Settled — use for accounting |
+| `deleted` | Auth reversed |
+| `invoiced` | Has invoice number from issuer |
+
+### Enrichment (per transaction)
+
+Arrives as separate webhooks after the transaction:
+
+| Entity | Webhook event | What it is |
+|--------|---------------|------------|
+| Receipt | `receipt.fetched` | Digital receipt URL |
+| True VAT | `transaction.true.vat` | Correct VAT from merchant |
+| Line items | `transaction.line.items` | Purchase line items |
+| Environmental impact | `card.transaction.environmental_impact` | CO₂ estimate (if enabled) |
+
+→ [Receipts](/ems/receipts) · [Environmental impact](/ems/environmental-impact)
+
+### Card issuer
+
+Bank or card program. You enable issuers on your account, then create TPAs against them. Card issuers manage cards and push transaction data to OpenCard.
+
+Not the same audience as EMS — card issuers use `receipts.opencard.io` for digital receipt matching.
+
+→ [Card issuers](/card-issuers)
+
+---
+
+## Quick reference
+
+| You create via API | OpenCard / issuer creates |
+|--------------------|---------------------------|
+| Account, OAuth client, Billing | — |
+| TPA, signatories | Signed PDF, activation |
+| Organization, webhook, card holder | Identity (via eID), PDPC |
+| — | Card, transaction, enrichment |
+
+| Your ID in webhooks | Entity |
+|---------------------|--------|
+| `organization.reference_id` | Organization |
+| `card_holder.reference_id` | Card holder |
+| Transaction `id` | Transaction (upsert key) |
