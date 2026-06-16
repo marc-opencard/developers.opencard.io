@@ -32,6 +32,6 @@ The practical way to run both feeds in parallel:
 
 **Cleared matches cleared** — compare `card_issuer_reference` only on `card.transaction.cleared`, not on `authorized`. The same purchase can carry **different** `card_issuer_reference` values on `authorized` vs `cleared`; that depends on the card issuer and OpenCard cannot normalize it.
 
-4. To end the old feed, your **client** terminates it with their **card issuer**. Agree with your client when to stop processing the other integration on your side — you do not need to wait for that before accepting OpenCard data.
+4. To end the old feed, your **client** terminates it with their **card issuer**. Agree with your client when to stop processing the other integration on your side.
 
 → [Transaction webhook upsert rules](/ems/webhooks/transactions)
