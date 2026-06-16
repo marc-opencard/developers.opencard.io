@@ -35,10 +35,6 @@
     {
       "source": "/ems/pdpc-flow",
       "destination": "/ems/card-holders"
-    },
-    {
-      "source": "/ems/data-model",
-      "destination": "/ems/data-model/index"
     }
   ],
   "navbar": {
