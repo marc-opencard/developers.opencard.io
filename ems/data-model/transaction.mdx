@@ -1,6 +1,6 @@
 ---
 title: Transaction
-description: One card purchase in OpenCard — same id across all states, delivered via webhook not API polling.
+description: A transaction represents one card purchase in OpenCard, keeps the same id across authorized, cleared, and invoiced states, and is delivered via webhook.
 ---
 
 One purchase. Same OpenCard `id` across all states (`authorized` → `cleared` → `invoiced`, etc.). Delivered via **webhook**, not by polling the API.
