@@ -1,0 +1,15 @@
+---
+title: Transaction state
+description: Point-in-time snapshot of a transaction — authorized, cleared, deleted, and invoiced webhook states.
+---
+
+Point-in-time snapshot of a transaction. Each state change fires a separate `card.transaction.*` webhook.
+
+| State | Meaning |
+|-------|---------|
+| `authorized` | Purchase just happened — preview only |
+| `cleared` | Settled — use for accounting |
+| `deleted` | Auth reversed |
+| `invoiced` | Has invoice number from issuer |
+
+→ [Transaction webhooks](/ems/webhooks/transactions) · [Overview](/ems/data-model/index)

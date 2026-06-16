@@ -1,0 +1,15 @@
+---
+title: Enrichment
+description: Post-transaction webhooks — receipts, true VAT, line items, and environmental impact data.
+---
+
+Arrives as separate webhooks after the transaction:
+
+| Entity | Webhook event | What it is |
+|--------|---------------|------------|
+| Receipt | `receipt.fetched` | Digital receipt URL |
+| True VAT | `transaction.true.vat` | Correct VAT from merchant |
+| Line items | `transaction.line.items` | Purchase line items |
+| Environmental impact | `card.transaction.environmental_impact` | CO₂ estimate (if enabled) |
+
+→ [Receipts](/ems/receipts) · [Environmental impact](/ems/environmental-impact) · [Overview](/ems/data-model/index)

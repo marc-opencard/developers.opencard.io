@@ -35,6 +35,10 @@
     {
       "source": "/ems/pdpc-flow",
       "destination": "/ems/card-holders"
+    },
+    {
+      "source": "/ems/data-model",
+      "destination": "/ems/data-model/index"
     }
   ],
   "navbar": {
@@ -90,9 +94,30 @@
         "tab": "Expense Management System",
         "groups": [
           {
+            "group": "Data model",
+            "pages": [
+              "ems/data-model/index",
+              "ems/data-model/account",
+              "ems/data-model/oauth-client",
+              "ems/data-model/billing",
+              "ems/data-model/tpa",
+              "ems/data-model/tpa-signatory",
+              "ems/data-model/pdpc",
+              "ems/data-model/organization",
+              "ems/data-model/webhook",
+              "ems/data-model/identity",
+              "ems/data-model/card-holder",
+              "ems/data-model/card",
+              "ems/data-model/transaction",
+              "ems/data-model/transaction-state",
+              "ems/data-model/enrichment",
+              "ems/data-model/card-issuer",
+              "ems/parallel-transaction-feeds"
+            ]
+          },
+          {
             "group": "Platform",
             "pages": [
-              "ems/data-model",
               "ems/billing",
               "ems/organizations",
               "ems/error-handling"
@@ -103,8 +128,7 @@
             "pages": [
               "ems/tpa-flow",
               "ems/eid-signing",
-              "ems/card-holders",
-              "ems/parallel-transaction-feeds"
+              "ems/card-holders"
             ]
           },
           {
