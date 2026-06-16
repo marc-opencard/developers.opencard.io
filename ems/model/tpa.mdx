@@ -1,0 +1,67 @@
+---
+title: TPA
+description: The TPA model — Transaction Processing Authorization, the company-level legal agreement that allows card data to flow to your EMS via OpenCard.
+---
+
+**TPA** = **Transaction Processing Authorization**.
+
+It is the legal agreement between a **client company** and OpenCard that card transaction data from a specific **card program** may flow to your EMS. Without a signed and activated TPA, no transactions are delivered for that client and issuer combination.
+
+---
+
+## What it represents
+
+| Concept | Meaning |
+|---------|---------|
+| **Who consents** | The client company — authorized signatories (CEO, board, etc.) |
+| **What they approve** | Card data from a given card issuer may pass through OpenCard to you |
+| **Scope** | One TPA per **client company + card issuer** pair |
+| **Audience** | Company level — not the individual cardholder |
+
+The individual employee signs a separate document — [PDPC](/ems/eid-signing) — when they onboard as a [card holder](/ems/model/card-holder). TPA is the company saying yes; PDPC is the person saying yes.
+
+---
+
+## Lifecycle
+
+| Status | Meaning |
+|--------|---------|
+| `pending-signatures` | Signatories added, not all signed |
+| `pending-activation` | Fully signed, waiting for issuer to confirm cards |
+| `activated` | Live — transactions can flow |
+
+```mermaid
+stateDiagram-v2
+    [*] --> pending-signatures: create TPA
+    pending-signatures --> pending-activation: all signed
+    pending-activation --> activated: issuer confirms cards
+```
+
+---
+
+## What is attached to a TPA
+
+- **Signatories** — people who receive email and sign with eID
+- **Legal text** — snapshot at creation
+- **Signed PDF** — generated when signing is complete
+- **Organizations** — your runtime orgs link here via `tpa_id`
+
+---
+
+## Key fields
+
+| Field | Purpose |
+|-------|---------|
+| `id` | Use when creating organizations (`tpa_id`) |
+| `card_issuer_id` | Which card program |
+| `name`, `country`, `organization_number` | Client company identity |
+| `activated` | Whether live transaction flow is enabled |
+| `signatures_verified` | Whether signing is complete |
+
+---
+
+## Your integration
+
+You create the TPA and add signatories via API. Signatories complete signing in a web flow — you do not implement eID yourself.
+
+→ [TPA flow — full walkthrough](/ems/tpa-flow) · [eID signing](/ems/eid-signing)

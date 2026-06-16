@@ -1,0 +1,74 @@
+---
+title: Organization
+description: The Organization model — your end-client in OpenCard, the container for webhooks, card holders, and TPA linkage.
+---
+
+An **organization** is one of your EMS customers — a company whose card program you integrate through OpenCard.
+
+It is the main **runtime container**: webhooks, card holders, and event routing all live under an organization. You identify it in every webhook with `reference_id`, which you set to your own internal client ID.
+
+---
+
+## What it represents
+
+| Concept | Meaning |
+|---------|---------|
+| **Your client** | One end-customer (usually one company) |
+| **`reference_id`** | Your string ID — echoed in all webhooks for that client |
+| **`tpa_id`** | Which signed legal agreement covers this client's card program |
+| **`billing_id`** | Which [billing profile](/ems/model/billing) this org rolls up under on your OpenCard invoice |
+
+One organization typically maps to one client. Split into multiple organizations only when you need separate webhook endpoints, event subscriptions, or card-holder groups for the same client.
+
+---
+
+## What lives under an organization
+
+```
+Organization
+├── Webhook      ← where OpenCard POSTs events
+├── Card holders ← people whose transactions you receive
+└── (via TPA)    ← which card issuer and legal scope apply
+```
+
+| Area | What you configure |
+|------|-------------------|
+| **Connection** | Webhook URL, secret, auth, event flags |
+| **People** | Card holders with your `reference_id` per employee |
+| **Legal scope** | Linked TPA — must be signed and activated for data to flow |
+
+---
+
+## Key fields
+
+| Field | Purpose |
+|-------|---------|
+| `id` | OpenCard organization ID |
+| `reference_id` | **Your** client ID (required, unique per account) |
+| `tpa_id` | TPA on your account (signed and activated for live data) |
+| `billing_id` | Invoice grouping — see [Billing](/ems/model/billing) |
+| `name` | Display name |
+
+---
+
+## Create
+
+```
+POST /accounts/{accountId}/organizations
+Scope: organizations-write
+```
+
+```json
+{
+  "reference_id": "client_acme_001",
+  "tpa_id": 42,
+  "billing_id": 1,
+  "name": "Acme AB"
+}
+```
+
+```
+GET / PUT / DELETE .../organizations/{organizationId}
+```
+
+Delete cascades webhooks and card holders. Use with care on production orgs.

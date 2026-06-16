@@ -1,0 +1,81 @@
+---
+title: Billing
+description: The Billing model — how OpenCard groups your organizations on the invoice you receive from us as an EMS partner.
+---
+
+**Billing** is not about your end-clients paying their card bills. It is how **OpenCard invoices you** — the EMS — for platform usage.
+
+A billing profile is the legal entity and invoice address on **your** OpenCard invoice. Organizations link to it via `billing_id` so you can roll one or many clients onto the same bill from us.
+
+---
+
+## What it represents
+
+| Concept | Meaning |
+|---------|---------|
+| **Who gets the invoice** | Your finance team (`email_invoice`, legal name, org number) |
+| **Which orgs count together** | Every organization with the same `billing_id` |
+| **What it does not control** | Card issuer invoices to cardholders, webhooks, or transaction routing |
+
+Think of billing as the **invoice grouping layer** between your account and your organizations.
+
+---
+
+## How it fits
+
+```
+Account (you)
+└── Billing
+    ├── Organization A  ─┐
+    ├── Organization B  ─┼─ same billing_id → one OpenCard invoice to you
+    └── Organization C  ─┘
+```
+
+Each organization still has its own webhooks, card holders, and transactions. Billing only affects **how OpenCard sums usage on the invoice to you**.
+
+---
+
+## Common setups
+
+| Your situation | Billing setup |
+|----------------|---------------|
+| One org per client, separate OpenCard invoices | One billing profile per organization |
+| Several subsidiaries, one group invoice | One billing profile shared by those orgs |
+| Large client with many orgs, central finance | One billing profile for all their orgs |
+
+---
+
+## Key fields
+
+| Field | Purpose |
+|-------|---------|
+| `id` | Use as `billing_id` when creating organizations |
+| `name_legal` | Legal entity on the OpenCard invoice |
+| `organization_number` | Company registration number |
+| `email_invoice` | Where OpenCard sends your invoice |
+| `your_reference_invoice` | Your PO or reference on the invoice |
+
+---
+
+## Create and link
+
+```
+POST /accounts/{accountId}/billings          Scope: billings-write
+POST /accounts/{accountId}/organizations     Set billing_id on create
+```
+
+```json
+{
+  "name_legal": "Acme Expense Group AB",
+  "organization_number": "5561234567",
+  "country": "SE",
+  "email_invoice": "finance@acme-ems.se",
+  "your_reference_invoice": "PO-12345"
+}
+```
+
+When creating an organization, set `"billing_id": 1` (or whichever profile applies). Multiple organizations with the **same** `billing_id` appear on one OpenCard invoice.
+
+<Note>
+  Configure billing early in onboarding — often together with TPA setup via the [ocTPA plugin](/ems/plugins).
+</Note>

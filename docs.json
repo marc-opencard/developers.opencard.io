@@ -45,6 +45,14 @@
       "destination": "/introduction/how-it-works"
     },
     {
+      "source": "/ems/billing",
+      "destination": "/ems/model/billing"
+    },
+    {
+      "source": "/ems/organizations",
+      "destination": "/ems/model/organization"
+    },
+    {
       "source": "/ems/data-model/:slug*",
       "destination": "/introduction/how-it-works"
     }
@@ -102,10 +110,17 @@
         "tab": "Expense Management System",
         "groups": [
           {
+            "group": "Model",
+            "pages": [
+              "ems/model/billing",
+              "ems/model/organization",
+              "ems/model/tpa",
+              "ems/model/card-holder"
+            ]
+          },
+          {
             "group": "Platform",
             "pages": [
-              "ems/billing",
-              "ems/organizations",
               "ems/current-card-issuer-integration",
               "ems/error-handling"
             ]

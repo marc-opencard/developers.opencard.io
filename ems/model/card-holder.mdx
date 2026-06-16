@@ -1,0 +1,61 @@
+---
+title: Card holder
+description: The Card holder model — an individual in an organization whose card transactions your EMS receives via OpenCard webhooks.
+---
+
+A **card holder** is one person in one [organization](/ems/model/organization) whose card transactions you want in your EMS.
+
+You create the record via API. OpenCard links it to a real person (identity) and, once identified, starts delivering that person's card events to the organization's webhook. You set `reference_id` to your internal user ID — it appears on every transaction webhook for that person.
+
+---
+
+## What it represents
+
+| Concept | Meaning |
+|---------|---------|
+| **Who** | An employee or card user at your client's company |
+| **`reference_id`** | Your string ID for that person — in every webhook |
+| **`organization_id`** | Which client they belong to |
+| **`identity_id`** | Link to the person in OpenCard (after eID, or immediately on instant onboard) |
+| **PDPC** | Individual GDPR consent — required unless onboarded via `identity_id` |
+
+A card holder is not the physical card. Cards are managed by the [card issuer](/ems/model/tpa) and appear on the identity once the TPA is activated.
+
+---
+
+## When transactions start
+
+| Path | How | Transactions begin |
+|------|-----|-------------------|
+| 🅰️ Email + eID | You send `email`, user signs PDPC | After `card_holder.identified` |
+| 🅱️ `identity_id` | Person already known to OpenCard | Immediately on create |
+
+On identification, OpenCard replays transaction states since the latest card invoice for that person's cards, then continues in real time.
+
+→ [Card holder onboarding](/ems/card-holders)
+
+---
+
+## Key fields
+
+| Field | Purpose |
+|-------|---------|
+| `id` | OpenCard card holder ID |
+| `reference_id` | **Your** user ID (required, unique per organization) |
+| `organization_id` | Parent organization |
+| `identity_id` | Linked person (null until eID on Path 🅰️) |
+| `email` | For PDPC signing link (Path 🅰️) |
+| `meta.signed`, `meta.pdpc_url` | PDPC status and signing URL |
+
+---
+
+## Webhook signal
+
+Subscribe to **`card_holder.identified`** — that is when you should expect transactions (including any retroactive batch) for that person.
+
+```
+POST /accounts/{accountId}/organizations/{organizationId}/cardholders
+Scope: card-holders-write
+```
+
+→ [Card holder onboarding — paths and API](/ems/card-holders) · [Current card issuer integration](/ems/current-card-issuer-integration)

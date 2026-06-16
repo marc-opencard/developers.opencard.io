@@ -20,13 +20,13 @@ Account          ← you (the EMS partner)
 
 **Account** = your OpenCard partner account. One per EMS.
 
-**Billing** = invoice grouping for **your** OpenCard bill. One billing profile can cover one or many organizations. Example: three orgs share `billing_id: 1` → one combined invoice from OpenCard to your finance team. → [Billing](/ems/billing)
+**Billing** = invoice grouping for **your** OpenCard bill. One billing profile can cover one or many organizations. Example: three orgs share `billing_id: 1` → one combined invoice from OpenCard to your finance team. → [Billing](/ems/model/billing)
 
-**Organization** = one of your customers. You set `reference_id` to your internal client ID. Most EMSs map 1:1 (one org per client), but you can split one client into multiple orgs if you need different webhook configs or card type filters.
+**Organization** = one of your customers. You set `reference_id` to your internal client ID. Most EMSs map 1:1 (one org per client), but you can split one client into multiple orgs if you need different webhook configs or card type filters. → [Organization](/ems/model/organization)
 
-**Card Holder** = a person. You set `reference_id` to your internal user ID. Two ways to onboard: **email** (user signs with eID) or **`identity_id`** (instant, person already in OpenCard). → [Card Holder Onboarding](/ems/card-holders)
+**Card Holder** = a person. You set `reference_id` to your internal user ID. Two ways to onboard: **email** (user signs with eID) or **`identity_id`** (instant, person already in OpenCard). → [Card holder](/ems/model/card-holder) · [Onboarding](/ems/card-holders)
 
-**TPA** (Transaction Processing Authorization) = legal doc the client's signatories sign saying "yes, our card data can flow to this EMS via OpenCard."
+**TPA** (Transaction Processing Authorization) = legal doc the client's signatories sign saying "yes, our card data can flow to this EMS via OpenCard." → [TPA](/ems/model/tpa)
 
 **PDPC** (Personal Data Processing Consent) = GDPR consent the individual cardholder signs saying "yes, my transactions can be shared."
 
