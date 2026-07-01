@@ -13,6 +13,28 @@ The Cards API maintains the set of cards enrolled in OpenCard per customer organ
 
 ---
 
+## Endpoints
+
+The boilerplate documents the **full** card API. OpenCard enables only the operations your integration needs — confirm which methods are live for your `{slug}` before go-live.
+
+| Method | Path | Scope (typical) | Boilerplate | Minimal integration |
+|--------|------|-----------------|-------------|---------------------|
+| `POST` | `/cards` | `issuer-{slug}-cards-write` | ✅ Create | ✅ Create |
+| `DELETE` | `/cards/{card_id}` | `issuer-{slug}-cards-delete` | ✅ Delete | ✅ Delete |
+| `PUT` | `/cards/{card_id}` | `issuer-{slug}-cards-write` | ✅ Update | — |
+| `GET` | `/cards/{card_id}` | `issuer-{slug}-cards-read` | ✅ Get one | — |
+| `GET` | `/cards` | `issuer-{slug}-cards-read` | ✅ List / filter | — |
+
+**Minimal integration** = create + delete + transaction states. Use that when you only register and close cards via API and manage changes by delete + re-create.
+
+**Full boilerplate** = all five operations above — update holder or company in place, query and inspect cards without posting again.
+
+<Note>
+  If an endpoint returns `404` or `405` on your slug, it is not enabled for your integration. The OpenAPI reference shows the full boilerplate surface; your credentials and scope list reflect what you can actually call.
+</Note>
+
+---
+
 ## Create card
 
 ```
@@ -67,6 +89,10 @@ Create is **idempotent** on `id`. Re-posting the same card returns the existing 
 
 ## Update card
 
+<Note>
+  **Boilerplate only** — not all issuer slugs expose `PUT`. If you only have create + delete, close the old card and create a new one when details change.
+</Note>
+
 ```
 PUT /api/v1/issuers/{slug}/cards/{card_id}
 Scope: issuer-{slug}-cards-write
@@ -80,6 +106,10 @@ Same body shape as create (except `id` comes from the path). Supports moving a c
 
 ## Get card
 
+<Note>
+  **Boilerplate only** — optional on minimal integrations.
+</Note>
+
 ```
 GET /api/v1/issuers/{slug}/cards/{card_id}
 Scope: issuer-{slug}-cards-read
@@ -88,6 +118,10 @@ Scope: issuer-{slug}-cards-read
 ---
 
 ## List cards
+
+<Note>
+  **Boilerplate only** — optional on minimal integrations.
+</Note>
 
 ```
 GET /api/v1/issuers/{slug}/cards
