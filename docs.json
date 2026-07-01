@@ -37,10 +37,6 @@
       "destination": "/ems/card-holders"
     },
     {
-      "source": "/card-issuers/digital-receipts",
-      "destination": "/card-issuers/digital-receipts/index"
-    },
-    {
       "source": "/ems/parallel-transaction-feeds",
       "destination": "/ems/current-card-issuer-integration"
     },
