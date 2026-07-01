@@ -68,6 +68,7 @@
     "openapi": [
       "openapi/oauth.json",
       "openapi/ems-api.json",
+      "openapi/issuer-api.json",
       "openapi/receipts-api.json",
       "openapi/receipt-provider-callback.json"
     ],
@@ -177,14 +178,32 @@
         "tab": "Card Issuers",
         "groups": [
           {
-            "group": "Digital receipts",
+            "group": "Transaction integration",
             "pages": [
               "card-issuers/index",
+              "card-issuers/issuer-integration/index",
+              "card-issuers/issuer-integration/onboarding",
+              "card-issuers/issuer-integration/authentication",
+              "card-issuers/issuer-integration/cards",
+              "card-issuers/issuer-integration/transaction-states"
+            ]
+          },
+          {
+            "group": "Digital receipts",
+            "pages": [
               "card-issuers/digital-receipts"
             ]
           },
           {
-            "group": "API",
+            "group": "API — Issuer",
+            "pages": ["api-reference/issuers/overview"],
+            "openapi": {
+              "source": "openapi/issuer-api.json",
+              "directory": "api-reference/issuers"
+            }
+          },
+          {
+            "group": "API — Receipts",
             "pages": ["api-reference/receipts/overview"],
             "openapi": {
               "source": "openapi/receipts-api.json",

@@ -1,0 +1,42 @@
+---
+title: Issuer API Overview
+description: Reference for the OpenCard Issuer API — register cards and push transaction states under /api/v1/issuers/{slug}/ on api.opencard.io.
+---
+
+Card issuers use this API to **register cards** and **deliver transaction states** to OpenCard. Connected EMS apps receive the data via webhooks.
+
+<Warning>
+  This is **not** `receipts.opencard.io`. For digital receipt matching only → [Digital Receipts API](/api-reference/receipts/overview).
+</Warning>
+
+## Base URLs
+
+| Environment | URL |
+|-------------|-----|
+| Sandbox | `https://sandbox-api.opencard.io` |
+| Production | `https://api.opencard.io` |
+
+## Path prefix
+
+```
+/api/v1/issuers/{slug}/
+```
+
+`{slug}` is assigned at integration start (e.g. your program identifier in the URL).
+
+## Auth
+
+OAuth 2.0 client credentials → `POST /oauth/token`
+
+→ [Issuer authentication](/card-issuers/issuer-integration/authentication)
+
+## Integration guides
+
+| Guide | Topic |
+|-------|-------|
+| [Overview](/card-issuers/issuer-integration) | Flow and prerequisites |
+| [Onboarding](/card-issuers/issuer-integration/onboarding) | TPA and go-live |
+| [Cards](/card-issuers/issuer-integration/cards) | Card registry |
+| [Transaction states](/card-issuers/issuer-integration/transaction-states) | Lifecycle events |
+
+Contact **support@opencard.io** for `client_id`, `client_secret`, scopes, and `{slug}`.

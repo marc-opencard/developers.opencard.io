@@ -1,0 +1,107 @@
+---
+title: Transaction States API
+description: Push card transaction lifecycle events to OpenCard — authorized, cleared, invoiced, and deleted states via the Issuer API.
+---
+
+The Transaction States API is the **primary channel** for delivering purchases to OpenCard. Send every state in the lifecycle so connected EMS apps receive a complete and accurate history.
+
+```
+POST /api/v1/issuers/{slug}/cards/{card_id}/transaction_states
+Scope: issuer-{slug}-transaction-states-write
+```
+
+`{card_id}` is the `id` you sent when [creating the card](/card-issuers/issuer-integration/cards).
+
+**Response `202`** — accepted for asynchronous processing. Empty body on success.
+
+---
+
+## Example — cleared purchase
+
+```json
+{
+  "id": "tx_1234567891",
+  "state": "cleared",
+  "type": "CARD_PURCHASE",
+  "invoice_number": null,
+  "original_amount": 109.38,
+  "original_currency": "SEK",
+  "accounting_amount": 109.38,
+  "accounting_currency": "SEK",
+  "exchange_rate": 1.0,
+  "vat_rate": 0.25,
+  "vat_amount": 21.88,
+  "vat_currency": "SEK",
+  "purchase_merchant": "Coop Vasagatan",
+  "purchase_time": "2025-11-17T15:35:11Z",
+  "purchase_country": "SE",
+  "purchase_city": "STOCKHOLM",
+  "mcc_code": "5411",
+  "merchant_number": "12345678",
+  "terminal_id": "TERM001",
+  "rrn": "123456789012",
+  "auth_code": "A1B2C3"
+}
+```
+
+---
+
+## Field reference
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `id` | ✅ | Your unique transaction id (same across states for one purchase) |
+| `state` | ✅ | `authorized`, `cleared`, `invoiced`, or `deleted` |
+| `type` | ✅ | `CARD_PURCHASE`, `CASH_WITHDRAWAL`, or `FEE_AND_DISCOUNT` |
+| `invoice_number` | ❌ | Issuer invoice number when `state` is `invoiced` |
+| `original_amount` | ✅ | Amount at point of purchase |
+| `original_currency` | ✅ | ISO 4217 (3 letters) |
+| `accounting_amount` | ✅ | Amount in cardholder billing currency |
+| `accounting_currency` | ✅ | ISO 4217 (3 letters) |
+| `exchange_rate` | ✅ | Rate between original and accounting amounts |
+| `vat_rate` | ❌ | VAT rate at merchant |
+| `vat_amount` | ❌ | VAT amount |
+| `vat_currency` | ❌ | ISO 4217 for VAT |
+| `purchase_merchant` | ✅ | Merchant name |
+| `purchase_time` | ✅ | ISO 8601 UTC, e.g. `2025-11-17T15:35:11Z` |
+| `purchase_country` | ✅ | ISO 3166-1 alpha-2 |
+| `purchase_city` | ❌ | City |
+| `mcc_code` | ✅ | Merchant Category Code |
+| `merchant_number` | ✅ | ISO 8583 field 42 |
+| `terminal_id` | ✅ | ISO 8583 field 41 |
+| `rrn` | ✅ | ISO 8583 field 37 (retrieval reference number) |
+| `auth_code` | ✅ | ISO 8583 field 38 |
+
+<Note>
+  Do **not** send `pre-authorized` as a state. Use `authorized` for the initial authorization event.
+</Note>
+
+---
+
+## States
+
+| State | When to send |
+|-------|----------------|
+| `authorized` | Immediately after purchase authorization |
+| `cleared` | When the transaction settles |
+| `invoiced` | When included on the cardholder's issuer invoice |
+| `deleted` | When an authorization is reversed before clearing |
+
+Use the **same `id`** for all states belonging to one purchase. EMS apps upsert on OpenCard's internal id after ingestion — your `id` is the issuer reference across states.
+
+---
+
+## Errors
+
+| HTTP | `error` | Meaning |
+|------|---------|---------|
+| `400` | `card_not_found` | No card registered for `{card_id}` |
+| `409` | `duplicate_transaction_state` | Same `id` + `state` already received |
+| `422` | `invalid_purchase_time` | `purchase_time` not valid ISO 8601 |
+| `422` | `card_missing_party` | Card missing buyer or seller party |
+
+---
+
+## What happens next
+
+OpenCard normalizes the payload, links it to the card and TPA, and forwards events to EMS webhooks. Optional enrichment (receipts, true VAT, line items) may follow as separate webhook events at the EMS — you do not implement that layer as an issuer.

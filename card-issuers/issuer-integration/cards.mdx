@@ -1,0 +1,119 @@
+---
+title: Cards API
+description: Register and maintain cards on the OpenCard Issuer API — create, update, list, get, and delete cards under /api/v1/issuers/{slug}/cards.
+---
+
+The Cards API maintains the set of cards enrolled in OpenCard per customer organisation. Register cards before sending transaction states — `{card_id}` in the transaction path is **your** card id from the create payload.
+
+**Base path:**
+
+```
+{base_url}/api/v1/issuers/{slug}/cards
+```
+
+---
+
+## Create card
+
+```
+POST /api/v1/issuers/{slug}/cards
+Scope: issuer-{slug}-cards-write
+```
+
+```json
+{
+  "id": "12345",
+  "last_four": "1234",
+  "bin_number": "123456",
+  "liability": "corporate_with_personal_invoice",
+  "scheme": "visa",
+  "issuer_organization_number": "5555555551",
+  "issuer_country_code": "SE",
+  "identity": {
+    "ssn": "190001011111",
+    "ssn_country_code": "SE",
+    "name": "Test Testsson",
+    "company_organization_number": "5555555555",
+    "company_country_code": "SE"
+  }
+}
+```
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `id` | ✅ | **Your** unique card id — used as `{card_id}` in transaction URLs |
+| `last_four` | ✅ | Last four digits |
+| `bin_number` | ✅ | BIN, max 12 characters |
+| `liability` | ✅ | `personal`, `corporate`, or `corporate_with_personal_invoice` |
+| `scheme` | ✅ | e.g. `visa`, `mastercard` |
+| `issuer_organization_number` | ✅ | Your organisation number (seller party) |
+| `issuer_country_code` | ✅ | ISO 3166-1 alpha-2 |
+| `identity.ssn` | ✅ | Cardholder national id |
+| `identity.ssn_country_code` | ✅ | ISO 3166-1 alpha-2 |
+| `identity.name` | ✅ | Cardholder display name |
+| `identity.company_organization_number` | ✅ | Customer company org number (buyer party) |
+| `identity.company_country_code` | ✅ | ISO 3166-1 alpha-2 |
+
+**Responses:**
+
+| Code | Meaning |
+|------|---------|
+| `201` | Card created |
+| `200` | Card already exists (idempotent — same `id`) |
+
+Create is **idempotent** on `id`. Re-posting the same card returns the existing record.
+
+---
+
+## Update card
+
+```
+PUT /api/v1/issuers/{slug}/cards/{card_id}
+Scope: issuer-{slug}-cards-write
+```
+
+Same body shape as create (except `id` comes from the path). Supports moving a card between identities/companies when holder or employer changes.
+
+**Response `200`** with `updated: true`.
+
+---
+
+## Get card
+
+```
+GET /api/v1/issuers/{slug}/cards/{card_id}
+Scope: issuer-{slug}-cards-read
+```
+
+---
+
+## List cards
+
+```
+GET /api/v1/issuers/{slug}/cards
+Scope: issuer-{slug}-cards-read
+```
+
+Query parameters: `last_four`, `buyer_party`, `seller_party`, `bin_number`, `id`, `active`, `per_page` (1–100, default 15), `page`.
+
+---
+
+## Delete card
+
+```
+DELETE /api/v1/issuers/{slug}/cards/{card_id}
+Scope: issuer-{slug}-cards-delete
+```
+
+Soft-deletes the card and marks it inactive. **Response `204`** with empty body.
+
+---
+
+## Why the registry matters
+
+OpenCard matches every transaction state to a registered card and identity. Without an up-to-date registry:
+
+- Transaction posts return `card_not_found`
+- EMS apps never see data for unknown cards
+
+Keep cards in sync when issued, replaced, or closed at your end.

@@ -1,44 +1,37 @@
 ---
 title: Card Issuer Integration
-description: Integration guide for banks and card programs to offer cardholders digital receipts from OpenCard's merchant network via receipts.opencard.io.
+description: OpenCard integration paths for card issuers — deliver transactions to connected EMS apps, or fetch digital receipts from the merchant network.
 ---
 
-This section is for **card issuers** — banks and card programs that want to give cardholders **digital receipts** from OpenCard's merchant network.
+This section is for **card issuers** — banks and card programs integrating with OpenCard.
 
 If you're an EMS → [Quickstart](/getting-started/quickstart) instead.
 
 ---
 
-## What you get
+## Two integrations — pick what you need
 
-One API on **`receipts.opencard.io`**:
+OpenCard offers **two separate APIs**. Most issuers start with transaction delivery; digital receipts is optional and runs on a different host.
 
-1. Discover which merchants have digital receipts (`GET /publishers`)
-2. Submit card transactions for matching (`POST /callbackrequests`)
-3. Receive matched receipts on your callback URL
-
-No separate transaction-delivery API in these docs — that's handled outside this integration.
-
----
-
-## How it works
-
-```mermaid
-sequenceDiagram
-    participant You as Card Issuer
-    participant R as receipts.opencard.io
-    participant M as Merchant Network
-
-    You->>R: GET /publishers
-    You->>R: POST /callbackrequests (transaction data)
-    R->>M: Match receipt
-    R->>You: Callback with receipt
-```
+<CardGroup cols={2}>
+  <Card title="Transaction integration" icon="credit-card" href="/card-issuers/issuer-integration">
+    Register cards and push transaction states (`authorized`, `cleared`, `invoiced`, `deleted`) to OpenCard. Data flows on to connected Expense Management Systems.
+  </Card>
+  <Card title="Digital receipts" icon="receipt" href="/card-issuers/digital-receipts">
+    Submit transactions to `receipts.opencard.io` for merchant receipt matching — independent from transaction delivery.
+  </Card>
+</CardGroup>
 
 ---
 
-## Get started
+## Transaction integration at a glance
 
-1. Contact **support@opencard.io** for JWT credentials and callback setup
-2. Read the integration guide → [Digital Receipts](/card-issuers/digital-receipts)
-3. API reference → [Digital Receipts API](/api-reference/receipts/overview)
+| | |
+|---|---|
+| **Base URL (sandbox)** | `https://sandbox-api.opencard.io` |
+| **Base URL (production)** | `https://api.opencard.io` |
+| **API prefix** | `/api/v1/issuers/{slug}/` |
+| **Auth** | OAuth 2.0 client credentials |
+| **Credentials** | `client_id`, `client_secret`, and `{slug}` delivered when integration starts |
+
+→ [Issuer integration overview](/card-issuers/issuer-integration)

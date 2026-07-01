@@ -1,0 +1,61 @@
+---
+title: Issuer Authentication
+description: OAuth 2.0 client credentials for the OpenCard Issuer API — obtain a bearer token and call endpoints under /api/v1/issuers/{slug}/.
+---
+
+The Issuer API uses **OAuth 2.0 client credentials**. OpenCard delivers a `client_id`, `client_secret`, issuer `{slug}`, and scope list when your integration starts.
+
+---
+
+## Get an access token
+
+```bash
+curl -X POST {base_url}/oauth/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=YOUR_CLIENT_ID" \
+  -d "client_secret=YOUR_CLIENT_SECRET" \
+  -d "scope=issuer-{slug}-cards-write issuer-{slug}-transaction-states-write"
+```
+
+Replace `{base_url}` with `https://sandbox-api.opencard.io` or `https://api.opencard.io`. Replace `{slug}` in scope names with your assigned slug.
+
+**Response `200`:**
+
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "Bearer",
+  "expires_in": 3600
+}
+```
+
+Tokens expire — cache until shortly before `expires_in` and refresh with a new token request.
+
+---
+
+## Call the API
+
+```bash
+curl {base_url}/api/v1/issuers/{slug}/cards \
+  -H "Authorization: Bearer ACCESS_TOKEN"
+```
+
+---
+
+## Scopes
+
+OpenCard assigns scopes per issuer slug. Typical boilerplate scopes:
+
+| Scope | Allows |
+|-------|--------|
+| `issuer-{slug}-cards-read` | `GET` cards |
+| `issuer-{slug}-cards-write` | `POST` and `PUT` cards |
+| `issuer-{slug}-cards-delete` | `DELETE` cards |
+| `issuer-{slug}-transaction-states-write` | `POST` transaction states |
+
+Your exact scope string is provided at onboarding. Request only the scopes you need in the token call — space-separated.
+
+<Warning>
+  Sandbox and production use **separate** credentials. Never point production traffic at sandbox URLs or vice versa.
+</Warning>

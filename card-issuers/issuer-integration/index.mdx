@@ -1,0 +1,83 @@
+---
+title: Issuer Integration Overview
+description: Connect your card program to OpenCard — push cards and transaction states so connected EMS apps receive real-time spend data and enrichment.
+---
+
+The **Issuer API** lets card issuers integrate directly with OpenCard and distribute transaction data to connected Expense Management Systems (EMS).
+
+In addition to standard transaction data, OpenCard can attach **enriched information** — digital receipts, correct VAT, line items, environmental metrics — through partner networks. EMS users get a fuller picture of each purchase without you building that layer yourself.
+
+<Note>
+  This is **not** the digital receipts API on `receipts.opencard.io`. That is a separate product for receipt matching only. See [Digital receipts](/card-issuers/digital-receipts) if you need it.
+</Note>
+
+---
+
+## Before you integrate
+
+1. **Customer signs a TPA** (Transaction Processing Authorisation) via their EMS — authorising the issuer to release that company's card data to OpenCard.
+2. **OpenCard delivers your credentials** — OAuth client, scopes, and your issuer `{slug}`.
+3. **You register cards** — OpenCard needs an up-to-date card registry per customer organisation.
+4. **You push transaction states** — `authorized`, `cleared`, `invoiced`, and `deleted` for every purchase.
+
+Until cards exist and states are delivered, EMS apps connected to that customer will not receive data.
+
+---
+
+## End-to-end flow
+
+```mermaid
+sequenceDiagram
+    participant Customer as Customer signatory
+    participant EMS as EMS
+    participant OC as OpenCard
+    participant Issuer as You (issuer)
+
+    Customer->>EMS: Sign TPA (eID)
+    EMS->>OC: TPA signed
+    OC->>Issuer: Signed TPA (API / email)
+    Issuer->>OC: POST /issuers/{slug}/cards
+    Issuer->>OC: POST .../transaction_states
+    OC->>EMS: Webhooks (transactions + enrichment)
+```
+
+---
+
+## API surface
+
+All endpoints live under:
+
+```
+{base_url}/api/v1/issuers/{slug}/
+```
+
+Replace `{slug}` with the value OpenCard assigns your integration (e.g. your program's short name). The boilerplate reference implementation uses this path pattern — your deployment may add or omit endpoints; confirm with OpenCard before go-live.
+
+| Area | Endpoints | Purpose |
+|------|-----------|---------|
+| **Cards** | `GET/POST/PUT/DELETE .../cards` | Register and maintain cards |
+| **Transaction states** | `POST .../cards/{card_id}/transaction_states` | Deliver transaction lifecycle events |
+
+---
+
+## Guides
+
+| Guide | What it covers |
+|-------|----------------|
+| [Onboarding](/card-issuers/issuer-integration/onboarding) | TPA handoff and when to start sending data |
+| [Authentication](/card-issuers/issuer-integration/authentication) | OAuth client credentials and scopes |
+| [Cards](/card-issuers/issuer-integration/cards) | Create, update, list, and delete cards |
+| [Transaction states](/card-issuers/issuer-integration/transaction-states) | Push purchases through their lifecycle |
+
+API reference → [Issuer API](/api-reference/issuers/overview)
+
+---
+
+## Environments
+
+| | Sandbox | Production |
+|---|---------|------------|
+| **Base URL** | `https://sandbox-api.opencard.io` | `https://api.opencard.io` |
+| **OAuth token** | `POST {base_url}/oauth/token` | Same path |
+
+Contact **support@opencard.io** to start integration and receive sandbox credentials.

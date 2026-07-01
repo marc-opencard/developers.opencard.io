@@ -1,0 +1,74 @@
+---
+title: Issuer Onboarding
+description: How issuer integration starts — TPA signing by the customer, receiving the signed agreement, and when to register cards and send transactions.
+---
+
+Integration starts when a **customer** (your corporate card client) authorises card data to flow through OpenCard to their EMS.
+
+---
+
+## 1. Customer signs the TPA
+
+The customer's authorized signatories sign a **Transaction Processing Authorisation (TPA)** digitally via their EMS. The TPA states that the customer authorises **you** (the issuer) to release their card transactions to OpenCard for delivery to that EMS.
+
+You do not run the signing flow — the EMS and OpenCard handle it.
+
+---
+
+## 2. You receive the signed TPA
+
+When signing is complete, OpenCard:
+
+1. Archives the signed PDF
+2. Notifies you that the TPA is ready — via **API callback** and/or **email** (depends on your integration setup)
+
+Verify signatures match your requirements before you start sending card and transaction data for that customer organisation.
+
+```mermaid
+flowchart TD
+    A[Customer signs TPA via EMS] --> B{Signatures verified?}
+    B -->|Yes| C[Archive TPA — start integration flow]
+    B -->|No| D[Verify via API and/or email]
+    D --> B
+```
+
+---
+
+## 3. Register cards
+
+Create cards with `POST /api/v1/issuers/{slug}/cards` for each card that should flow through OpenCard.
+
+The card registry is the foundation for transaction routing — every `transaction_states` call references a `{card_id}` you registered earlier.
+
+→ [Cards](/card-issuers/issuer-integration/cards)
+
+---
+
+## 4. Push transaction states
+
+Send all lifecycle states for each purchase:
+
+- `authorized` — purchase just happened
+- `cleared` — settled
+- `invoiced` — included on issuer invoice (with `invoice_number` when applicable)
+- `deleted` — authorization reversed
+
+→ [Transaction states](/card-issuers/issuer-integration/transaction-states)
+
+---
+
+## 5. TPA activation
+
+The first card you register for a buyer/seller party pair can move an associated TPA to **activated** on the OpenCard side. Until the TPA is active, EMS apps will not receive transactions for that customer — even if you send data early.
+
+Confirm activation status with OpenCard during testing if transactions do not appear at the EMS.
+
+---
+
+## Get credentials
+
+Contact **support@opencard.io** with:
+
+- Your card program name
+- Expected markets (SE, NO, DK, FI)
+- Technical contact for OAuth credentials and `{slug}` assignment

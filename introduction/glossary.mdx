@@ -15,7 +15,7 @@ description: OpenCard glossary — EMS, account, organization, billing, card hol
 | **PDPC** | Personal Data Processing Consent. Individual GDPR consent. |
 | **Transaction** | One purchase. ID stays same across all states. |
 | **Transaction State** | Snapshot: `authorized`, `cleared`, `deleted`, `invoiced`. |
-| **Card Issuer** | Bank or card program. Uses `receipts.opencard.io` for digital receipt matching. |
+| **Card Issuer** | Bank or card program. Delivers transactions via the Issuer API; may also use `receipts.opencard.io` for digital receipt matching. |
 | **Receipt Provider** | Collects receipts from merchants and delivers them to OpenCard. OpenCard forwards enriched data to Expense Management Systems. |
 | **Webhook** | HTTP POST from OpenCard when stuff happens. |
 | **Reference ID** | Your string ID on orgs/cardholders. In every webhook. |

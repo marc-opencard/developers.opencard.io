@@ -495,6 +495,199 @@ receipts_spec = {
     },
 }
 
+# ─── Issuer API (api.opencard.io) — transaction delivery for card issuers ─────
+
+ISSUER_CARD = {
+    "id": "12345",
+    "last_four": "1234",
+    "bin_number": "123456",
+    "liability": "corporate_with_personal_invoice",
+    "scheme": "visa",
+    "issuer_organization_number": "5555555551",
+    "issuer_country_code": "SE",
+    "identity": {
+        "ssn": "190001011111",
+        "ssn_country_code": "SE",
+        "name": "Test Testsson",
+        "company_organization_number": "5555555555",
+        "company_country_code": "SE",
+    },
+}
+
+ISSUER_TX_STATE = {
+    "id": "tx_1234567891",
+    "state": "cleared",
+    "type": "CARD_PURCHASE",
+    "invoice_number": None,
+    "original_amount": 109.38,
+    "original_currency": "SEK",
+    "accounting_amount": 109.38,
+    "accounting_currency": "SEK",
+    "exchange_rate": 1.0,
+    "vat_rate": 0.25,
+    "vat_amount": 21.88,
+    "vat_currency": "SEK",
+    "purchase_merchant": "Coop Vasagatan",
+    "purchase_time": "2025-11-17T15:35:11Z",
+    "purchase_country": "SE",
+    "purchase_city": "STOCKHOLM",
+    "mcc_code": "5411",
+    "merchant_number": "12345678",
+    "terminal_id": "TERM001",
+    "rrn": "123456789012",
+    "auth_code": "A1B2C3",
+}
+
+SLUG = path_param("slug", "Issuer slug assigned by OpenCard", "string")
+CARD_ID = path_param("cardId", "Your card id from POST /cards", "string")
+
+issuer_spec = {
+    "openapi": "3.0.3",
+    "info": {
+        "title": "OpenCard Issuer API",
+        "version": "1.0",
+        "description": "Card issuers register cards and push transaction states. Replace {slug} with your assigned issuer identifier.",
+        "contact": {"email": "support@opencard.io"},
+    },
+    "servers": [
+        {"url": "https://api.opencard.io", "description": "Production"},
+        {"url": "https://sandbox-api.opencard.io", "description": "Sandbox"},
+    ],
+    "tags": [
+        {"name": "Cards", "description": "Card registry"},
+        {"name": "Transaction States", "description": "Transaction lifecycle events"},
+    ],
+    "paths": {
+        "/api/v1/issuers/{slug}/cards": {
+            "get": {
+                "tags": ["Cards"], "summary": "List cards", "operationId": "listIssuerCards",
+                "parameters": [SLUG,
+                    {"name": "last_four", "in": "query", "schema": {"type": "string"}},
+                    {"name": "per_page", "in": "query", "schema": {"type": "integer", "default": 15}},
+                    {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
+                ],
+                "security": [BEARER],
+                "responses": json_resp("200", "Paginated cards", example={"ok": True, "data": [], "meta": {"total": 0}}),
+            },
+            "post": {
+                "tags": ["Cards"], "summary": "Create card", "operationId": "createIssuerCard",
+                "parameters": [SLUG],
+                "security": [BEARER],
+                "requestBody": json_body(ref("IssuerCardCreate"), example=ISSUER_CARD),
+                "responses": {
+                    **json_resp("201", "Created", example={"ok": True, "cardId": "12345", "created": True}),
+                    **json_resp("200", "Already exists", example={"ok": True, "cardId": "12345", "created": False}),
+                },
+            },
+        },
+        "/api/v1/issuers/{slug}/cards/{cardId}": {
+            "get": {
+                "tags": ["Cards"], "summary": "Get card", "operationId": "getIssuerCard",
+                "parameters": [SLUG, CARD_ID], "security": [BEARER],
+                "responses": json_resp("200", "Card", example={"ok": True, "card": {"id": "12345"}}),
+            },
+            "put": {
+                "tags": ["Cards"], "summary": "Update card", "operationId": "updateIssuerCard",
+                "parameters": [SLUG, CARD_ID], "security": [BEARER],
+                "requestBody": json_body(ref("IssuerCardUpdate"), example={k: v for k, v in ISSUER_CARD.items() if k != "id"}),
+                "responses": json_resp("200", "Updated", example={"ok": True, "updated": True}),
+            },
+            "delete": {
+                "tags": ["Cards"], "summary": "Delete card", "operationId": "deleteIssuerCard",
+                "parameters": [SLUG, CARD_ID], "security": [BEARER],
+                "responses": json_resp("204", "Deleted"),
+            },
+        },
+        "/api/v1/issuers/{slug}/cards/{cardId}/transaction_states": {
+            "post": {
+                "tags": ["Transaction States"], "summary": "Create transaction state", "operationId": "createIssuerTransactionState",
+                "parameters": [SLUG, CARD_ID], "security": [BEARER],
+                "requestBody": json_body(ref("IssuerTransactionStateCreate"), example=ISSUER_TX_STATE),
+                "responses": {
+                    **json_resp("202", "Accepted"),
+                    **json_resp("409", "Duplicate", example={"ok": False, "error": "duplicate_transaction_state"}),
+                },
+            },
+        },
+    },
+    "components": {
+        "securitySchemes": {"bearer": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}},
+        "schemas": {
+            "IssuerCardCreate": {
+                "type": "object",
+                "required": ["id", "last_four", "bin_number", "liability", "scheme",
+                             "issuer_organization_number", "issuer_country_code", "identity"],
+                "properties": {
+                    "id": {"type": "string"},
+                    "last_four": {"type": "string", "maxLength": 4},
+                    "bin_number": {"type": "string"},
+                    "liability": {"type": "string", "enum": ["personal", "corporate", "corporate_with_personal_invoice"]},
+                    "scheme": {"type": "string"},
+                    "issuer_organization_number": {"type": "string"},
+                    "issuer_country_code": {"type": "string", "minLength": 2, "maxLength": 2},
+                    "identity": {"$ref": "#/components/schemas/IssuerIdentity"},
+                },
+            },
+            "IssuerCardUpdate": {
+                "type": "object",
+                "required": ["last_four", "bin_number", "liability", "scheme",
+                             "issuer_organization_number", "issuer_country_code", "identity"],
+                "properties": {
+                    "last_four": {"type": "string"},
+                    "bin_number": {"type": "string"},
+                    "liability": {"type": "string", "enum": ["personal", "corporate", "corporate_with_personal_invoice"]},
+                    "scheme": {"type": "string"},
+                    "issuer_organization_number": {"type": "string"},
+                    "issuer_country_code": {"type": "string"},
+                    "identity": {"$ref": "#/components/schemas/IssuerIdentity"},
+                },
+            },
+            "IssuerIdentity": {
+                "type": "object",
+                "required": ["ssn", "ssn_country_code", "name", "company_organization_number", "company_country_code"],
+                "properties": {
+                    "ssn": {"type": "string"},
+                    "ssn_country_code": {"type": "string"},
+                    "name": {"type": "string"},
+                    "company_organization_number": {"type": "string"},
+                    "company_country_code": {"type": "string"},
+                },
+            },
+            "IssuerTransactionStateCreate": {
+                "type": "object",
+                "required": ["id", "state", "type", "original_amount", "original_currency",
+                             "accounting_amount", "accounting_currency", "exchange_rate",
+                             "purchase_merchant", "purchase_time", "purchase_country",
+                             "mcc_code", "merchant_number", "terminal_id", "rrn", "auth_code"],
+                "properties": {
+                    "id": {"type": "string"},
+                    "state": {"type": "string", "enum": ["authorized", "cleared", "invoiced", "deleted"]},
+                    "type": {"type": "string", "enum": ["CARD_PURCHASE", "CASH_WITHDRAWAL", "FEE_AND_DISCOUNT"]},
+                    "invoice_number": {"type": "string", "nullable": True},
+                    "original_amount": {"type": "number"},
+                    "original_currency": {"type": "string"},
+                    "accounting_amount": {"type": "number"},
+                    "accounting_currency": {"type": "string"},
+                    "exchange_rate": {"type": "number"},
+                    "vat_rate": {"type": "number"},
+                    "vat_amount": {"type": "number"},
+                    "vat_currency": {"type": "string"},
+                    "purchase_merchant": {"type": "string"},
+                    "purchase_time": {"type": "string", "format": "date-time"},
+                    "purchase_country": {"type": "string"},
+                    "purchase_city": {"type": "string"},
+                    "mcc_code": {"type": "string"},
+                    "merchant_number": {"type": "string"},
+                    "terminal_id": {"type": "string"},
+                    "rrn": {"type": "string"},
+                    "auth_code": {"type": "string"},
+                },
+            },
+            "Error": ERR,
+        },
+    },
+}
+
 # ─── Receipt provider callback (inbound to api.opencard.io) ───────────────────
 
 provider_callback_spec = {
@@ -525,6 +718,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 files = {
     "ems-api.json": ems_spec,
     "oauth.json": oauth_spec,
+    "issuer-api.json": issuer_spec,
     "receipts-api.json": receipts_spec,
     "receipt-provider-callback.json": provider_callback_spec,
 }
