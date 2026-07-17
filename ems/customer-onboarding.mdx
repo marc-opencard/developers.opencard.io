@@ -31,13 +31,12 @@ sequenceDiagram
     Client->>You: Choose card program
     You->>OC: GET account cardissuers
     Client->>You: Choose products + invoice details
-    You->>OC: GET publicrecords (signatories)
-    Client->>You: Pick who signs + emails
-    You->>OC: POST billing + TPA + signatories
+    You->>OC: GET publicrecords (who may sign TPA)
+    Client->>You: Confirm TPA signatories + emails
+    You->>OC: Configure client (billing, TPA, org, webhook)
     OC->>Client: TPA signing email (eID)
     Client->>OC: Sign TPA
     OC->>You: tpa.signed webhook
-    You->>OC: Create Organization + Webhook
 
     Note over Client,OC: Phase 2 — Cardholder setup
     Client->>You: Add employee
@@ -79,11 +78,32 @@ Enabling new issuers on the account is one-time platform setup — not part of t
 
 What OpenCard should deliver for this client. Stored as flags on the **billing** profile when you create it:
 
-| Field | Meaning | Typical UX |
-|-------|---------|------------|
-| `product_transaction` | Real-time transaction states to your webhooks | Usually always on |
-| `product_digital_receipt` | Digital receipts from the merchant network | Optional toggle |
-| `product_aland_index` | Environmental impact estimates | Optional toggle |
+<table>
+  <thead>
+    <tr>
+      <th width="42%">Field</th>
+      <th>Meaning</th>
+      <th width="22%">Typical UX</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>product_transaction</code></td>
+      <td>Real-time transaction states to your webhooks</td>
+      <td>Usually always on</td>
+    </tr>
+    <tr>
+      <td><code>product_digital_receipt</code></td>
+      <td>Digital receipts from the merchant network</td>
+      <td>Optional toggle</td>
+    </tr>
+    <tr>
+      <td><code>product_aland_index</code></td>
+      <td>Environmental impact estimates</td>
+      <td>Optional toggle</td>
+    </tr>
+  </tbody>
+</table>
 
 Transactions are the core product. Receipts and environmental impact are enriched add-ons — same split the plugin uses (“Transaction information” vs “Enriched information”).
 
@@ -151,6 +171,7 @@ Complete the [webhook challenge handshake](/ems/webhooks/setup#challenge-handsha
 → [Billing](/ems/model/billing) · [Organization](/ems/model/organization) · [Webhook setup](/ems/webhooks/setup) · [TPA flow](/ems/tpa-flow)
 
 Client setup is complete when the TPA is signed (ideally activated), the organization exists with `billing_id` + `tpa_id`, and the webhook is active.
+
 ---
 
 ## Phase 2 — Cardholder setup
