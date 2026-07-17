@@ -49,7 +49,7 @@ Scope: account-tpas-write
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| `card_issuer_id` | ✅ | Which card program (from `GET /cardissuers`) |
+| `card_issuer_id` | ✅ | Which card program — from issuers **enabled on your account** (`GET .../accounts/{accountId}/cardissuers`) |
 | `name` | ✅ | Overwritten by registry name if found |
 | `country` | ✅ | `SE`, `DK`, `NO`, or `FI` only |
 | `organization_number` | ✅ | Format depends on country (see below) |

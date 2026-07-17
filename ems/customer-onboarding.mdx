@@ -28,16 +28,16 @@ sequenceDiagram
     participant OC as OpenCard
 
     Note over Client,OC: Phase 1 — Client setup
-    Client->>You: Sign up / add company
-    You->>OC: Public records + card issuers (optional)
-    You->>OC: Create Billing
-    You->>OC: Create TPA
-    You->>OC: Create TPA signatories
+    Client->>You: Choose card program
+    You->>OC: GET account cardissuers
+    Client->>You: Choose products + invoice details
+    You->>OC: GET publicrecords (signatories)
+    Client->>You: Pick who signs + emails
+    You->>OC: POST billing + TPA + signatories
     OC->>Client: TPA signing email (eID)
     Client->>OC: Sign TPA
     OC->>You: tpa.signed webhook
-    You->>OC: Create Organization (tpa_id + billing_id)
-    You->>OC: Create Webhook
+    You->>OC: Create Organization + Webhook
 
     Note over Client,OC: Phase 2 — Cardholder setup
     Client->>You: Add employee
@@ -55,52 +55,88 @@ sequenceDiagram
 
 ## Phase 1 — Client setup
 
-Goal: legal permission + a runtime container (organization + webhook) so data has somewhere to go.
+This is what the **client** walks through in your product (same order as the optional [ocTPA plugin](/ems/plugins)). You collect choices in the UI, then create the OpenCard resources.
 
-### 1. Look up the company (recommended)
+```mermaid
+flowchart LR
+    A[1. Card program] --> B[2. Products]
+    B --> C[3. Invoice details]
+    C --> D[4. Who signs]
+    D --> E[5. Create in API]
+```
+
+### 1. Choose card program
 
 ```
-GET /accounts/{accountId}/publicrecords?country=SE&organization_number=...
-GET /cardissuers
 GET /accounts/{accountId}/cardissuers
 ```
 
-Use public records to suggest authorized signatories. Use card issuers to pick which card program this client uses.
+Show only issuers **already enabled** on your account. The client picks one → you store `card_issuer_id` for the TPA.
 
-→ [TPA flow — who can sign](/ems/tpa-flow) · [Model: TPA](/ems/model/tpa)
+Enabling new issuers on the account is one-time platform setup — not part of this per-client wizard. → [Quickstart](/getting-started/quickstart)
 
-### 2. Create billing
+### 2. Choose products
 
-```
-POST /accounts/{accountId}/billings
-```
+What OpenCard should deliver for this client. Collected on the **billing** profile when you create it:
 
-Billing is **how OpenCard invoices you** (the EMS), not how the client's bank invoices them. Link one or many organizations to the same `billing_id` if you want them on one OpenCard invoice.
+| Product flag | Meaning | Typical UX |
+|--------------|---------|------------|
+| `product_transaction` | Real-time transaction states to your webhooks | Usually always on |
+| `product_digital_receipt` | Digital receipts / enrichment from the merchant network | Optional toggle |
+| `product_aland_index` | Environmental impact estimates on transactions | Optional toggle |
+
+Transactions are the core product. Receipts and environmental impact are **enriched** add-ons — same model the plugin uses under “Transaction information” vs “Enriched information”.
+
+→ [Billing](/ems/model/billing) · [Receipts](/ems/receipts) · [Environmental impact](/ems/environmental-impact)
+
+### 3. Invoice details (for your OpenCard bill)
+
+Collect how **you** (the EMS) want this client grouped on the invoice OpenCard sends **you**:
+
+- Invoice email (`email_invoice`)
+- Your reference (`your_reference_invoice`)
+- Legal name / org number / address (often from public records)
+
+This is not the bank’s card invoice to the client.
 
 → [Billing](/ems/model/billing)
 
-### 3. Create TPA + signatories
+### 4. Who must approve (TPA signatories)
 
 ```
-POST /accounts/{accountId}/tpas
-POST /accounts/{accountId}/tpas/{tpaId}/signatories
+GET /accounts/{accountId}/publicrecords?country=SE&organization_number=...
 ```
 
-OpenCard emails each signatory a link. They sign with national **eID**. You wait for status — do not invent your own signing UI.
+Use `signature_combinations` when present so the client picks a valid signing group. Collect **name + email** for each required signatory (or allow manual entry when the registry has no combinations).
+
+→ [TPA flow](/ems/tpa-flow) · [eID signing](/ems/eid-signing)
+
+### 5. Create what they chose (your APIs)
+
+When the client confirms, create everything in OpenCard:
+
+```
+POST /accounts/{accountId}/billings          ← invoice + product flags
+POST /accounts/{accountId}/tpas             ← card_issuer_id + company
+POST /accounts/{accountId}/tpas/{id}/signatories   ← emails → eID links
+```
+
+OpenCard emails signatories. They sign with national **eID**. You wait for status — do not build your own signing UI.
 
 | Event / signal | Meaning |
 |----------------|---------|
 | Signatory signs | Progress toward fully signed |
 | `tpa.signed` webhook | All required signatures done — PDF ready |
-| Status → `activated` | Issuer confirmed — transactions can flow |
+| Status → `activated` | TPA confirmed — transactions can flow |
 
-→ [TPA flow](/ems/tpa-flow) · [eID signing](/ems/eid-signing)
-
-### 4. Create organization
+Then create the **runtime** container:
 
 ```
-POST /accounts/{accountId}/organizations
+POST /accounts/{accountId}/organizations    ← tpa_id + billing_id + your reference_id
+POST /accounts/{accountId}/organizations/{id}/webhooks
 ```
+
+Pass the webhook challenge before `active=true`.
 
 ```json
 {
@@ -111,22 +147,9 @@ POST /accounts/{accountId}/organizations
 }
 ```
 
-`reference_id` = **your** client ID — it comes back on every webhook.
-
-→ [Organization](/ems/model/organization)
-
-### 5. Create webhook
-
-```
-POST /accounts/{accountId}/organizations/{organizationId}/webhooks
-```
-
-Pass the challenge handshake before `active=true`. Subscribe at least to transaction + card-holder events.
-
-→ [Webhook setup](/ems/webhooks/setup)
+→ [Organization](/ems/model/organization) · [Webhook setup](/ems/webhooks/setup) · [TPA flow](/ems/tpa-flow)
 
 **Client setup is complete** when: TPA is signed (ideally activated), organization exists with `billing_id` + `tpa_id`, and webhook is active.
-
 ---
 
 ## Phase 2 — Cardholder setup
@@ -166,18 +189,19 @@ Once card holders are identified and the TPA is activated:
 
 Do this **per client** (after your account + OAuth client exist):
 
-| # | API | Detail guide |
-|---|-----|--------------|
-| 1 | Enable card issuer on account (once per program) | [Quickstart](/getting-started/quickstart) |
-| 2 | `POST .../billings` | [Billing](/ems/model/billing) |
-| 3 | `POST .../tpas` | [TPA flow](/ems/tpa-flow) |
-| 4 | `POST .../tpas/{id}/signatories` | [TPA flow](/ems/tpa-flow) |
-| 5 | Wait for eID + `tpa.signed` | [eID signing](/ems/eid-signing) |
-| 6 | `POST .../organizations` (`tpa_id`, `billing_id`, `reference_id`) | [Organization](/ems/model/organization) |
-| 7 | `POST .../webhooks` + pass challenge | [Webhook setup](/ems/webhooks/setup) |
-| 8 | `POST .../cardholders` (email or `identity_id`) | [Card holders](/ems/card-holders) |
-| 9 | Wait for `card_holder.identified` | [Card holders](/ems/card-holders) |
-| 10 | Handle `card.transaction.*` (+ enrichment) | [Transactions](/ems/webhooks/transactions) |
+| # | Step | API / action | Detail guide |
+|---|------|--------------|--------------|
+| 0 | Enable card issuer(s) on account (once) | `POST .../cardissuers/{id}` | [Quickstart](/getting-started/quickstart) |
+| 1 | Client picks card program | `GET .../accounts/{id}/cardissuers` | below |
+| 2 | Client picks products | Flags on billing create | [Billing](/ems/model/billing) |
+| 3 | Invoice email / reference | Part of billing create | [Billing](/ems/model/billing) |
+| 4 | Who signs | `GET .../publicrecords` | [TPA flow](/ems/tpa-flow) |
+| 5 | Create billing + TPA + signatories | `POST` billings, tpas, signatories | [TPA flow](/ems/tpa-flow) |
+| 6 | Wait for eID + `tpa.signed` | Webhook / status | [eID signing](/ems/eid-signing) |
+| 7 | Create organization + webhook | `POST` orgs, webhooks | [Organization](/ems/model/organization) · [Webhooks](/ems/webhooks/setup) |
+| 8 | Create card holders | `POST` cardholders | [Card holders](/ems/card-holders) |
+| 9 | Wait for `card_holder.identified` | Webhook | [Card holders](/ems/card-holders) |
+| 10 | Handle transactions + enrichment | Webhooks | [Transactions](/ems/webhooks/transactions) |
 
 ---
 
@@ -185,10 +209,10 @@ Do this **per client** (after your account + OAuth client exist):
 
 | Approach | When |
 |----------|------|
-| **API only (this guide)** | You want full control in your product — recommended for a production integration |
-| **[ocTPA / ocPDPC plugins](/ems/plugins)** | Optional UI helpers that collect form data; **you still call the same APIs** |
+| **API only (this guide)** | Rebuild the same steps in your own UI — recommended for production |
+| **[ocTPA plugin](/ems/plugins)** | Ready-made wizard: issuer → products → invoice → signatories; **you still POST** billing / TPA / signatories from `onDataSend` |
 
-The plugin does not replace this flow — it only helps collect billing / TPA / signatory fields before you POST them.
+The plugin mirrors steps 1–5 above. It does not create organization, webhook, or card holders — those stay in your integration.
 
 ---
 

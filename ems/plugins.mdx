@@ -11,7 +11,13 @@ These are **optional UI helpers**. For the full API path (billing → TPA → or
 
 ## ocTPA — TPA onboarding wizard
 
-Self-service multi-step wizard: pick issuer → company info → signatory combos → collect emails.
+Self-service wizard that mirrors [customer onboarding Phase 1](/ems/customer-onboarding#phase-1--client-setup):
+
+1. Pick card program (`GET .../cardissuers` on the account)
+2. Pick products (transactions + optional enrichment)
+3. Invoice email / reference
+4. Signatory combination + emails (`GET .../publicrecords`)
+5. Hand payload to you via `onDataSend`
 
 **Load:**
 ```html
@@ -23,33 +29,45 @@ Self-service multi-step wizard: pick issuer → company info → signatory combo
 ```javascript
 new ocTPA({
   environment: 'sandbox', // or 'production'
-  oAuthToken: 'Bearer ...', // needs public-records-read + account-card-issuers-read
+  oAuthToken: 'Bearer ...', // scopes: public-records-read + account-card-issuers-read only
   accountId: 1,
   orgNumber: '5561234567',
   country: 'SE',
-  onDataSend: function(data) {
-    // YOU call the APIs:
-    // 1. POST /billings (data.billing)
+  onDataSend: async function(data) {
+    // YOU call the APIs — plugin does not write to OpenCard:
+    // 1. POST /billings (data.billing) — includes product_* flags
     // 2. POST /tpas (data.tpa)
     // 3. POST /tpas/{id}/signatories for each in data.tpa_signatories
+    // Then: organization + webhook (your app), then card holders
+    return true; // or error string
   }
 });
 ```
-
-The plugin does **not** call APIs itself. It collects data and hands it to your `onDataSend` callback.
 
 ### `onDataSend` payload
 
 ```json
 {
   "billing": {
-    "name_display": "...", "name_legal": "...",
-    "organization_number": "...", "country": "SE",
-    "email_invoice": "...", "your_reference_invoice": "..."
+    "name_display": "...",
+    "name_legal": "...",
+    "organization_number": "...",
+    "country": "SE",
+    "address_street": "...",
+    "address_city": "...",
+    "address_zip": "...",
+    "email_invoice": "...",
+    "your_reference_invoice": "...",
+    "product_transaction": true,
+    "product_digital_receipt": true,
+    "product_aland_index": false
   },
   "tpa": {
-    "language": "sv", "name": "...", "country": "SE",
-    "organization_number": "...", "card_issuer_id": 1
+    "language": "sv",
+    "name": "...",
+    "country": "SE",
+    "organization_number": "...",
+    "card_issuer_id": 1
   },
   "tpa_signatories": [
     { "name": "Anna", "email": "anna@acme.se" }

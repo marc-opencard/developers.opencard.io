@@ -54,6 +54,9 @@ Each organization still has its own webhooks, card holders, and transactions. Bi
 | `organization_number` | Company registration number |
 | `email_invoice` | Where OpenCard sends your invoice |
 | `your_reference_invoice` | Your PO or reference on the invoice |
+| `product_transaction` | Real-time transactions enabled for orgs on this billing |
+| `product_digital_receipt` | Digital receipt enrichment |
+| `product_aland_index` | Environmental impact enrichment |
 
 ---
 
@@ -70,12 +73,17 @@ POST /accounts/{accountId}/organizations     Set billing_id on create
   "organization_number": "5561234567",
   "country": "SE",
   "email_invoice": "finance@acme-ems.se",
-  "your_reference_invoice": "PO-12345"
+  "your_reference_invoice": "PO-12345",
+  "product_transaction": true,
+  "product_digital_receipt": true,
+  "product_aland_index": false
 }
 ```
 
 When creating an organization, set `"billing_id": 1` (or whichever profile applies). Multiple organizations with the **same** `billing_id` appear on one OpenCard invoice.
 
+Product flags are what the client chooses in onboarding (“transactions” vs optional enrichment). → [Customer onboarding](/ems/customer-onboarding)
+
 <Note>
-  Create billing during [client setup](/ems/customer-onboarding#phase-1--client-setup), before or alongside the TPA. An optional [ocTPA plugin](/ems/plugins) can collect the same fields in a UI — you still POST this API.
+  Create billing during [client setup](/ems/customer-onboarding#phase-1--client-setup), together with the TPA. An optional [ocTPA plugin](/ems/plugins) collects the same fields — you still POST this API.
 </Note>
