@@ -24,7 +24,7 @@ sequenceDiagram
     participant You as Your Expense Management System
 
     Note over You,OC: Setup (once per client)
-    You->>OC: Create billing profile (invoice grouping)
+    You->>OC: Create billing profile (invoice recipient + line roll-up)
     You->>OC: Create TPA + signatories sign with eID
     You->>OC: Create organization + webhook (linked to billing)
     You->>OC: Create card holders

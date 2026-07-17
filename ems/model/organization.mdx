@@ -16,7 +16,7 @@ It is the main **runtime container**: webhooks, card holders, and event routing 
 | **Your client** | One end-customer (usually one company) |
 | **`reference_id`** | Your string ID — echoed in all webhooks for that client |
 | **`tpa_id`** | Which signed legal agreement covers this client's card program |
-| **`billing_id`** | Which [billing profile](/ems/model/billing) this org rolls up under on your OpenCard invoice |
+| **`billing_id`** | Which [billing profile](/ems/model/billing) this org rolls into — same id = **one line** on your OpenCard invoice |
 
 One organization typically maps to one client. Split into multiple organizations only when you need separate webhook endpoints, event subscriptions, or card-holder groups for the same client.
 
@@ -46,7 +46,7 @@ Organization
 | `id` | OpenCard organization ID |
 | `reference_id` | **Your** client ID (required, unique per account) |
 | `tpa_id` | TPA on your account (signed and activated for live data) |
-| `billing_id` | Invoice grouping — see [Billing](/ems/model/billing) |
+| `billing_id` | Invoice line roll-up — see [Billing](/ems/model/billing) |
 | `name` | Display name |
 
 ---

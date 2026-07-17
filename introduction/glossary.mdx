@@ -8,7 +8,7 @@ description: OpenCard glossary — EMS, account, organization, billing, card hol
 | **EMS** | Expense Management System — software for corporate card spend, expenses, and receipts. |
 | **Account** | Your Expense Management System partner account. Top of the hierarchy. |
 | **Organization** | Your end-client. You set `reference_id`. Has webhooks + card holders. |
-| **Billing** | Invoice grouping profile. Tells OpenCard how to roll up one or more organizations on the invoice you receive from us. |
+| **Billing** | Invoice recipient + roll-up. Organizations with the same `billing_id` appear as **one line** on the invoice you receive from OpenCard. |
 | **Card Holder** | Individual whose transactions you receive. You set `reference_id`. |
 | **Identity** | Physical person in OpenCard (SSN via eID). Has cards. Use `identity_id` for instant onboarding. |
 | **TPA** | Transaction Processing Authorization. Company-level legal agreement. |

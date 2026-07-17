@@ -1,11 +1,11 @@
 ---
 title: Billing
-description: The OpenCard Billing model — how organizations are grouped under one invoice, how EMS partners are charged, and how billing relates to TPAs and accounts.
+description: The OpenCard Billing model — invoice recipient for your EMS account, and how organizations with the same billing_id roll up as one line on that invoice.
 ---
 
 **Billing** is not about your end-clients paying their card bills. It is how **OpenCard invoices you** — the EMS — for platform usage.
 
-A billing profile is the legal entity and invoice address on **your** OpenCard invoice. Organizations link to it via `billing_id` so you can roll one or many clients onto the same bill from us.
+A billing profile is the **invoice recipient** (legal entity, address, email, your reference) and the bucket organizations link to via `billing_id`. Organizations that share the same `billing_id` are **rolled up as one line** on your OpenCard invoice — not billed as separate invoices per organization.
 
 ---
 
@@ -14,10 +14,8 @@ A billing profile is the legal entity and invoice address on **your** OpenCard i
 | Concept | Meaning |
 |---------|---------|
 | **Who gets the invoice** | Your finance team (`email_invoice`, legal name, org number) |
-| **Which orgs count together** | Every organization with the same `billing_id` |
+| **Same `billing_id`** | Those organizations’ usage appears as **one line** on the invoice |
 | **What it does not control** | Card issuer invoices to cardholders, webhooks, or transaction routing |
-
-Think of billing as the **invoice grouping layer** between your account and your organizations.
 
 ---
 
@@ -25,13 +23,13 @@ Think of billing as the **invoice grouping layer** between your account and your
 
 ```
 Account (you)
-└── Billing
+└── Billing profile
     ├── Organization A  ─┐
-    ├── Organization B  ─┼─ same billing_id → one OpenCard invoice to you
+    ├── Organization B  ─┼─ same billing_id → one line on your OpenCard invoice
     └── Organization C  ─┘
 ```
 
-Each organization still has its own webhooks, card holders, and transactions. Billing only affects **how OpenCard sums usage on the invoice to you**.
+Each organization still has its own webhooks, card holders, and transactions. Billing only controls **invoice recipient** and **how usage is aggregated onto a line** on the invoice OpenCard sends you.
 
 ---
 
@@ -39,9 +37,9 @@ Each organization still has its own webhooks, card holders, and transactions. Bi
 
 | Your situation | Billing setup |
 |----------------|---------------|
-| One org per client, separate OpenCard invoices | One billing profile per organization |
-| Several subsidiaries, one group invoice | One billing profile shared by those orgs |
-| Large client with many orgs, central finance | One billing profile for all their orgs |
+| One org per client, each as its own invoice line | One billing profile per organization |
+| Several orgs that should appear as a single line | One billing profile shared by those orgs |
+| Large client with many orgs, one roll-up line | One billing profile for all their orgs |
 
 ---
 
@@ -80,7 +78,7 @@ POST /accounts/{accountId}/organizations     Set billing_id on create
 }
 ```
 
-When creating an organization, set `"billing_id": 1` (or whichever profile applies). Multiple organizations with the **same** `billing_id` appear on one OpenCard invoice.
+When creating an organization, set `"billing_id": 1` (or whichever profile applies). Multiple organizations with the **same** `billing_id` share **one line** on your OpenCard invoice.
 
 Product flags are what the client chooses in onboarding (“transactions” vs optional enrichment). → [Customer onboarding](/ems/customer-onboarding)
 

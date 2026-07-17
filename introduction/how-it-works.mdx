@@ -7,9 +7,9 @@ description: The OpenCard hierarchy — account, billing, organization, card hol
 
 ```
 Account          ← you (the EMS partner)
-├── Billing      ← how OpenCard invoices YOU (group orgs on one invoice)
+├── Billing      ← invoice recipient; orgs with same billing_id = one line on YOUR OpenCard invoice
 └── Organization ← your end-client company
-    ├── billing_id → links to a Billing profile
+    ├── billing_id → which billing profile (invoice line roll-up) this org belongs to
     ├── Webhook    ← where events get POSTed
     ├── CardHolder ← employee whose card data you want
     │   └── Card ← actual credit card (managed by issuer)
@@ -20,7 +20,7 @@ Account          ← you (the EMS partner)
 
 **Account** = your OpenCard partner account. One per EMS.
 
-**Billing** = invoice grouping for **your** OpenCard bill. One billing profile can cover one or many organizations. Example: three orgs share `billing_id: 1` → one combined invoice from OpenCard to your finance team. → [Billing](/ems/model/billing)
+**Billing** = invoice recipient for **your** OpenCard bill. Organizations that share a `billing_id` are rolled up as **one line** on that invoice (not separate invoices per org). Example: three orgs with `billing_id: 1` → one combined line to your finance team. → [Billing](/ems/model/billing)
 
 **Organization** = one of your customers. You set `reference_id` to your internal client ID. Most EMSs map 1:1 (one org per client), but you can split one client into multiple orgs if you need different webhook configs or card type filters. → [Organization](/ems/model/organization)
 
