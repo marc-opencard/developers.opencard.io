@@ -33,6 +33,8 @@ You'll get:
 
 ```bash
 curl -X POST https://sandbox-api.opencard.io/oauth/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -H "Accept: application/json" \
   -d "grant_type=client_credentials" \
   -d "client_id=YOUR_ID" \
   -d "client_secret=YOUR_SECRET" \

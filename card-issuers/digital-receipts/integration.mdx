@@ -14,6 +14,7 @@ description: Step-by-step guide for card issuers to discover merchant publishers
 ```
 GET https://receipts.opencard.io/api/v1/marcet/publishers
 Authorization: Bearer {jwt}
+Accept: application/json
 ```
 
 Returns merchants (publishers) with active digital receipts. Each has **CAIDs** (Card Acceptor IDs / Merchant IDs) you match against transaction data.
@@ -38,6 +39,8 @@ Returns merchants (publishers) with active digital receipts. Each has **CAIDs** 
 ```
 POST https://receipts.opencard.io/api/v1/marcet/callbackrequests
 Authorization: Bearer {jwt}
+Accept: application/json
+Content-Type: application/json
 ```
 
 **Body** (array of callback transactions):

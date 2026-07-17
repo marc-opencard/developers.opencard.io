@@ -12,6 +12,7 @@ The Issuer API uses **OAuth 2.0 client credentials**. OpenCard delivers a `clien
 ```bash
 curl -X POST {base_url}/oauth/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
+  -H "Accept: application/json" \
   -d "grant_type=client_credentials" \
   -d "client_id=YOUR_CLIENT_ID" \
   -d "client_secret=YOUR_CLIENT_SECRET" \
@@ -38,9 +39,13 @@ Tokens expire — cache until shortly before `expires_in` and refresh with a new
 
 ```bash
 curl {base_url}/api/v1/issuers/{slug}/cards \
-  -H "Authorization: Bearer ACCESS_TOKEN"
+  -H "Authorization: Bearer ACCESS_TOKEN" \
+  -H "Accept: application/json"
 ```
 
+<Warning>
+  Always send `Accept: application/json`. Without it, auth failures may return an HTML login page instead of a JSON error body.
+</Warning>
 ---
 
 ## Scopes

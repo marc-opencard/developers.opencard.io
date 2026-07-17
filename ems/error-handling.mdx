@@ -29,6 +29,7 @@ description: Reference for OpenCard HTTP status codes, validation errors, webhoo
 
 | Issue | Cause | Fix |
 |-------|-------|-----|
+| HTML login page instead of JSON error | Missing `Accept: application/json` | Send `Accept: application/json` on every API call |
 | Webhook `active=false` | Challenge failed | Implement HMAC challenge handler |
 | No transactions | TPA not activated | Wait for issuer card confirmation |
 | No transactions | PDPC not signed | Cardholder must sign consent |

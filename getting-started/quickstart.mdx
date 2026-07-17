@@ -28,6 +28,7 @@ Your `accountId` is in the dashboard URL or API responses.
 # Then get a token:
 curl -X POST https://sandbox-api.opencard.io/oauth/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
+  -H "Accept: application/json" \
   -d "grant_type=client_credentials" \
   -d "client_id=YOUR_CLIENT_ID" \
   -d "client_secret=YOUR_CLIENT_SECRET" \
@@ -38,10 +39,11 @@ Save the `access_token`. All subsequent calls:
 
 ```
 Authorization: Bearer {access_token}
+Accept: application/json
 ```
 
 <Note>
-  Scopes are space-separated. Request only what you need. Full list in [Authentication](/getting-started/authentication).
+  Scopes are space-separated. Request only what you need. Full list in [Authentication](/getting-started/authentication). Always send `Accept: application/json` so error responses stay JSON (not an HTML login page).
 </Note>
 
 ---
@@ -51,11 +53,13 @@ Authorization: Bearer {access_token}
 ```bash
 # List available issuers
 curl https://sandbox-api.opencard.io/api/v1/application/cardissuers \
-  -H "Authorization: Bearer $TOKEN"
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/json"
 
 # Attach one to your account (use the cardIssuerId from above)
 curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/cardissuers/1 \
-  -H "Authorization: Bearer $TOKEN"
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/json"
 ```
 
 ---
@@ -66,7 +70,8 @@ Before creating a TPA, check the public registry for signing combinations:
 
 ```bash
 curl "https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/publicrecords?country=SE&organization_number=5561234567" \
-  -H "Authorization: Bearer $TOKEN"
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/json"
 ```
 
 Response includes `signature_combinations` — who can legally sign for this company. You'll add those people as TPA signatories next.
@@ -81,6 +86,7 @@ TPA = Transaction Processing Authorization. Legal permission for transaction dat
 curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/tpas \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
   -d '{
     "card_issuer_id": 1,
     "name": "Acme AB",
@@ -118,6 +124,7 @@ Each signatory = someone authorized to sign for the company.
 curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/tpas/$TPA_ID/signatories \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
   -d '{
     "email": "ceo@acme.se",
     "name": "Anna Andersson"
@@ -163,6 +170,7 @@ Then:
 curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/organizations \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
   -d '{
     "reference_id": "client_acme_001",
     "tpa_id": '"$TPA_ID"',
@@ -182,6 +190,7 @@ Save `organizationId`.
 curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/organizations/$ORG_ID/webhooks \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
   -d '{
     "url": "https://your-app.com/webhooks/opencard",
     "enabled": true,
@@ -225,6 +234,7 @@ Two paths — pick one. Full guide → [Card Holder Onboarding](/ems/card-holder
 curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/organizations/$ORG_ID/cardholders \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
   -d '{
     "reference_id": "employee_john_42",
     "email": "john@acme.se",
@@ -239,12 +249,14 @@ John gets email → signs PDPC with eID → `card_holder.identified` → transac
 ```bash
 # 1. List identities on the TPA (people who already have cards)
 curl "https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/tpas/$TPA_ID/identities?is_card_holder=false" \
-  -H "Authorization: Bearer $TOKEN"
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/json"
 
 # 2. Create card holder with identity_id — transactions start immediately
 curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/organizations/$ORG_ID/cardholders \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
   -d '{
     "reference_id": "employee_anna_07",
     "identity_id": 123,
