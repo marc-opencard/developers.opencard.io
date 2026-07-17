@@ -77,5 +77,5 @@ POST /accounts/{accountId}/organizations     Set billing_id on create
 When creating an organization, set `"billing_id": 1` (or whichever profile applies). Multiple organizations with the **same** `billing_id` appear on one OpenCard invoice.
 
 <Note>
-  Configure billing early in onboarding — often together with TPA setup via the [ocTPA plugin](/ems/plugins).
+  Create billing during [client setup](/ems/customer-onboarding#phase-1--client-setup), before or alongside the TPA. An optional [ocTPA plugin](/ems/plugins) can collect the same fields in a UI — you still POST this API.
 </Note>

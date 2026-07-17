@@ -129,6 +129,7 @@
           {
             "group": "Customer onboarding",
             "pages": [
+              "ems/customer-onboarding",
               "ems/tpa-flow",
               "ems/eid-signing",
               "ems/card-holders"
