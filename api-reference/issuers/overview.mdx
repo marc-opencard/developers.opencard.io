@@ -28,7 +28,7 @@ Card issuers use this API to **register cards** and **deliver transaction states
 
 OAuth 2.0 client credentials → `POST /oauth/token`
 
-→ [Issuer authentication](/card-issuers/issuer-integration/authentication)
+→ [Authentication](/card-issuers/issuer-integration/authentication)
 
 ## Card endpoints
 
@@ -47,9 +47,10 @@ Not every `{slug}` enables all card methods — see [Cards guide](/card-issuers/
 
 | Guide | Topic |
 |-------|-------|
-| [Overview](/card-issuers/issuer-integration) | Flow and prerequisites |
+| [How it works](/card-issuers/issuer-integration) | Flow and prerequisites |
 | [Onboarding](/card-issuers/issuer-integration/onboarding) | TPA and go-live |
 | [Cards](/card-issuers/issuer-integration/cards) | Card registry |
 | [Transaction states](/card-issuers/issuer-integration/transaction-states) | Lifecycle events |
+| [TPA delivery](/card-issuers/issuer-integration/tpa-integration) | Signed / terminated TPA callbacks |
 
 Contact **support@opencard.io** for `client_id`, `client_secret`, scopes, and `{slug}`.
