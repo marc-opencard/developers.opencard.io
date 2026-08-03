@@ -179,14 +179,15 @@
         "tab": "Card Issuers",
         "groups": [
           {
-            "group": "Transaction integration",
+            "group": "Issuer Integration",
             "pages": [
               "card-issuers/index",
               "card-issuers/issuer-integration/index",
               "card-issuers/issuer-integration/onboarding",
               "card-issuers/issuer-integration/authentication",
               "card-issuers/issuer-integration/cards",
-              "card-issuers/issuer-integration/transaction-states"
+              "card-issuers/issuer-integration/transaction-states",
+              "card-issuers/issuer-integration/tpa-integration"
             ]
           },
           {

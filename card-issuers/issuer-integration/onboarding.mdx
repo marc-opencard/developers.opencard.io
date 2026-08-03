@@ -17,19 +17,18 @@ You do not run the signing flow — the EMS and OpenCard handle it.
 
 ## 2. You receive the signed TPA
 
-When signing is complete, OpenCard:
+When signing is complete, OpenCard notifies you via **API callback** and/or **email** (configured for your integration). On API, you receive an `initiate` payload with the signed PDF — archive it, onboard the customer, then start sending cards and transactions.
 
-1. Archives the signed PDF
-2. Notifies you that the TPA is ready — via **API callback** and/or **email** (depends on your integration setup)
-
-Verify signatures match your requirements before you start sending card and transaction data for that customer organisation.
+Full contract (initiate + terminate) → [TPA Integration](/card-issuers/issuer-integration/tpa-integration)
 
 ```mermaid
 flowchart TD
-    A[Customer signs TPA via EMS] --> B{Signatures verified?}
-    B -->|Yes| C[Archive TPA — start integration flow]
-    B -->|No| D[Verify via API and/or email]
-    D --> B
+    A[Customer signs TPA via EMS] --> B[OpenCard notifies you]
+    B --> C{Email or API?}
+    C -->|API| D[POST action=initiate + PDF]
+    C -->|Email| E[Inbox with signed PDF]
+    D --> F[Archive TPA — start card delivery]
+    E --> F
 ```
 
 ---
