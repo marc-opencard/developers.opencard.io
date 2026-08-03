@@ -118,7 +118,7 @@ Sent after all required signatories have signed. Includes the signed PDF as Base
 | `document.mime_type` | Always `application/pdf` |
 | `document.content_base64` | Full signed TPA PDF, Base64-encoded |
 
-Decode `content_base64` and store the PDF. Use `party_information.id` (and org number) as the key when you later push [cards](/card-issuers/issuer-integration/cards) and [transaction states](/card-issuers/issuer-integration/transaction-states).
+Decode `content_base64` and store the PDF.
 
 ---
 
@@ -158,14 +158,11 @@ Sent when the customer ends the OpenCard connection in their EMS (or OpenCard te
 | `4xx` | Bad payload, unknown party, business reject — include a readable error message |
 | `5xx` | Temporary failure — safe for OpenCard to retry |
 
-Idempotency tip: treat repeated `initiate` / `terminate` for the same `party_information.id` as safe no-ops once already applied.
-
 ---
 
 ## After initiate
 
 1. Register cards for the customer → [Cards](/card-issuers/issuer-integration/cards)
 2. Push lifecycle states → [Transaction states](/card-issuers/issuer-integration/transaction-states)
-3. Confirm TPA activation behaviour → [Onboarding](/card-issuers/issuer-integration/onboarding)
 
 To wire the callback URL and auth scheme, contact **support@opencard.io**.
