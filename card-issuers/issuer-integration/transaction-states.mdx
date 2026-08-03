@@ -1,9 +1,9 @@
 ---
-title: Transaction States API
+title: Transaction states
 description: Push card transaction lifecycle events to OpenCard — authorized, cleared, invoiced, and deleted states via the Issuer API.
 ---
 
-The Transaction States API is the **primary channel** for delivering purchases to OpenCard. Send every state in the lifecycle so connected EMS apps receive a complete and accurate history.
+Transaction states are the **primary channel** for delivering purchases to OpenCard. Send every state in the lifecycle so connected EMS apps receive a complete and accurate history.
 
 ```
 POST /api/v1/issuers/{slug}/cards/{card_id}/transaction_states

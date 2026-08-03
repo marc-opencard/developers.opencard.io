@@ -1,5 +1,5 @@
 ---
-title: Issuer Onboarding
+title: Onboarding
 description: How issuer integration starts — TPA signing by the customer, receiving the signed agreement, and when to register cards and send transactions.
 ---
 
@@ -19,7 +19,7 @@ You do not run the signing flow — the EMS and OpenCard handle it.
 
 When signing is complete, OpenCard notifies you via **API callback** and/or **email** (configured for your integration). On API, you receive an `initiate` payload with the signed PDF — archive it, onboard the customer, then start sending cards and transactions.
 
-Full contract (initiate + terminate) → [TPA Integration](/card-issuers/issuer-integration/tpa-integration)
+Full contract (initiate + terminate) → [TPA delivery](/card-issuers/issuer-integration/tpa-integration)
 
 ```mermaid
 flowchart TD
