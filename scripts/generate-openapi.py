@@ -162,6 +162,24 @@ EX = {
             "updated_at": "2026-06-01T09:00:00.000000Z",
         },
     },
+    # Global catalog list selects a subset (no email) and has no account pivot
+    "card_issuer_catalog": {
+        "id": 1,
+        "name_display": "Acme Corporate Card",
+        "name_legal": "Acme Card Issuer AB",
+        "name_short": "Acme Card",
+        "name_system": "acme_card",
+        "name_product": "Acme Corporate Card",
+        "type_product": "Corporate Card",
+        "product_description_short": "Streamline expense management with real-time card data.",
+        "product_description_long": "Full product description shown after the client activates this card program.",
+        "card_scheme": "mastercard",
+        "logo_name": "acme-card-logo.png",
+        "logo_url": "https://sandbox-api.opencard.io/logos?type=card_issuers&name=acme-card-logo.png",
+        "card_scheme_logo_url": "https://sandbox-api.opencard.io/images/card-schemes/mastercard.svg",
+        "created_at": "2026-01-15T10:00:00.000000Z",
+        "updated_at": "2026-06-08T10:00:00.000000Z",
+    },
     "oauth_token": {
         "token_type": "Bearer",
         "expires_in": 31536000,
@@ -242,11 +260,29 @@ op(ems_paths, "post", bill, tag="Billings", summary="Create billing profile", op
    body=json_body(ref("BillingCreate"), example={"name_display": "Acme AB", "name_legal": "Acme AB", "organization_number": "5561234567", "country": "SE"}),
    responses=json_resp("201", "Billing created", example={"id": 1, "name_display": "Acme AB"}))
 
-# Card issuers on account (full CardIssuer model + pivot — see CardIssuer schema)
+# Card issuers — catalog (all programs) then enable on account
+op(ems_paths, "get", "/cardissuers", tag="Card Issuers", summary="List available issuers",
+   operation_id="listCardIssuers", scope="card-issuers-read",
+   description="Platform catalog of card programs you can enable. Pick an `id`, then [enable it on your account](#tag/Card-Issuers/operation/attachCardIssuer). Optional `q` searches `name_system` (space-separated tokens).",
+   params=[
+       {"name": "q", "in": "query", "required": False, "description": "Space-separated search tokens matched against `name_system`", "schema": {"type": "string"}},
+       {"name": "per_page", "in": "query", "required": False, "description": "Page size (default 15)", "schema": {"type": "integer", "default": 15}},
+   ],
+   responses=json_resp("200", "Available issuers",
+       schema={"type": "object", "properties": {
+           "current_page": {"type": "integer"},
+           "data": {"type": "array", "items": ref("CardIssuer")},
+           "per_page": {"type": "integer"},
+           "total": {"type": "integer"},
+           "last_page": {"type": "integer"},
+       }},
+       example=EX["paginated"]([EX["card_issuer_catalog"]])))
+
+# Card issuers on account (enabled subset — full model + pivot)
 ci = "/accounts/{accountId}/cardissuers"
 op(ems_paths, "get", ci, tag="Card Issuers", summary="List enabled issuers", operation_id="listAccountCardIssuers",
    scope="account-card-issuers-read", params=[ACCOUNT_ID],
-   description="Paginated list of card issuers attached to the account. Each item is a full `CardIssuer` plus Laravel `pivot` (account attachment timestamps).",
+   description="Card issuers already attached to your account (what clients can pick in onboarding). Each item includes `pivot` with when it was enabled.",
    responses=json_resp("200", "Issuers",
        schema={"type": "object", "properties": {
            "current_page": {"type": "integer"},
@@ -261,7 +297,11 @@ op(ems_paths, "get", f"{ci}/{{cardIssuerId}}", tag="Card Issuers", summary="Get 
    responses=json_resp("200", "Issuer", schema=ref("CardIssuer"), example=EX["card_issuer"]))
 op(ems_paths, "post", f"{ci}/{{cardIssuerId}}", tag="Card Issuers", summary="Enable issuer", operation_id="attachCardIssuer",
    scope="account-card-issuers-write", params=[ACCOUNT_ID, path_param("cardIssuerId", "Issuer ID")],
-   responses=json_resp("201", "Attached"))
+   description="Attach a card program from the [available catalog](#tag/Card-Issuers/operation/listCardIssuers) to your account. Empty body. `201` on success; `400` if already attached.",
+   responses={
+       **json_resp("201", "Attached"),
+       **json_resp("400", "Already attached", example={"error": "Card issuer is already attached to the account."}),
+   })
 op(ems_paths, "delete", f"{ci}/{{cardIssuerId}}", tag="Card Issuers", summary="Disable issuer", operation_id="detachCardIssuer",
    scope="account-card-issuers-delete", params=[ACCOUNT_ID, path_param("cardIssuerId", "Issuer ID")],
    responses=json_resp("200", "Detached"))
@@ -342,6 +382,7 @@ EMS_SCOPES = {
     "account-tpa-signatories-write": "Add TPA signatories",
     "account-tpa-identities-read": "List identities on TPA",
     "billings-write": "Create billing profiles",
+    "card-issuers-read": "List available card programs (catalog)",
     "account-card-issuers-read": "List enabled issuers",
     "account-card-issuers-write": "Enable issuers",
     "account-card-issuers-delete": "Disable issuers",

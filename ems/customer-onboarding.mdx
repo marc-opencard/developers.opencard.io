@@ -213,7 +213,7 @@ Do this **per client** (after your account + OAuth client exist):
 
 | # | Step | API / action | Detail guide |
 |---|------|--------------|--------------|
-| 0 | Enable card issuer(s) on account (once) | `POST .../cardissuers/{id}` | [Quickstart](/getting-started/quickstart) |
+| 0 | Enable card issuer(s) on account (once) | `GET /cardissuers` → `POST .../accounts/{id}/cardissuers/{id}` | [Quickstart](/getting-started/quickstart) |
 | 1 | Client picks card program | `GET .../accounts/{id}/cardissuers` | below |
 | 2 | Client picks products | Flags on billing create | [Billing](/ems/model/billing) |
 | 3 | Invoice email / reference | Part of billing create | [Billing](/ems/model/billing) |
