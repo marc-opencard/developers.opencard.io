@@ -137,6 +137,31 @@ EX = {
         "cards": [{"id": 10, "last_four": "1234", "token": "ext-card-abc", "type": "corporate"}],
         "card_holders": [],
     },
+    "card_issuer": {
+        "id": 1,
+        "name_display": "Acme Corporate Card",
+        "name_legal": "Acme Card Issuer AB",
+        "name_short": "Acme Card",
+        "name_system": "acme_card",
+        "name_product": "Acme Corporate Card",
+        "type_product": "Corporate Card",
+        "email": "issuer-ops@example.com",
+        "product_description_short": "Streamline expense management with real-time card data.",
+        "product_description_long": "Full product description shown after the client activates this card program.",
+        "card_scheme": "mastercard",
+        "logo_name": "acme-card-logo.png",
+        "logo_url": "https://sandbox-api.opencard.io/logos?type=card_issuers&name=acme-card-logo.png",
+        "card_scheme_logo_url": "https://sandbox-api.opencard.io/images/card-schemes/mastercard.svg",
+        "created_at": "2026-01-15T10:00:00.000000Z",
+        "updated_at": "2026-06-08T10:00:00.000000Z",
+        "deleted_at": None,
+        "pivot": {
+            "account_id": 1,
+            "card_issuer_id": 1,
+            "created_at": "2026-06-01T09:00:00.000000Z",
+            "updated_at": "2026-06-01T09:00:00.000000Z",
+        },
+    },
     "oauth_token": {
         "token_type": "Bearer",
         "expires_in": 31536000,
@@ -217,14 +242,29 @@ op(ems_paths, "post", bill, tag="Billings", summary="Create billing profile", op
    body=json_body(ref("BillingCreate"), example={"name_display": "Acme AB", "name_legal": "Acme AB", "organization_number": "5561234567", "country": "SE"}),
    responses=json_resp("201", "Billing created", example={"id": 1, "name_display": "Acme AB"}))
 
-# Card issuers on account
+# Card issuers on account (full CardIssuer model + pivot — see CardIssuer schema)
 ci = "/accounts/{accountId}/cardissuers"
 op(ems_paths, "get", ci, tag="Card Issuers", summary="List enabled issuers", operation_id="listAccountCardIssuers",
    scope="account-card-issuers-read", params=[ACCOUNT_ID],
-   responses=json_resp("200", "Issuers", example=EX["paginated"]([{"id": 1, "name_display": "Corporate Card Program"}])))
+   description="Paginated list of card issuers attached to the account. Each item is a full `CardIssuer` plus Laravel `pivot` (account attachment timestamps).",
+   responses=json_resp("200", "Issuers",
+       schema={"type": "object", "properties": {
+           "current_page": {"type": "integer"},
+           "data": {"type": "array", "items": ref("CardIssuer")},
+           "per_page": {"type": "integer"},
+           "total": {"type": "integer"},
+           "last_page": {"type": "integer"},
+       }},
+       example=EX["paginated"]([EX["card_issuer"]])))
+op(ems_paths, "get", f"{ci}/{{cardIssuerId}}", tag="Card Issuers", summary="Get enabled issuer", operation_id="getAccountCardIssuer",
+   scope="account-card-issuers-read", params=[ACCOUNT_ID, path_param("cardIssuerId", "Issuer ID")],
+   responses=json_resp("200", "Issuer", schema=ref("CardIssuer"), example=EX["card_issuer"]))
 op(ems_paths, "post", f"{ci}/{{cardIssuerId}}", tag="Card Issuers", summary="Enable issuer", operation_id="attachCardIssuer",
    scope="account-card-issuers-write", params=[ACCOUNT_ID, path_param("cardIssuerId", "Issuer ID")],
    responses=json_resp("201", "Attached"))
+op(ems_paths, "delete", f"{ci}/{{cardIssuerId}}", tag="Card Issuers", summary="Disable issuer", operation_id="detachCardIssuer",
+   scope="account-card-issuers-delete", params=[ACCOUNT_ID, path_param("cardIssuerId", "Issuer ID")],
+   responses=json_resp("200", "Detached"))
 
 # Organizations
 org = "/accounts/{accountId}/organizations"
@@ -304,6 +344,7 @@ EMS_SCOPES = {
     "billings-write": "Create billing profiles",
     "account-card-issuers-read": "List enabled issuers",
     "account-card-issuers-write": "Enable issuers",
+    "account-card-issuers-delete": "Disable issuers",
     "organizations-read": "Read organizations",
     "organizations-write": "Create organizations",
     "card-holders-read": "Read card holders",
@@ -385,6 +426,35 @@ ems_spec = {
                 }},
             "BillingCreate": {"type": "object", "required": ["name_display", "name_legal", "organization_number", "country"],
                 "properties": {"name_display": {"type": "string"}, "name_legal": {"type": "string"}, "organization_number": {"type": "string"}, "country": {"type": "string"}}},
+            "CardIssuer": {"type": "object",
+                "description": "Card program returned by account card-issuer endpoints. Same shape as the CardIssuer Eloquent model (plus `pivot` when listed via the account relation).",
+                "properties": {
+                    "id": {"type": "integer"},
+                    "name_display": {"type": "string"},
+                    "name_legal": {"type": "string", "nullable": True},
+                    "name_short": {"type": "string", "nullable": True},
+                    "name_system": {"type": "string", "nullable": True, "description": "Stable system key (e.g. for plugin `allowedCardIssuerIds`)"},
+                    "name_product": {"type": "string", "nullable": True},
+                    "type_product": {"type": "string", "nullable": True},
+                    "email": {"type": "string", "nullable": True},
+                    "product_description_short": {"type": "string", "nullable": True},
+                    "product_description_long": {"type": "string", "nullable": True},
+                    "card_scheme": {"type": "string", "nullable": True, "description": "e.g. mastercard, visa"},
+                    "logo_name": {"type": "string", "nullable": True},
+                    "logo_url": {"type": "string", "nullable": True, "description": "Computed absolute URL to issuer logo"},
+                    "card_scheme_logo_url": {"type": "string", "nullable": True, "description": "Computed absolute URL to scheme logo"},
+                    "created_at": {"type": "string", "format": "date-time"},
+                    "updated_at": {"type": "string", "format": "date-time"},
+                    "deleted_at": {"type": "string", "format": "date-time", "nullable": True},
+                    "pivot": {"type": "object", "nullable": True,
+                        "description": "Present on account-attached list/get — when this issuer was enabled on the account",
+                        "properties": {
+                            "account_id": {"type": "integer"},
+                            "card_issuer_id": {"type": "integer"},
+                            "created_at": {"type": "string", "format": "date-time"},
+                            "updated_at": {"type": "string", "format": "date-time"},
+                        }},
+                }},
             "WebhookCreate": {"type": "object", "required": ["url"], "properties": {
                 "url": {"type": "string"}, "card_transaction_authorized": {"type": "boolean"}, "card_transaction_cleared": {"type": "boolean"},
                 "card_transaction_deleted": {"type": "boolean"}, "receipt_fetched": {"type": "boolean"}, "transaction_true_vat": {"type": "boolean"}}},
