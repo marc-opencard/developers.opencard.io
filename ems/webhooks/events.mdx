@@ -11,6 +11,8 @@ X-Event: {event_name}
 
 Plus any custom headers you configured, and auth headers if you set `authentication_type`.
 
+The transaction, receipt, VAT, and line-item samples below are **one purchase** — Coop in Svängsta, **109.38 SEK**, card ending `1234`, issuer `nordea`. The receipt URL is the real sample file: [Coop receipt](https://api.opencard.io/files/receipts/abc123).
+
 ---
 
 ## Event catalog
@@ -89,8 +91,8 @@ Plus any custom headers you configured, and auth headers if you set `authenticat
   "id": "10",
   "state": "authorized",
   "receiptable": true,
-  "card_issuer": "corporate-card",
-  "card_issuer_reference": "654321",
+  "card_issuer": "nordea",
+  "card_issuer_reference": "11212945",
   "card_issuer_customer_number": null,
   "type": "card",
   "invoice_number": null,
@@ -103,20 +105,20 @@ Plus any custom headers you configured, and auth headers if you set `authenticat
   "accounting_amount": 109.38,
   "accounting_currency": "SEK",
   "exchange_rate": null,
-  "purchase_merchant": "Espresso House Sveavägen",
-  "purchase_merchant_common": "Espresso House",
-  "purchase_date": "2026-06-08",
+  "purchase_merchant": "Coop Svängsta",
+  "purchase_merchant_common": "Coop",
+  "purchase_date": "2022-09-02",
   "purchase_time": "11:12:14",
   "purchase_timezone": null,
   "purchase_country": "SE",
-  "purchase_city": "STOCKHOLM",
+  "purchase_city": "SVANGSTA",
   "card_id": 1,
   "card_product": "first_card",
   "card_type": "corporate",
   "card_last_four": "1234",
-  "mcc_code": "5814",
+  "mcc_code": "5411",
   "mcc_text": null,
-  "mcc_top_level": "Miscellaneous Stores",
+  "mcc_top_level": "Retail Stores",
   "branch_code": null,
   "branch_text": null,
   "category_text": "Card purchase",
@@ -136,7 +138,7 @@ Plus any custom headers you configured, and auth headers if you set `authenticat
 | `id` | string | Unique transaction ID. **Use this as your primary key.** |
 | `state` | string | `authorized`, `cleared`, `deleted`, `invoiced` |
 | `receiptable` | boolean | Expect a digital receipt? |
-| `card_issuer` | string | Card program identifier |
+| `card_issuer` | string | Card program identifier (`name_system`, e.g. `nordea`) |
 | `card_issuer_reference` | string | Issuer's reference for this state (not globally unique) |
 | `card_type` | string | `private`, `corporate`, `corporate_with_private_invoice` |
 | `original_amount` | float | Amount at merchant |
@@ -149,19 +151,21 @@ Plus any custom headers you configured, and auth headers if you set `authenticat
 
 ### `receipt.fetched`
 
+Matches the sample file at the URL (Coop, 109.38 SEK, same purchase as the transaction above).
+
 ```json
 {
   "url": "https://api.opencard.io/files/receipts/abc123",
   "content_type": "application/pdf",
-  "expiration_time": "2026-07-08 13:23:08",
-  "purchase_merchant": "ICA Supermarket",
-  "original_amount": 245.50,
+  "expiration_time": "2022-10-02 11:12:14",
+  "purchase_merchant": "Coop",
+  "original_amount": 109.38,
   "original_currency": "SEK",
-  "purchase_date": "2026-06-08",
-  "purchase_time": "14:30:00",
+  "purchase_date": "2022-09-02",
+  "purchase_time": "11:12:14",
   "transaction": {
     "id": "10",
-    "card_issuer": "corporate-card"
+    "card_issuer": "nordea"
   },
   "card_holder": { "reference_id": "employee_john_42" },
   "organization": { "reference_id": "client_acme_001" }
@@ -174,9 +178,11 @@ Plus any custom headers you configured, and auth headers if you set `authenticat
 
 ### `transaction.true.vat`
 
+VAT bands from the Coop receipt (12% + 25%):
+
 ```json
 {
-  "transaction": { "id": "10", "card_issuer": "corporate-card" },
+  "transaction": { "id": "10", "card_issuer": "nordea" },
   "organization": { "reference_id": "client_acme_001" },
   "card_holder": { "reference_id": "employee_john_42" },
   "purchase_country": "SE",
@@ -187,12 +193,19 @@ Plus any custom headers you configured, and auth headers if you set `authenticat
       "total_amount": 51.48,
       "percentage": 12,
       "currency": "SEK"
+    },
+    {
+      "vat_amount": 11.58,
+      "taxable_amount": 46.32,
+      "total_amount": 57.90,
+      "percentage": 25,
+      "currency": "SEK"
     }
   ],
   "totals": [
     {
-      "vat_amount": 17.1,
-      "taxable_amount": 92.29,
+      "vat_amount": 17.10,
+      "taxable_amount": 92.28,
       "total_amount": 109.38,
       "currency": "SEK"
     }
@@ -202,24 +215,40 @@ Plus any custom headers you configured, and auth headers if you set `authenticat
 
 ### `transaction.line.items`
 
+Line items from the same Coop receipt:
+
 ```json
 {
-  "transaction": { "id": "10", "card_issuer": "corporate-card" },
+  "transaction": { "id": "10", "card_issuer": "nordea" },
   "organization": { "reference_id": "client_acme_001" },
   "card_holder": { "reference_id": "employee_john_42" },
   "line_items": [
     {
-      "description": "Cappuccino",
-      "amount": 45,
-      "total_amount": 45,
+      "description": "SERV 33CM VIT",
+      "amount": 12.95,
+      "total_amount": 12.95,
       "quantity": 1,
       "currency": "SEK"
     },
     {
-      "description": "Cinnamon bun",
-      "amount": 35,
-      "total_amount": 35,
+      "description": "VÄRMELJUS STEARIN",
+      "amount": 44.95,
+      "total_amount": 44.95,
       "quantity": 1,
+      "currency": "SEK"
+    },
+    {
+      "description": "GODIS LÖSVIKT",
+      "amount": 11.68,
+      "total_amount": 11.68,
+      "quantity": 0.195,
+      "currency": "SEK"
+    },
+    {
+      "description": "ZUCCHINI GRÖN ST",
+      "amount": 9.95,
+      "total_amount": 39.80,
+      "quantity": 4,
       "currency": "SEK"
     }
   ]
@@ -233,7 +262,7 @@ Plus any custom headers you configured, and auth headers if you set `authenticat
   "carbon_emission_in_grams": 0.66,
   "carbon_social_cost_amount": 2.1,
   "carbon_social_cost_currency": "SEK",
-  "transaction": { "id": "10", "card_issuer": "corporate-card" },
+  "transaction": { "id": "10", "card_issuer": "nordea" },
   "organization": { "reference_id": "client_acme_001" },
   "card_holder": { "reference_id": "employee_john_42" }
 }

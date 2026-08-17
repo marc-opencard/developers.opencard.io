@@ -27,9 +27,14 @@ Subscribe to all three in your webhook config for the full picture.
 {
   "url": "https://api.opencard.io/files/receipts/abc123",
   "content_type": "application/pdf",
-  "expiration_time": "2026-07-08 13:23:08"
+  "expiration_time": "2022-10-02 11:12:14",
+  "purchase_merchant": "Coop",
+  "original_amount": 109.38,
+  "original_currency": "SEK"
 }
 ```
+
+Sample file: [Coop receipt (109.38 SEK)](https://api.opencard.io/files/receipts/abc123) — same purchase as in [Webhook events](/ems/webhooks/events).
 
 1. Download immediately when webhook arrives
 2. Store in your system
