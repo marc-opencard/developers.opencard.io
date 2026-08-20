@@ -127,6 +127,7 @@
                 "bin_number": "123456",
                 "liability": "corporate_with_personal_invoice",
                 "scheme": "visa",
+                "funding": "credit",
                 "issuer_organization_number": "5555555551",
                 "issuer_country_code": "SE",
                 "identity": {
@@ -259,6 +260,7 @@
                 "bin_number": "123456",
                 "liability": "corporate_with_personal_invoice",
                 "scheme": "visa",
+                "funding": "credit",
                 "issuer_organization_number": "5555555551",
                 "issuer_country_code": "SE",
                 "identity": {
@@ -457,6 +459,14 @@
           "scheme": {
             "type": "string"
           },
+          "funding": {
+            "type": "string",
+            "enum": [
+              "debit",
+              "credit"
+            ],
+            "description": "Card funding \u2014 delivered to EMS as webhook field `card_funding`"
+          },
           "issuer_organization_number": {
             "type": "string"
           },
@@ -498,6 +508,13 @@
           },
           "scheme": {
             "type": "string"
+          },
+          "funding": {
+            "type": "string",
+            "enum": [
+              "debit",
+              "credit"
+            ]
           },
           "issuer_organization_number": {
             "type": "string"

@@ -49,6 +49,7 @@ Scope: issuer-{slug}-cards-write
   "bin_number": "123456",
   "liability": "corporate_with_personal_invoice",
   "scheme": "visa",
+  "funding": "credit",
   "issuer_organization_number": "5555555551",
   "issuer_country_code": "SE",
   "identity": {
@@ -68,6 +69,7 @@ Scope: issuer-{slug}-cards-write
 | `bin_number` | ✅ | BIN, max 12 characters |
 | `liability` | ✅ | `personal`, `corporate`, or `corporate_with_personal_invoice` |
 | `scheme` | ✅ | e.g. `visa`, `mastercard` |
+| `funding` | ✅* | `debit` or `credit` — appears on EMS webhooks as `card_funding` |
 | `issuer_organization_number` | ✅ | Your organisation number (seller party) |
 | `issuer_country_code` | ✅ | ISO 3166-1 alpha-2 |
 | `identity.ssn` | ✅ | Cardholder national id |
@@ -75,6 +77,8 @@ Scope: issuer-{slug}-cards-write
 | `identity.name` | ✅ | Cardholder display name |
 | `identity.company_organization_number` | ✅ | Customer company org number (buyer party) |
 | `identity.company_country_code` | ✅ | ISO 3166-1 alpha-2 |
+
+\*Required on integrations that expose `funding` (confirm with OpenCard for your `{slug}`).
 
 **Responses:**
 

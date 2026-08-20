@@ -108,6 +108,15 @@ Subscribe to `receipt_fetched`, `transaction_true_vat`, and `transaction_line_it
 | `private` | Personal card |
 | `corporate_with_private_invoice` | Company card, employee reimbursed privately |
 
+## Card funding
+
+| `card_funding` | Meaning |
+|----------------|---------|
+| `credit` | Credit card |
+| `debit` | Debit card |
+
+Present on **all** `card.transaction.*` states — same value for a given card across authorized / cleared / deleted / invoiced.
+
 Verify with your client which card types to include. Common setup: corporate only.
 
 ---

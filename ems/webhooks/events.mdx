@@ -114,6 +114,7 @@ The transaction, receipt, VAT, and line-item samples below are **one purchase** 
   "purchase_city": "SVANGSTA",
   "card_id": 1,
   "card_product": "first_card",
+  "card_funding": "credit",
   "card_type": "corporate",
   "card_last_four": "1234",
   "mcc_code": "5411",
@@ -140,6 +141,7 @@ The transaction, receipt, VAT, and line-item samples below are **one purchase** 
 | `receiptable` | boolean | Expect a digital receipt? |
 | `card_issuer` | string | Card program identifier (`name_system`, e.g. `nordea`) |
 | `card_issuer_reference` | string | Issuer's reference for this state (not globally unique) |
+| `card_funding` | string | `debit` or `credit` — from the registered card |
 | `card_type` | string | `private`, `corporate`, `corporate_with_private_invoice` |
 | `original_amount` | float | Amount at merchant |
 | `original_currency` | string | ISO 4217 |

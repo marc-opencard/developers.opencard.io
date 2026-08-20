@@ -761,6 +761,7 @@
                       "id": 1,
                       "name_display": "Acme Corporate Card",
                       "name_legal": "Acme Card Issuer AB",
+                      "name_legal_short": "Acme Card Issuer",
                       "name_short": "Acme Card",
                       "name_system": "acme_card",
                       "name_product": "Acme Corporate Card",
@@ -840,6 +841,7 @@
                       "id": 1,
                       "name_display": "Acme Corporate Card",
                       "name_legal": "Acme Card Issuer AB",
+                      "name_legal_short": "Acme Card Issuer",
                       "name_short": "Acme Card",
                       "name_system": "acme_card",
                       "name_product": "Acme Corporate Card",
@@ -912,6 +914,7 @@
                   "id": 1,
                   "name_display": "Acme Corporate Card",
                   "name_legal": "Acme Card Issuer AB",
+                  "name_legal_short": "Acme Card Issuer",
                   "name_short": "Acme Card",
                   "name_system": "acme_card",
                   "name_product": "Acme Corporate Card",
@@ -1991,6 +1994,11 @@
             "type": "string",
             "nullable": true
           },
+          "name_legal_short": {
+            "type": "string",
+            "nullable": true,
+            "description": "Short legal name (used in PDPC/TPA legal text)"
+          },
           "name_short": {
             "type": "string",
             "nullable": true
@@ -2010,7 +2018,8 @@
           },
           "email": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Present on account-enabled list/get; omitted from the global catalog select"
           },
           "product_description_short": {
             "type": "string",
@@ -2050,7 +2059,8 @@
           "deleted_at": {
             "type": "string",
             "format": "date-time",
-            "nullable": true
+            "nullable": true,
+            "description": "Present on account-enabled responses; soft-deleted issuers are excluded from the catalog"
           },
           "pivot": {
             "type": "object",
