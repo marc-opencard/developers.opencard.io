@@ -208,14 +208,18 @@ You:  GET identities ──► POST cardholder with identity_id ──► txs fl
 
 ## Which path should I use?
 
-| Scenario | Path |
-|----------|------|
-| New hire, never used OpenCard | 🅰️ Email |
-| Employee already has corp card via issuer | 🅱️ `identity_id` |
-| Bulk onboarding 50 people who all have cards | 🅱️ `identity_id` |
-| Re-adding person to a **new** organization under same TPA | 🅱️ `identity_id` |
-| You want user to explicitly consent via email link | 🅰️ Email |
-| Self-service "activate your card" flow in your app | 🅰️ Email |
+Two ways to link a person in your EMS to card spend in OpenCard:
+
+| | 🅱️ Match on employee number | 🅰️ Email + eID |
+|--|------------------------------|----------------|
+| **How** | Map the issuer’s employee number to yours → create with `identity_id` | Create with `email` + your `reference_id` |
+| **User action** | None | Opens OpenCard email and identifies with **eID** |
+| **You need** | An up-to-date employee register in **both** places (issuer + your EMS) | A working email address for the person |
+| **Transactions** | Start as soon as you create the card holder | Start only **after** they complete eID |
+
+**Choose 🅱️** when you can reliably match people across systems — bulk onboard, no inbox friction, but the two registers must stay in sync.
+
+**Choose 🅰️** when you want the person to prove who they are before you receive their transactions — self-service activate flows, new hires without a shared employee id, or when you don’t maintain dual registers.
 
 ---
 
