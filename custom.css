@@ -89,39 +89,92 @@ mdx-content h1.font-semibold,
 mdx-content h2.font-semibold,
 mdx-content h3.font-semibold,
 mdx-content h4.font-semibold,
+mdx-content h1.font-bold,
+mdx-content h2.font-bold,
+mdx-content h3.font-bold,
+mdx-content h4.font-bold,
 #content-area h1,
 #content-area h2,
 #content-area h3,
 #content-area h4 {
-  font-weight: 700 !important;
+  font-weight: 800 !important;
+  color: #171717 !important;
+  cursor: default !important;
+  text-decoration: none !important;
+}
+
+.dark mdx-content h1,
+.dark mdx-content h2,
+.dark mdx-content h3,
+.dark mdx-content h4,
+html.dark mdx-content h1,
+html.dark mdx-content h2,
+html.dark mdx-content h3,
+html.dark mdx-content h4,
+.dark #content-area h1,
+.dark #content-area h2,
+.dark #content-area h3,
+.dark #content-area h4,
+html.dark #content-area h1,
+html.dark #content-area h2,
+html.dark #content-area h3,
+html.dark #content-area h4 {
+  color: #fafafa !important;
+}
+
+/* Mintlify wraps headings in anchor tags — must not look like body links */
+mdx-content h1 a,
+mdx-content h2 a,
+mdx-content h3 a,
+mdx-content h4 a {
+  color: inherit !important;
+  font-weight: inherit !important;
+  text-decoration: none !important;
+  cursor: default !important;
+}
+
+mdx-content h1 a:hover,
+mdx-content h2 a:hover,
+mdx-content h3 a:hover,
+mdx-content h4 a:hover {
+  color: inherit !important;
+  text-decoration: none !important;
 }
 
 mdx-content h1 {
-  font-size: 1rem !important;
-  margin-top: 0.875rem !important;
+  font-size: 1.125rem !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.375rem !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.02em !important;
+}
+
+mdx-content h2 {
+  font-size: 1.0625rem !important;
+  letter-spacing: -0.015em !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.375rem !important;
+  padding-bottom: 0.375rem !important;
+  line-height: 1.25 !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.dark mdx-content h2,
+html.dark mdx-content h2 {
+  border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+mdx-content h3 {
+  font-size: 0.9375rem !important;
+  margin-top: 1rem !important;
   margin-bottom: 0.25rem !important;
   line-height: 1.3 !important;
 }
 
-mdx-content h2 {
-  font-size: 0.9375rem !important;
-  letter-spacing: -0.01em !important;
-  margin-top: 0.75rem !important;
-  margin-bottom: 0.125rem !important;
-  line-height: 1.3 !important;
-}
-
-mdx-content h3 {
-  font-size: 0.875rem !important;
-  margin-top: 0.625rem !important;
-  margin-bottom: 0.125rem !important;
-  line-height: 1.3 !important;
-}
-
 mdx-content h4 {
-  font-size: 0.8125rem !important;
-  margin-top: 0.5rem !important;
-  margin-bottom: 0.125rem !important;
+  font-size: 0.875rem !important;
+  margin-top: 0.75rem !important;
+  margin-bottom: 0.25rem !important;
 }
 
 /* API reference page headings */
@@ -365,4 +418,132 @@ html.dark .oc-hero-title {
 .dark .oc-hero-subtitle,
 html.dark .oc-hero-subtitle {
   color: #a3a3a3;
+}
+
+/* ─── ocTPA plugin card preview (docs) ─────────────────────── */
+
+.oc-tpa-preview {
+  margin: 0.75rem 0 1rem;
+  max-width: 340px;
+}
+
+.oc-tpa-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 13px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dark .oc-tpa-card,
+html.dark .oc-tpa-card {
+  background: #1e1e1e;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.oc-tpa-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.oc-tpa-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #171717;
+  line-height: 1.25;
+}
+
+.dark .oc-tpa-card-title,
+html.dark .oc-tpa-card-title {
+  color: #fafafa;
+}
+
+.oc-tpa-card-subtitle {
+  font-size: 12px;
+  color: #737373;
+  margin-top: 2px;
+}
+
+.oc-tpa-card-logo-wrap {
+  width: 72px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.oc-tpa-card-logo {
+  max-width: 72px;
+  max-height: 40px;
+  object-fit: contain;
+  object-position: right center;
+}
+
+.oc-tpa-card-desc {
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+  color: #525252 !important;
+  margin: 4px 0 8px !important;
+}
+
+.dark .oc-tpa-card-desc,
+html.dark .oc-tpa-card-desc {
+  color: #a3a3a3 !important;
+}
+
+.oc-tpa-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.oc-tpa-card-scheme-wrap {
+  width: 44px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.oc-tpa-card-scheme {
+  width: 44px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.oc-tpa-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.oc-tpa-btn-outline,
+.oc-tpa-btn-primary {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  line-height: 1.2;
+  cursor: default;
+  user-select: none;
+}
+
+.oc-tpa-btn-outline {
+  border: 1px solid #7a7a7a;
+  color: #7a7a7a;
+  background: transparent;
+}
+
+.oc-tpa-btn-primary {
+  background: #4a7c59;
+  color: #ffffff;
+  border: none;
+  font-size: 11px;
+  padding: 5px 12px;
 }

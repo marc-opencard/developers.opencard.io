@@ -130,6 +130,7 @@
             "group": "Customer onboarding",
             "pages": [
               "ems/customer-onboarding",
+              "ems/card-issuers-setup",
               "ems/tpa-flow",
               "ems/eid-signing",
               "ems/card-holders"
