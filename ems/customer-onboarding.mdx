@@ -27,9 +27,11 @@ sequenceDiagram
     participant You as You (EMS)
     participant OC as OpenCard
 
+    Note over Client,OC: EMS setup (once)
+    You->>OC: GET /cardissuers + enable on account
     Note over Client,OC: Phase 1 — Client setup
-    Client->>You: Choose card program
-    You->>OC: GET account cardissuers
+    Client->>You: Choose card program (marketplace)
+    You->>OC: GET account cardissuers (enabled)
     Client->>You: Choose products + invoice details
     You->>OC: GET publicrecords (who may sign TPA)
     Client->>You: Confirm TPA signatories + emails
@@ -52,6 +54,73 @@ sequenceDiagram
 
 ---
 
+## Before Phase 1 — Card issuers (EMS setup)
+
+Client onboarding starts with **choosing a card program**. That only works if you have already decided **which issuers your EMS offers**. This is a **one-time account setup** — not part of the per-client wizard.
+
+```mermaid
+flowchart TD
+    A[GET /cardissuers — platform catalog] --> B{Enable on your account}
+    B -->|API| C[POST .../accounts/id/cardissuers/cardIssuerId]
+    B -->|UI| D[application.opencard.io — Card Issuers]
+    C --> E[GET .../accounts/id/cardissuers — enabled list]
+    D --> E
+    E --> F[Your marketplace — client picks one]
+    F --> G[TPA with card_issuer_id from choice]
+```
+
+### 1. Discover available programs
+
+```
+GET /cardissuers
+Scope: card-issuers-read
+```
+
+Returns every card program on the OpenCard platform. Your EMS account does **not** have them yet — this is the full catalog.
+
+→ [List available issuers](/api-reference/ems/card-issuers/list-available-issuers)
+
+### 2. Enable the ones you sell
+
+Pick the programs you want in your product, then attach them to **your account**:
+
+```
+POST /accounts/{accountId}/cardissuers/{cardIssuerId}
+Scope: account-card-issuers-write
+```
+
+You can do this via the API or in **[application.opencard.io](https://application.opencard.io)** under **Card Issuers** (enable / disable per program). Same result either way.
+
+→ [Enable issuer](/api-reference/ems/card-issuers/enable-issuer) · [Quickstart](/getting-started/quickstart#step-2-enable-a-card-issuer)
+
+### 3. Show enabled programs in your marketplace
+
+When a **client** onboards, list only what you enabled:
+
+```
+GET /accounts/{accountId}/cardissuers
+Scope: account-card-issuers-read
+```
+
+Build a marketplace (or wizard step) where the client picks one program. Store the chosen **`id`** — that becomes `card_issuer_id` when you create the TPA.
+
+The optional [ocTPA plugin](/ems/plugins) renders the same step as product cards. Fields it uses from each enabled issuer:
+
+| API field | Use in UI |
+|-----------|-----------|
+| `name_product` | Card title |
+| `type_product` | Subtitle (e.g. Corporate Card, Credit Card) |
+| `logo_url` | Issuer logo |
+| `product_description_short` | Short description on the card |
+| `card_scheme_logo_url` | Visa / Mastercard badge |
+| `name_display` | Confirmation screen after selection |
+| `product_description_long` | Longer copy on confirmation |
+| `id` | **`card_issuer_id`** on `POST .../tpas` |
+
+Filter by `name_system` if you only expose a subset (`allowedCardIssuerIds` in the plugin).
+
+---
+
 ## Phase 1 — Client setup
 
 This is what the **client** walks through in your product (same order as the optional [ocTPA plugin](/ems/plugins)). You collect choices in the UI, then create the OpenCard resources.
@@ -66,13 +135,15 @@ flowchart LR
 
 ### 1. Choose card program
 
+The client picks from **your enabled list** (see above). You already called:
+
 ```
 GET /accounts/{accountId}/cardissuers
 ```
 
-Show only issuers **already enabled** on your account. The client picks one → you store `card_issuer_id` for the TPA.
+Pass the chosen issuer's `id` as `card_issuer_id` when you create the TPA in step 4.
 
-Enabling new issuers on the account is one-time platform setup — not part of this per-client wizard. → [Quickstart](/getting-started/quickstart)
+Enabling new issuers on the account is EMS setup — not something the end-client does. → [Before Phase 1 — Card issuers](#before-phase-1--card-issuers-ems-setup)
 
 ### 2. Choose products
 
@@ -213,8 +284,8 @@ Do this **per client** (after your account + OAuth client exist):
 
 | # | Step | API / action | Detail guide |
 |---|------|--------------|--------------|
-| 0 | Enable card issuer(s) on account (once) | `GET /cardissuers` → `POST .../accounts/{id}/cardissuers/{id}` | [Quickstart](/getting-started/quickstart) |
-| 1 | Client picks card program | `GET .../accounts/{id}/cardissuers` | below |
+| 0 | Enable card issuer(s) on account (once) | `GET /cardissuers` → `POST .../accounts/{id}/cardissuers/{id}` (or [application.opencard.io](https://application.opencard.io)) | [Before Phase 1](#before-phase-1--card-issuers-ems-setup) |
+| 1 | Client picks card program in your marketplace | `GET .../accounts/{id}/cardissuers` → `card_issuer_id` on TPA | below |
 | 2 | Client picks products | Flags on billing create | [Billing](/ems/model/billing) |
 | 3 | Invoice email / reference | Part of billing create | [Billing](/ems/model/billing) |
 | 4 | Create TPA (who signs) | `GET` publicrecords — collect signatories | [TPA flow](/ems/tpa-flow) |
