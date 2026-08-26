@@ -281,27 +281,43 @@ html.dark card {
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-/* Sidebar */
+/* Sidebar — bold black nav labels */
 sidebar-group-header {
   font-size: 0.6875rem !important;
-  font-weight: 700 !important;
+  font-weight: 900 !important;
   letter-spacing: 0.06em !important;
   text-transform: uppercase !important;
-  color: #404040 !important;
+  color: #000000 !important;
 }
 
 .dark sidebar-group-header,
 html.dark sidebar-group-header {
-  color: #d4d4d4 !important;
+  color: #ffffff !important;
+}
+
+#sidebar-content a,
+#sidebar a,
+#sidebar-content li a {
+  font-weight: 900 !important;
+  color: #000000 !important;
+  -webkit-font-smoothing: antialiased !important;
+}
+
+.dark #sidebar-content a,
+.dark #sidebar a,
+html.dark #sidebar-content a,
+html.dark #sidebar a {
+  color: #ffffff !important;
 }
 
 #sidebar-content li[data-active] a {
-  color: #8B6B6B !important;
-  font-weight: 700 !important;
+  color: #000000 !important;
+  font-weight: 900 !important;
 }
 
-#sidebar-content a {
-  font-weight: 700 !important;
+.dark #sidebar-content li[data-active] a,
+html.dark #sidebar-content li[data-active] a {
+  color: #ffffff !important;
 }
 
 /* Links */
@@ -423,40 +439,44 @@ html.dark .oc-hero-subtitle {
 /* ─── ocTPA plugin card preview (docs) ─────────────────────── */
 
 .oc-tpa-preview {
-  margin: 0.75rem 0 1rem;
-  max-width: 340px;
+  margin: 1rem 0 1.25rem;
+  max-width: 360px;
 }
 
 .oc-tpa-card {
   background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e5e5;
   border-radius: 13px;
-  padding: 14px 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 16px 18px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 14px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
+  overflow: hidden;
+  font-family: Montserrat, "Open Sans", Helvetica, Arial, sans-serif;
 }
 
 .dark .oc-tpa-card,
 html.dark .oc-tpa-card {
-  background: #1e1e1e;
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  background: #1a1a1a;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
 
 .oc-tpa-card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
+  gap: 16px;
+  margin-bottom: 8px;
 }
 
 .oc-tpa-card-title {
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
   color: #171717;
-  line-height: 1.25;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
 .dark .oc-tpa-card-title,
@@ -465,14 +485,15 @@ html.dark .oc-tpa-card-title {
 }
 
 .oc-tpa-card-subtitle {
-  font-size: 12px;
+  font-size: 13px;
   color: #737373;
-  margin-top: 2px;
+  margin-top: 3px;
+  font-weight: 400;
 }
 
 .oc-tpa-card-logo-wrap {
-  width: 72px;
-  height: 40px;
+  width: 80px;
+  height: 36px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -480,17 +501,21 @@ html.dark .oc-tpa-card-title {
 }
 
 .oc-tpa-card-logo {
-  max-width: 72px;
-  max-height: 40px;
+  max-width: 80px;
+  max-height: 36px;
+  width: auto;
+  height: auto;
   object-fit: contain;
   object-position: right center;
+  display: block;
 }
 
 .oc-tpa-card-desc {
   font-size: 12px !important;
-  line-height: 1.35 !important;
+  line-height: 1.45 !important;
   color: #525252 !important;
-  margin: 4px 0 8px !important;
+  margin: 0 0 14px !important;
+  min-height: 2.9em;
 }
 
 .dark .oc-tpa-card-desc,
@@ -502,48 +527,70 @@ html.dark .oc-tpa-card-desc {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 4px;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+  min-height: 36px;
+}
+
+.dark .oc-tpa-card-footer,
+html.dark .oc-tpa-card-footer {
+  border-top-color: rgba(255, 255, 255, 0.08);
 }
 
 .oc-tpa-card-scheme-wrap {
   width: 44px;
   height: 28px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 
 .oc-tpa-card-scheme {
   width: 44px;
   height: 28px;
   object-fit: contain;
+  display: block;
 }
 
 .oc-tpa-card-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .oc-tpa-btn-outline,
 .oc-tpa-btn-primary {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
-  padding: 4px 10px;
+  padding: 6px 12px;
   border-radius: 6px;
-  line-height: 1.2;
+  line-height: 1;
   cursor: default;
   user-select: none;
+  white-space: nowrap;
+  font-family: inherit;
 }
 
 .oc-tpa-btn-outline {
-  border: 1px solid #7a7a7a;
-  color: #7a7a7a;
+  border: 1px solid #9ca3af;
+  color: #6b7280;
+  background: #ffffff;
+}
+
+.dark .oc-tpa-btn-outline,
+html.dark .oc-tpa-btn-outline {
   background: transparent;
+  border-color: #6b7280;
+  color: #d1d5db;
 }
 
 .oc-tpa-btn-primary {
-  background: #4a7c59;
+  background: #3d7a4a;
   color: #ffffff;
   border: none;
-  font-size: 11px;
-  padding: 5px 12px;
+  font-size: 12px;
+  padding: 7px 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
