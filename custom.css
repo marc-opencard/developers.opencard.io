@@ -1,5 +1,8 @@
 /* ─── OpenCard corporate glass (Stripe / Klarna inspired) ───── */
 
+/* Load full Montserrat weight range — docs.json alone only ships weight 500 */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900&display=swap");
+
 /* Brand font — matches opencard.io / service.opencard.io */
 body,
 #navbar,
@@ -93,12 +96,15 @@ mdx-content h1.font-bold,
 mdx-content h2.font-bold,
 mdx-content h3.font-bold,
 mdx-content h4.font-bold,
+mdx-content h2.font-normal,
+mdx-content h3.font-normal,
 #content-area h1,
 #content-area h2,
 #content-area h3,
-#content-area h4 {
+#content-area h4,
+#page-title {
   font-weight: 800 !important;
-  color: #171717 !important;
+  color: #000000 !important;
   cursor: default !important;
   text-decoration: none !important;
 }
@@ -118,8 +124,10 @@ html.dark mdx-content h4,
 html.dark #content-area h1,
 html.dark #content-area h2,
 html.dark #content-area h3,
-html.dark #content-area h4 {
-  color: #fafafa !important;
+html.dark #content-area h4,
+.dark #page-title,
+html.dark #page-title {
+  color: #ffffff !important;
 }
 
 /* Mintlify wraps headings in anchor tags — must not look like body links */
@@ -281,43 +289,85 @@ html.dark card {
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-/* Sidebar — bold black nav labels */
-sidebar-group-header {
+/* Sidebar — bold black nav (target Mintlify Tailwind classes, not just custom elements) */
+.sidebar-group-header,
+.sidebar-group-header .sidebar-title,
+.sidebar-group-header h3,
+.sidebar-group-header span {
   font-size: 0.6875rem !important;
-  font-weight: 900 !important;
+  font-weight: 800 !important;
   letter-spacing: 0.06em !important;
   text-transform: uppercase !important;
   color: #000000 !important;
 }
 
-.dark sidebar-group-header,
-html.dark sidebar-group-header {
+.dark .sidebar-group-header,
+.dark .sidebar-group-header .sidebar-title,
+.dark .sidebar-group-header h3,
+.dark .sidebar-group-header span,
+html.dark .sidebar-group-header,
+html.dark .sidebar-group-header .sidebar-title,
+html.dark .sidebar-group-header h3,
+html.dark .sidebar-group-header span {
   color: #ffffff !important;
 }
 
 #sidebar-content a,
+#sidebar-content a span,
 #sidebar a,
-#sidebar-content li a {
-  font-weight: 900 !important;
+#sidebar a span,
+#sidebar-content li a,
+#sidebar-content li a span,
+#sidebar-content [data-title] a,
+#sidebar-content [data-title] a span {
+  font-weight: 700 !important;
   color: #000000 !important;
   -webkit-font-smoothing: antialiased !important;
 }
 
 .dark #sidebar-content a,
+.dark #sidebar-content a span,
 .dark #sidebar a,
+.dark #sidebar a span,
 html.dark #sidebar-content a,
-html.dark #sidebar a {
+html.dark #sidebar-content a span,
+html.dark #sidebar a,
+html.dark #sidebar a span {
   color: #ffffff !important;
 }
 
-#sidebar-content li[data-active] a {
+#sidebar-content li[data-active] a,
+#sidebar-content li[data-active] a span {
   color: #000000 !important;
-  font-weight: 900 !important;
+  font-weight: 800 !important;
 }
 
 .dark #sidebar-content li[data-active] a,
-html.dark #sidebar-content li[data-active] a {
+.dark #sidebar-content li[data-active] a span,
+html.dark #sidebar-content li[data-active] a,
+html.dark #sidebar-content li[data-active] a span {
   color: #ffffff !important;
+}
+
+/* Beat Tailwind text-gray-* on sidebar links */
+#sidebar-content a.text-gray-700,
+#sidebar-content a.text-gray-700 span,
+#sidebar-content a.dark\:text-gray-400,
+#sidebar-content a.dark\:text-gray-400 span {
+  color: #000000 !important;
+}
+
+.dark #sidebar-content a.text-gray-700,
+.dark #sidebar-content a.text-gray-700 span,
+html.dark #sidebar-content a.dark\:text-gray-400,
+html.dark #sidebar-content a.dark\:text-gray-400 span {
+  color: #ffffff !important;
+}
+
+/* Legacy Mintlify custom element selectors */
+sidebar-group-header {
+  font-weight: 800 !important;
+  color: #000000 !important;
 }
 
 /* Links */

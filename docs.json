@@ -10,7 +10,15 @@
   },
   "fonts": {
     "family": "Montserrat",
-    "weight": 500
+    "weight": 500,
+    "heading": {
+      "family": "Montserrat",
+      "weight": 800
+    },
+    "body": {
+      "family": "Montserrat",
+      "weight": 500
+    }
   },
   "background": {
     "decoration": "gradient",
