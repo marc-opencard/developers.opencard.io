@@ -147,7 +147,6 @@ EX = {
         "name_product": "Acme Corporate Card",
         "product_subtitle": "Corporate Card",
         "payment_program_name": "Acme Corporate",
-        "product_liability": "corporate",
         "email": "issuer-ops@example.com",
         "product_description_short": "Streamline expense management with real-time card data.",
         "product_description_long": "Full product description shown after the client activates this card program.",
@@ -176,7 +175,6 @@ EX = {
         "name_product": "Acme Corporate Card",
         "product_subtitle": "Corporate Card",
         "payment_program_name": "Acme Corporate",
-        "product_liability": "corporate",
         "product_description_short": "Streamline expense management with real-time card data.",
         "product_description_long": "Full product description shown after the client activates this card program.",
         "card_scheme": "mastercard",
@@ -276,7 +274,6 @@ EX_PAYMENT_PRODUCT = {
     "description_short": "Streamline expense management with real-time card data.",
     "description_long": "Full product description shown after the client activates this card program.",
     "funding": "debit",
-    "liability": "corporate",
     "scheme": {
         "name": "mastercard",
         "logo_url": "https://sandbox-api.opencard.io/images/card-schemes/mastercard.svg",
@@ -504,7 +501,6 @@ ems_spec = {
                     "description_short": {"type": "string", "nullable": True},
                     "description_long": {"type": "string", "nullable": True},
                     "funding": {"type": "string", "nullable": True, "enum": ["debit", "credit"], "description": "How the card is funded"},
-                    "liability": {"type": "string", "nullable": True, "enum": ["personal", "corporate", "corporate_with_personal_invoice"]},
                     "scheme": {"type": "object", "properties": {
                         "name": {"type": "string", "nullable": True, "description": "e.g. mastercard, visa"},
                         "logo_url": {"type": "string", "nullable": True, "description": "Visa / Mastercard badge"},
