@@ -773,27 +773,23 @@
                     {
                       "id": 1,
                       "card_issuer_id": 1,
-                      "code": "acme_corporate_debit",
-                      "card_issuer": "acme_corporate_debit",
                       "name": "Acme Corporate Card",
                       "subtitle": "Corporate Card",
                       "description_short": "Streamline expense management with real-time card data.",
                       "description_long": "Full product description shown after the client activates this card program.",
                       "funding": "debit",
                       "liability": "company",
+                      "scheme": {
+                        "code": "mastercard",
+                        "logo_url": "https://sandbox-api.opencard.io/images/card-schemes/mastercard.svg"
+                      },
                       "payment_program": {
                         "id": 1,
-                        "code": "acme_corporate_debit",
                         "name": "Acme Corporate",
-                        "logo_url": "https://sandbox-api.opencard.io/logos?type=card_issuers&name=acme-card-logo.png",
-                        "scheme": {
-                          "code": "mastercard",
-                          "logo_url": "https://sandbox-api.opencard.io/images/card-schemes/mastercard.svg"
-                        }
+                        "logo_url": "https://sandbox-api.opencard.io/logos?type=card_issuers&name=acme-card-logo.png"
                       },
                       "issuer": {
                         "id": 1,
-                        "code": "acme_corporate_debit",
                         "name": "Acme Card Issuer",
                         "legal_name": "Acme Card Issuer AB",
                         "logo_url": "https://sandbox-api.opencard.io/logos?type=card_issuers&name=acme-card-logo.png"
@@ -823,21 +819,11 @@
           "Payment Products"
         ],
         "summary": "List enabled payment products",
-        "operationId": "listAccountPaymentProducts",
-        "description": "Payment products already enabled on your account \u2014 what clients can pick in onboarding.",
+        "operationId": "listEnabledPaymentProducts",
+        "description": "Payment products already enabled on your account (what clients can pick in onboarding).",
         "parameters": [
           {
             "$ref": "#/components/parameters/accountId"
-          },
-          {
-            "name": "per_page",
-            "in": "query",
-            "required": false,
-            "description": "Page size (default 15)",
-            "schema": {
-              "type": "integer",
-              "default": 15
-            }
           }
         ],
         "responses": {
@@ -874,27 +860,23 @@
                     {
                       "id": 1,
                       "card_issuer_id": 1,
-                      "code": "acme_corporate_debit",
-                      "card_issuer": "acme_corporate_debit",
                       "name": "Acme Corporate Card",
                       "subtitle": "Corporate Card",
                       "description_short": "Streamline expense management with real-time card data.",
                       "description_long": "Full product description shown after the client activates this card program.",
                       "funding": "debit",
                       "liability": "company",
+                      "scheme": {
+                        "code": "mastercard",
+                        "logo_url": "https://sandbox-api.opencard.io/images/card-schemes/mastercard.svg"
+                      },
                       "payment_program": {
                         "id": 1,
-                        "code": "acme_corporate_debit",
                         "name": "Acme Corporate",
-                        "logo_url": "https://sandbox-api.opencard.io/logos?type=card_issuers&name=acme-card-logo.png",
-                        "scheme": {
-                          "code": "mastercard",
-                          "logo_url": "https://sandbox-api.opencard.io/images/card-schemes/mastercard.svg"
-                        }
+                        "logo_url": "https://sandbox-api.opencard.io/logos?type=card_issuers&name=acme-card-logo.png"
                       },
                       "issuer": {
                         "id": 1,
-                        "code": "acme_corporate_debit",
                         "name": "Acme Card Issuer",
                         "legal_name": "Acme Card Issuer AB",
                         "logo_url": "https://sandbox-api.opencard.io/logos?type=card_issuers&name=acme-card-logo.png"
@@ -924,14 +906,19 @@
           "Payment Products"
         ],
         "summary": "Get enabled payment product",
-        "operationId": "getAccountPaymentProduct",
-        "description": "Returns one payment product enabled on your account. `404` if it is not enabled.",
+        "operationId": "getEnabledPaymentProduct",
         "parameters": [
           {
             "$ref": "#/components/parameters/accountId"
           },
           {
-            "$ref": "#/components/parameters/paymentProductId"
+            "name": "paymentProductId",
+            "in": "path",
+            "required": true,
+            "description": "Payment product ID",
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -945,27 +932,23 @@
                 "example": {
                   "id": 1,
                   "card_issuer_id": 1,
-                  "code": "acme_corporate_debit",
-                  "card_issuer": "acme_corporate_debit",
                   "name": "Acme Corporate Card",
                   "subtitle": "Corporate Card",
                   "description_short": "Streamline expense management with real-time card data.",
                   "description_long": "Full product description shown after the client activates this card program.",
                   "funding": "debit",
                   "liability": "company",
+                  "scheme": {
+                    "code": "mastercard",
+                    "logo_url": "https://sandbox-api.opencard.io/images/card-schemes/mastercard.svg"
+                  },
                   "payment_program": {
                     "id": 1,
-                    "code": "acme_corporate_debit",
                     "name": "Acme Corporate",
-                    "logo_url": "https://sandbox-api.opencard.io/logos?type=card_issuers&name=acme-card-logo.png",
-                    "scheme": {
-                      "code": "mastercard",
-                      "logo_url": "https://sandbox-api.opencard.io/images/card-schemes/mastercard.svg"
-                    }
+                    "logo_url": "https://sandbox-api.opencard.io/logos?type=card_issuers&name=acme-card-logo.png"
                   },
                   "issuer": {
                     "id": 1,
-                    "code": "acme_corporate_debit",
                     "name": "Acme Card Issuer",
                     "legal_name": "Acme Card Issuer AB",
                     "logo_url": "https://sandbox-api.opencard.io/logos?type=card_issuers&name=acme-card-logo.png"
@@ -973,9 +956,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Not enabled on this account"
           }
         },
         "security": [
@@ -998,7 +978,13 @@
             "$ref": "#/components/parameters/accountId"
           },
           {
-            "$ref": "#/components/parameters/paymentProductId"
+            "name": "paymentProductId",
+            "in": "path",
+            "required": true,
+            "description": "Payment product ID",
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -1013,7 +999,7 @@
             "content": {
               "application/json": {
                 "example": {
-                  "error": "Payment product is already enabled for the account."
+                  "error": "Payment product is already enabled on the account."
                 }
               }
             }
@@ -1033,13 +1019,18 @@
         ],
         "summary": "Disable payment product",
         "operationId": "disablePaymentProduct",
-        "description": "Disable a payment product on your account. Empty body. `200` on success.",
         "parameters": [
           {
             "$ref": "#/components/parameters/accountId"
           },
           {
-            "$ref": "#/components/parameters/paymentProductId"
+            "name": "paymentProductId",
+            "in": "path",
+            "required": true,
+            "description": "Payment product ID",
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -1768,15 +1759,6 @@
         "schema": {
           "type": "integer"
         }
-      },
-      "paymentProductId": {
-        "name": "paymentProductId",
-        "in": "path",
-        "required": true,
-        "description": "Payment product ID",
-        "schema": {
-          "type": "integer"
-        }
       }
     },
     "schemas": {
@@ -1790,8 +1772,7 @@
         ],
         "properties": {
           "card_issuer_id": {
-            "type": "integer",
-            "description": "Payment product `id` from products enabled on your account"
+            "type": "integer"
           },
           "name": {
             "type": "string"
@@ -2016,53 +1997,17 @@
           }
         }
       },
-      "WebhookCreate": {
-        "type": "object",
-        "required": [
-          "url"
-        ],
-        "properties": {
-          "url": {
-            "type": "string"
-          },
-          "card_transaction_authorized": {
-            "type": "boolean"
-          },
-          "card_transaction_cleared": {
-            "type": "boolean"
-          },
-          "card_transaction_deleted": {
-            "type": "boolean"
-          },
-          "receipt_fetched": {
-            "type": "boolean"
-          },
-          "transaction_true_vat": {
-            "type": "boolean"
-          }
-        }
-      },
       "PaymentProduct": {
         "type": "object",
         "description": "A card product clients can activate \u2014 debit or credit under a payment program, issued by a bank.",
         "properties": {
           "id": {
             "type": "integer",
-            "description": "Payment product ID. Pass this as `card_issuer_id` when creating a TPA."
+            "description": "Payment product ID"
           },
           "card_issuer_id": {
             "type": "integer",
-            "description": "Same value as `id`. Use this field (or `id`) as `card_issuer_id` on `POST .../tpas`."
-          },
-          "code": {
-            "type": "string",
-            "nullable": true,
-            "description": "Stable product code"
-          },
-          "card_issuer": {
-            "type": "string",
-            "nullable": true,
-            "description": "Stable product code. Use with the ocTPA plugin `allowedCardIssuerIds` filter."
+            "description": "Pass this as `card_issuer_id` on `POST .../tpas`."
           },
           "name": {
             "type": "string",
@@ -2095,15 +2040,26 @@
             "type": "string",
             "nullable": true
           },
+          "scheme": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "nullable": true,
+                "description": "e.g. mastercard, visa"
+              },
+              "logo_url": {
+                "type": "string",
+                "nullable": true,
+                "description": "Visa / Mastercard badge"
+              }
+            }
+          },
           "payment_program": {
             "type": "object",
             "properties": {
               "id": {
                 "type": "integer",
-                "nullable": true
-              },
-              "code": {
-                "type": "string",
                 "nullable": true
               },
               "name": {
@@ -2115,21 +2071,6 @@
                 "type": "string",
                 "nullable": true,
                 "description": "Program logo"
-              },
-              "scheme": {
-                "type": "object",
-                "properties": {
-                  "code": {
-                    "type": "string",
-                    "nullable": true,
-                    "description": "e.g. mastercard, visa"
-                  },
-                  "logo_url": {
-                    "type": "string",
-                    "nullable": true,
-                    "description": "Visa / Mastercard badge"
-                  }
-                }
               }
             }
           },
@@ -2138,10 +2079,6 @@
             "properties": {
               "id": {
                 "type": "integer",
-                "nullable": true
-              },
-              "code": {
-                "type": "string",
                 "nullable": true
               },
               "name": {
@@ -2159,6 +2096,32 @@
                 "description": "Issuer / bank mark when available"
               }
             }
+          }
+        }
+      },
+      "WebhookCreate": {
+        "type": "object",
+        "required": [
+          "url"
+        ],
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "card_transaction_authorized": {
+            "type": "boolean"
+          },
+          "card_transaction_cleared": {
+            "type": "boolean"
+          },
+          "card_transaction_deleted": {
+            "type": "boolean"
+          },
+          "receipt_fetched": {
+            "type": "boolean"
+          },
+          "transaction_true_vat": {
+            "type": "boolean"
           }
         }
       }

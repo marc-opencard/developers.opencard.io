@@ -19,7 +19,7 @@ flowchart TD
     C --> E[GET .../accounts/id/payment-products — enabled list]
     D --> E
     E --> F[Your marketplace — client picks one]
-    F --> G[TPA with card_issuer_id from the product id]
+    F --> G[TPA with card_issuer_id]
 ```
 
 ---
@@ -71,7 +71,7 @@ GET /accounts/{accountId}/payment-products
 Scope: account-payment-products-read
 ```
 
-Build a marketplace (or wizard step) where the client picks one product. Store the chosen **`id`** — that becomes `card_issuer_id` when you create the TPA.
+Build a marketplace (or wizard step) where the client picks one product. Store **`card_issuer_id`** — you pass that when you create the TPA.
 
 The optional [ocTPA plugin](/ems/plugins) renders the same step as product cards:
 
@@ -119,10 +119,9 @@ Fields from each enabled product:
 | `description_long` | Longer copy on confirmation |
 | `payment_program.name` | Program name on confirmation |
 | `payment_program.logo_url` | Program logo |
-| `payment_program.scheme.logo_url` | Visa / Mastercard badge |
+| `scheme.logo_url` | Visa / Mastercard badge |
 | `issuer.logo_url` | Bank mark when present |
-| `id` | **`card_issuer_id`** on `POST .../tpas` |
-| `card_issuer` | Stable product code — filter a subset with `allowedCardIssuerIds` in the plugin |
+| `card_issuer_id` | Pass this as `card_issuer_id` on `POST .../tpas` |
 
 ---
 
