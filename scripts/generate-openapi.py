@@ -262,51 +262,81 @@ op(ems_paths, "post", bill, tag="Billings", summary="Create billing profile", op
    body=json_body(ref("BillingCreate"), example={"name_display": "Acme AB", "name_legal": "Acme AB", "organization_number": "5561234567", "country": "SE"}),
    responses=json_resp("201", "Billing created", example={"id": 1, "name_display": "Acme AB"}))
 
-# Card issuers — catalog (all programs) then enable on account
-op(ems_paths, "get", "/cardissuers", tag="Card Issuers", summary="List available issuers",
-   operation_id="listCardIssuers", scope="card-issuers-read",
-   description="Platform catalog of card programs you can enable. Pick an `id`, then [enable it on your account](#tag/Card-Issuers/operation/attachCardIssuer). Optional `q` searches `name_system` (space-separated tokens).",
+# Payment products — catalog then enable on account
+EX_PAYMENT_PRODUCT = {
+    "id": 1,
+    "card_issuer_id": 1,
+    "code": "acme_corporate_debit",
+    "card_issuer": "acme_corporate_debit",
+    "name": "Acme Corporate Card",
+    "subtitle": "Corporate Card",
+    "description_short": "Streamline expense management with real-time card data.",
+    "description_long": "Full product description shown after the client activates this card program.",
+    "funding": "debit",
+    "liability": None,
+    "payment_program": {
+        "id": None,
+        "code": None,
+        "name": "Acme Corporate",
+        "logo_url": "https://sandbox-api.opencard.io/logos?type=card_issuers&name=acme-card-logo.png",
+        "scheme": {
+            "code": "mastercard",
+            "logo_url": "https://sandbox-api.opencard.io/images/card-schemes/mastercard.svg",
+        },
+    },
+    "issuer": {
+        "id": None,
+        "code": None,
+        "name": "Acme Card Issuer",
+        "legal_name": "Acme Card Issuer AB",
+        "logo_url": None,
+    },
+}
+
+op(ems_paths, "get", "/payment-products", tag="Payment Products", summary="List available payment products",
+   operation_id="listPaymentProducts", scope="payment-products-read",
+   description="Platform catalog of payment products you can enable. Pick an `id`, then [enable it on your account](#tag/Payment-Products/operation/enablePaymentProduct). Optional `q` searches name, subtitle, program, issuer, and short description. Optional `funding` filters `debit` or `credit`.",
    params=[
-       {"name": "q", "in": "query", "required": False, "description": "Space-separated search tokens matched against `name_system`", "schema": {"type": "string"}},
+       {"name": "q", "in": "query", "required": False, "description": "Space-separated search tokens matched against product name, subtitle, program name, issuer name, and short description", "schema": {"type": "string"}},
+       {"name": "funding", "in": "query", "required": False, "description": "Filter by funding type", "schema": {"type": "string", "enum": ["debit", "credit"]}},
        {"name": "per_page", "in": "query", "required": False, "description": "Page size (default 15)", "schema": {"type": "integer", "default": 15}},
    ],
-   responses=json_resp("200", "Available issuers",
+   responses=json_resp("200", "Available payment products",
        schema={"type": "object", "properties": {
            "current_page": {"type": "integer"},
-           "data": {"type": "array", "items": ref("CardIssuer")},
+           "data": {"type": "array", "items": ref("PaymentProduct")},
            "per_page": {"type": "integer"},
            "total": {"type": "integer"},
            "last_page": {"type": "integer"},
        }},
-       example=EX["paginated"]([EX["card_issuer_catalog"]])))
+       example=EX["paginated"]([EX_PAYMENT_PRODUCT])))
 
-# Card issuers on account (enabled subset — full model + pivot)
-ci = "/accounts/{accountId}/cardissuers"
-op(ems_paths, "get", ci, tag="Card Issuers", summary="List enabled issuers", operation_id="listAccountCardIssuers",
-   scope="account-card-issuers-read", params=[ACCOUNT_ID],
-   description="Card issuers already attached to your account (what clients can pick in onboarding). Each item includes `pivot` with when it was enabled.",
-   responses=json_resp("200", "Issuers",
+pp = "/accounts/{accountId}/payment-products"
+op(ems_paths, "get", pp, tag="Payment Products", summary="List enabled payment products", operation_id="listEnabledPaymentProducts",
+   scope="account-payment-products-read", params=[ACCOUNT_ID],
+   description="Payment products already enabled on your account (what clients can pick in onboarding).",
+   responses=json_resp("200", "Enabled payment products",
        schema={"type": "object", "properties": {
            "current_page": {"type": "integer"},
-           "data": {"type": "array", "items": ref("CardIssuer")},
+           "data": {"type": "array", "items": ref("PaymentProduct")},
            "per_page": {"type": "integer"},
            "total": {"type": "integer"},
            "last_page": {"type": "integer"},
        }},
-       example=EX["paginated"]([EX["card_issuer"]])))
-op(ems_paths, "get", f"{ci}/{{cardIssuerId}}", tag="Card Issuers", summary="Get enabled issuer", operation_id="getAccountCardIssuer",
-   scope="account-card-issuers-read", params=[ACCOUNT_ID, path_param("cardIssuerId", "Issuer ID")],
-   responses=json_resp("200", "Issuer", schema=ref("CardIssuer"), example=EX["card_issuer"]))
-op(ems_paths, "post", f"{ci}/{{cardIssuerId}}", tag="Card Issuers", summary="Enable issuer", operation_id="attachCardIssuer",
-   scope="account-card-issuers-write", params=[ACCOUNT_ID, path_param("cardIssuerId", "Issuer ID")],
-   description="Attach a card program from the [available catalog](#tag/Card-Issuers/operation/listCardIssuers) to your account. Empty body. `201` on success; `400` if already attached.",
+       example=EX["paginated"]([EX_PAYMENT_PRODUCT])))
+op(ems_paths, "get", f"{pp}/{{paymentProductId}}", tag="Payment Products", summary="Get enabled payment product", operation_id="getEnabledPaymentProduct",
+   scope="account-payment-products-read", params=[ACCOUNT_ID, path_param("paymentProductId", "Payment product ID")],
+   responses=json_resp("200", "Payment product", schema=ref("PaymentProduct"), example=EX_PAYMENT_PRODUCT))
+op(ems_paths, "post", f"{pp}/{{paymentProductId}}", tag="Payment Products", summary="Enable payment product", operation_id="enablePaymentProduct",
+   scope="account-payment-products-write", params=[ACCOUNT_ID, path_param("paymentProductId", "Payment product ID")],
+   description="Enable a payment product from the [catalog](#tag/Payment-Products/operation/listPaymentProducts) on your account. Empty body. `201` on success; `400` if already enabled.",
    responses={
-       **json_resp("201", "Attached"),
-       **json_resp("400", "Already attached", example={"error": "Card issuer is already attached to the account."}),
+       **json_resp("201", "Enabled"),
+       **json_resp("400", "Already enabled", example={"error": "Payment product is already enabled on the account."}),
    })
-op(ems_paths, "delete", f"{ci}/{{cardIssuerId}}", tag="Card Issuers", summary="Disable issuer", operation_id="detachCardIssuer",
-   scope="account-card-issuers-delete", params=[ACCOUNT_ID, path_param("cardIssuerId", "Issuer ID")],
-   responses=json_resp("200", "Detached"))
+op(ems_paths, "delete", f"{pp}/{{paymentProductId}}", tag="Payment Products", summary="Disable payment product", operation_id="disablePaymentProduct",
+   scope="account-payment-products-write", params=[ACCOUNT_ID, path_param("paymentProductId", "Payment product ID")],
+   responses=json_resp("200", "Disabled"))
 
 # Organizations
 org = "/accounts/{accountId}/organizations"
@@ -384,10 +414,9 @@ EMS_SCOPES = {
     "account-tpa-signatories-write": "Add TPA signatories",
     "account-tpa-identities-read": "List identities on TPA",
     "billings-write": "Create billing profiles",
-    "card-issuers-read": "List available card programs (catalog)",
-    "account-card-issuers-read": "List enabled issuers",
-    "account-card-issuers-write": "Enable issuers",
-    "account-card-issuers-delete": "Disable issuers",
+    "payment-products-read": "List available payment products (catalog)",
+    "account-payment-products-read": "List enabled payment products",
+    "account-payment-products-write": "Enable and disable payment products",
     "organizations-read": "Read organizations",
     "organizations-write": "Create organizations",
     "card-holders-read": "Read card holders",
@@ -469,35 +498,36 @@ ems_spec = {
                 }},
             "BillingCreate": {"type": "object", "required": ["name_display", "name_legal", "organization_number", "country"],
                 "properties": {"name_display": {"type": "string"}, "name_legal": {"type": "string"}, "organization_number": {"type": "string"}, "country": {"type": "string"}}},
-            "CardIssuer": {"type": "object",
-                "description": "Card program returned by account card-issuer endpoints. Same shape as the CardIssuer Eloquent model (plus `pivot` when listed via the account relation).",
+            "PaymentProduct": {"type": "object",
+                "description": "A card product clients can activate — debit or credit under a payment program, issued by a bank.",
                 "properties": {
-                    "id": {"type": "integer"},
-                    "name_display": {"type": "string"},
-                    "name_legal": {"type": "string", "nullable": True},
-                    "name_legal_short": {"type": "string", "nullable": True, "description": "Short legal name (used in PDPC/TPA legal text)"},
-                    "name_short": {"type": "string", "nullable": True},
-                    "name_system": {"type": "string", "nullable": True, "description": "Stable system key (e.g. for plugin `allowedCardIssuerIds`)"},
-                    "name_product": {"type": "string", "nullable": True},
-                    "type_product": {"type": "string", "nullable": True},
-                    "email": {"type": "string", "nullable": True, "description": "Present on account-enabled list/get; omitted from the global catalog select"},
-                    "product_description_short": {"type": "string", "nullable": True},
-                    "product_description_long": {"type": "string", "nullable": True},
-                    "card_scheme": {"type": "string", "nullable": True, "description": "e.g. mastercard, visa"},
-                    "logo_name": {"type": "string", "nullable": True},
-                    "logo_url": {"type": "string", "nullable": True, "description": "Computed absolute URL to issuer logo"},
-                    "card_scheme_logo_url": {"type": "string", "nullable": True, "description": "Computed absolute URL to scheme logo"},
-                    "created_at": {"type": "string", "format": "date-time"},
-                    "updated_at": {"type": "string", "format": "date-time"},
-                    "deleted_at": {"type": "string", "format": "date-time", "nullable": True, "description": "Present on account-enabled responses; soft-deleted issuers are excluded from the catalog"},
-                    "pivot": {"type": "object", "nullable": True,
-                        "description": "Present on account-attached list/get — when this issuer was enabled on the account",
-                        "properties": {
-                            "account_id": {"type": "integer"},
-                            "card_issuer_id": {"type": "integer"},
-                            "created_at": {"type": "string", "format": "date-time"},
-                            "updated_at": {"type": "string", "format": "date-time"},
+                    "id": {"type": "integer", "description": "Payment product ID. Pass this as `card_issuer_id` when creating a TPA."},
+                    "card_issuer_id": {"type": "integer", "description": "Same value as `id`. Use this field (or `id`) as `card_issuer_id` on `POST .../tpas`."},
+                    "code": {"type": "string", "nullable": True, "description": "Stable product code"},
+                    "card_issuer": {"type": "string", "nullable": True, "description": "Stable product code. Use with the ocTPA plugin `allowedCardIssuerIds` filter."},
+                    "name": {"type": "string", "nullable": True, "description": "Product title"},
+                    "subtitle": {"type": "string", "nullable": True, "description": "Product subtitle (e.g. Corporate Card)"},
+                    "description_short": {"type": "string", "nullable": True},
+                    "description_long": {"type": "string", "nullable": True},
+                    "funding": {"type": "string", "nullable": True, "enum": ["debit", "credit"], "description": "How the card is funded"},
+                    "liability": {"type": "string", "nullable": True},
+                    "payment_program": {"type": "object", "properties": {
+                        "id": {"type": "integer", "nullable": True},
+                        "code": {"type": "string", "nullable": True},
+                        "name": {"type": "string", "nullable": True, "description": "Program name shown after the client selects the product"},
+                        "logo_url": {"type": "string", "nullable": True, "description": "Program logo"},
+                        "scheme": {"type": "object", "properties": {
+                            "code": {"type": "string", "nullable": True, "description": "e.g. mastercard, visa"},
+                            "logo_url": {"type": "string", "nullable": True, "description": "Visa / Mastercard badge"},
                         }},
+                    }},
+                    "issuer": {"type": "object", "properties": {
+                        "id": {"type": "integer", "nullable": True},
+                        "code": {"type": "string", "nullable": True},
+                        "name": {"type": "string", "nullable": True, "description": "Short issuer name"},
+                        "legal_name": {"type": "string", "nullable": True},
+                        "logo_url": {"type": "string", "nullable": True, "description": "Issuer / bank mark when available"},
+                    }},
                 }},
             "WebhookCreate": {"type": "object", "required": ["url"], "properties": {
                 "url": {"type": "string"}, "card_transaction_authorized": {"type": "boolean"}, "card_transaction_cleared": {"type": "boolean"},
@@ -505,7 +535,7 @@ ems_spec = {
         },
     },
     "x-tagGroups": [
-        {"name": "Account", "tags": ["Account", "OAuth Clients", "Public Records", "Billings", "Card Issuers"]},
+        {"name": "Account", "tags": ["Account", "OAuth Clients", "Public Records", "Billings", "Payment Products"]},
         {"name": "Legal", "tags": ["TPAs", "TPA Signatories", "Identities"]},
         {"name": "Organizations", "tags": ["Organizations", "Card Holders", "Webhooks"]},
         {"name": "Enrichment", "tags": ["Receipt Scanner"]},

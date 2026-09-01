@@ -63,30 +63,6 @@
     {
       "source": "/ems/data-model/:slug*",
       "destination": "/introduction/how-it-works"
-    },
-    {
-      "source": "/ems/card-issuers-setup",
-      "destination": "/ems/payment-products-setup"
-    },
-    {
-      "source": "/api-reference/ems/card-issuers/list-available-issuers",
-      "destination": "/api-reference/ems/payment-products/list-available-payment-products"
-    },
-    {
-      "source": "/api-reference/ems/card-issuers/list-enabled-issuers",
-      "destination": "/api-reference/ems/payment-products/list-enabled-payment-products"
-    },
-    {
-      "source": "/api-reference/ems/card-issuers/get-enabled-issuer",
-      "destination": "/api-reference/ems/payment-products/get-enabled-payment-product"
-    },
-    {
-      "source": "/api-reference/ems/card-issuers/enable-issuer",
-      "destination": "/api-reference/ems/payment-products/enable-payment-product"
-    },
-    {
-      "source": "/api-reference/ems/card-issuers/disable-issuer",
-      "destination": "/api-reference/ems/payment-products/disable-payment-product"
     }
   ],
   "navbar": {
