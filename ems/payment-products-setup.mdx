@@ -37,7 +37,7 @@ Optional query params:
 
 | Param | What it does |
 |-------|----------------|
-| `q` | Space-separated search across product name, subtitle, program, issuer, and short description |
+| `q` | Space-separated search across product name, subtitle, program, and short description |
 | `funding` | `debit` or `credit` |
 | `per_page` | Page size (default 15) |
 
@@ -119,8 +119,9 @@ Fields from each enabled product:
 | `description_long` | Longer copy on confirmation |
 | `payment_program.name` | Program name on confirmation |
 | `payment_program.logo_url` | Program logo |
+| `scheme.name` | Card scheme (`mastercard`, `visa`) |
 | `scheme.logo_url` | Visa / Mastercard badge |
-| `issuer.logo_url` | Bank mark when present |
+| `liability` | `personal`, `corporate`, or `corporate_with_personal_invoice` |
 | `card_issuer_id` | Pass this as `card_issuer_id` on `POST .../tpas` |
 
 ---
