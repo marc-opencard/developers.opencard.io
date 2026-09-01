@@ -92,6 +92,10 @@ The transaction, receipt, VAT, and line-item samples below are **one purchase** 
   "state": "authorized",
   "receiptable": true,
   "card_issuer": "nordea",
+  "payment_product": {
+    "id": 1,
+    "name": "Acme Corporate Card"
+  },
   "card_issuer_reference": "11212945",
   "card_issuer_customer_number": null,
   "type": "card",
@@ -140,6 +144,7 @@ The transaction, receipt, VAT, and line-item samples below are **one purchase** 
 | `state` | string | `authorized`, `cleared`, `deleted`, `invoiced` |
 | `receiptable` | boolean | Expect a digital receipt? |
 | `card_issuer` | string | Card program identifier (`name_system`, e.g. `nordea`) |
+| `payment_product` | object | `{ "id": <card_issuer_id>, "name": "<product name>" }` |
 | `card_issuer_reference` | string | Issuer's reference for this state (not globally unique) |
 | `card_funding` | string | `debit` or `credit` — from the registered card |
 | `card_type` | string | `private`, `corporate`, `corporate_with_private_invoice` |
@@ -169,6 +174,10 @@ Matches the sample file at the URL (Coop, 109.38 SEK, same purchase as the trans
     "id": "10",
     "card_issuer": "nordea"
   },
+  "payment_product": {
+    "id": 1,
+    "name": "Acme Corporate Card"
+  },
   "card_holder": { "reference_id": "employee_john_42" },
   "organization": { "reference_id": "client_acme_001" }
 }
@@ -185,6 +194,10 @@ VAT bands from the Coop receipt (12% + 25%):
 ```json
 {
   "transaction": { "id": "10", "card_issuer": "nordea" },
+  "payment_product": {
+    "id": 1,
+    "name": "Acme Corporate Card"
+  },
   "organization": { "reference_id": "client_acme_001" },
   "card_holder": { "reference_id": "employee_john_42" },
   "purchase_country": "SE",
@@ -222,6 +235,10 @@ Line items from the same Coop receipt:
 ```json
 {
   "transaction": { "id": "10", "card_issuer": "nordea" },
+  "payment_product": {
+    "id": 1,
+    "name": "Acme Corporate Card"
+  },
   "organization": { "reference_id": "client_acme_001" },
   "card_holder": { "reference_id": "employee_john_42" },
   "line_items": [
@@ -265,6 +282,10 @@ Line items from the same Coop receipt:
   "carbon_social_cost_amount": 2.1,
   "carbon_social_cost_currency": "SEK",
   "transaction": { "id": "10", "card_issuer": "nordea" },
+  "payment_product": {
+    "id": 1,
+    "name": "Acme Corporate Card"
+  },
   "organization": { "reference_id": "client_acme_001" },
   "card_holder": { "reference_id": "employee_john_42" }
 }
