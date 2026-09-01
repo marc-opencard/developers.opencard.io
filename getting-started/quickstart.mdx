@@ -32,7 +32,7 @@ curl -X POST https://sandbox-api.opencard.io/oauth/token \
   -d "grant_type=client_credentials" \
   -d "client_id=YOUR_CLIENT_ID" \
   -d "client_secret=YOUR_CLIENT_SECRET" \
-  -d "scope=account-tpas-write account-tpas-read account-tpa-signatories-write organizations-write organizations-read card-holders-write webhooks-write webhooks-read public-records-read account-card-issuers-read account-card-issuers-write"
+  -d "scope=account-tpas-write account-tpas-read account-tpa-signatories-write organizations-write organizations-read card-holders-write webhooks-write webhooks-read public-records-read payment-products-read account-payment-products-read account-payment-products-write"
 ```
 
 Save the `access_token`. All subsequent calls:
@@ -48,16 +48,16 @@ Accept: application/json
 
 ---
 
-## Step 2: Enable a card issuer
+## Step 2: Enable a payment product
 
 ```bash
-# List available issuers
-curl https://sandbox-api.opencard.io/api/v1/application/cardissuers \
+# List available payment products
+curl https://sandbox-api.opencard.io/api/v1/application/payment-products \
   -H "Authorization: Bearer $TOKEN" \
   -H "Accept: application/json"
 
-# Attach one to your account (use the cardIssuerId from above)
-curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/cardissuers/1 \
+# Enable one on your account (use the id from above)
+curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/payment-products/1 \
   -H "Authorization: Bearer $TOKEN" \
   -H "Accept: application/json"
 ```

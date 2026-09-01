@@ -84,7 +84,7 @@ organizations-read organizations-write
 card-holders-read card-holders-write
 webhooks-read webhooks-write webhook-events-read
 public-records-read
-account-card-issuers-read account-card-issuers-write
+payment-products-read account-payment-products-read account-payment-products-write
 oauth-clients-read
 billings-write
 receipts-write
@@ -104,7 +104,8 @@ Request only what you need. Scopes are space-separated in the token request.
 | `account-tpas-read` / `account-tpas-write` / `account-tpas-delete` | TPAs |
 | `account-tpa-signatories-read` / `-write` / `-delete` | TPA signatories |
 | `account-tpa-identities-read` | Identities on a TPA |
-| `account-card-issuers-read` / `-write` / `-delete` | Enable card programs |
+| `payment-products-read` | List available payment products |
+| `account-payment-products-read` / `-write` | List, enable, and disable payment products on your account |
 | `organizations-read` / `-write` / `-delete` | Organizations |
 | `card-holders-read` / `-write` / `-delete` | Card holders |
 | `webhooks-read` / `webhooks-write` | Webhooks |
@@ -114,7 +115,6 @@ Request only what you need. Scopes are space-separated in the token request.
 | `billings-read` / `billings-write` | Billing profiles |
 | `receipts-write` | Receipt OCR scan |
 | `files-read` | Download files (e.g. receipt URLs) |
-| `card-issuers-read` | List available card programs |
 | `environmental-impacts-read` | CO₂ data on transactions |
 | `account-users-read` / `-write` / `-delete` | Account user management |
 | `account-statistics-read` | Account statistics |

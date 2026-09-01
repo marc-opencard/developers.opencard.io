@@ -13,8 +13,8 @@ These are **optional UI helpers**. For the full API path (billing → TPA → or
 
 Self-service wizard that mirrors [customer onboarding Phase 1](/ems/customer-onboarding#phase-1--client-setup):
 
-1. Pick card program (`GET .../cardissuers` on the account)
-2. Pick products (transactions + optional enrichment)
+1. Pick payment product (`GET .../payment-products` on the account)
+2. Pick add-ons (transactions + optional enrichment)
 3. Invoice email / reference
 4. Signatory combination + emails (`GET .../publicrecords`)
 5. Hand payload to you via `onDataSend`
@@ -29,10 +29,11 @@ Self-service wizard that mirrors [customer onboarding Phase 1](/ems/customer-onb
 ```javascript
 new ocTPA({
   environment: 'sandbox', // or 'production'
-  oAuthToken: 'Bearer ...', // scopes: public-records-read + account-card-issuers-read only
+  oAuthToken: 'Bearer ...', // scopes: public-records-read + account-payment-products-read only
   accountId: 1,
   orgNumber: '5561234567',
   country: 'SE',
+  allowedCardIssuerIds: [], // optional: product codes (`card_issuer`) to show
   onDataSend: async function(data) {
     // YOU call the APIs — plugin does not write to OpenCard:
     // 1. POST /billings (data.billing) — includes product_* flags

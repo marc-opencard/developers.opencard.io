@@ -19,7 +19,7 @@ This API is for **EMS integrators**. You manage clients, legal signing, card hol
 | Account | Get/update your account |
 | OAuth Clients | Create API credentials |
 | Public Records | Company lookup before TPA |
-| Card Issuers | Catalog of programs → enable on your account |
+| Payment Products | Catalog of cards → enable on your account |
 | TPAs + Signatories | Legal authorization flow |
 | Identities | List people for instant card holder onboarding |
 | Organizations | Your end-clients |
@@ -44,10 +44,11 @@ See [Authentication](/api-reference/ems/authentication).
 
 ## Typical flow
 
-1. `POST /accounts/{id}/tpas` + signatories
-2. `POST /accounts/{id}/organizations`
-3. `POST .../webhooks`
-4. `POST .../cardholders`
-5. Receive `card.transaction.*` on your webhook URL
+1. `GET /payment-products` → `POST .../payment-products/{id}`
+2. `POST /accounts/{id}/tpas` + signatories (`card_issuer_id` = product `id`)
+3. `POST /accounts/{id}/organizations`
+4. `POST .../webhooks`
+5. `POST .../cardholders`
+6. Receive `card.transaction.*` on your webhook URL
 
 Full walkthrough → [Quickstart](/getting-started/quickstart)

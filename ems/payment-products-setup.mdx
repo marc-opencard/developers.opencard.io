@@ -1,0 +1,133 @@
+---
+title: Payment product setup
+description: One-time setup — browse the payment product catalog, enable the ones you sell, and let clients pick a product in your marketplace before TPA onboarding.
+---
+
+Client onboarding starts with **choosing a payment product**. That only works if you have already decided **which products your EMS offers**. This is a **one-time account setup** — not part of the per-client wizard.
+
+<Tip>
+  Part of the full path → [Customer onboarding overview](/ems/customer-onboarding)
+</Tip>
+
+A payment product is the card a client activates — for example a debit or credit card under a program, issued by a bank.
+
+```mermaid
+flowchart TD
+    A[GET /payment-products — catalog] --> B{Enable on your account}
+    B -->|API| C[POST .../accounts/id/payment-products/id]
+    B -->|UI| D[application.opencard.io]
+    C --> E[GET .../accounts/id/payment-products — enabled list]
+    D --> E
+    E --> F[Your marketplace — client picks one]
+    F --> G[TPA with card_issuer_id from the product id]
+```
+
+---
+
+## 1. Browse the catalog
+
+```
+GET /payment-products
+Scope: payment-products-read
+```
+
+Returns every payment product on the OpenCard platform. Your EMS account does **not** have them yet — this is the full catalog.
+
+Optional query params:
+
+| Param | What it does |
+|-------|----------------|
+| `q` | Space-separated search across product name, subtitle, program, issuer, and short description |
+| `funding` | `debit` or `credit` |
+| `per_page` | Page size (default 15) |
+
+→ [List available payment products](/api-reference/ems/payment-products/list-available-payment-products)
+
+---
+
+## 2. Enable the ones you sell
+
+Pick the products you want in your marketplace, then attach them to **your account**:
+
+```
+POST /accounts/{accountId}/payment-products/{id}
+Scope: account-payment-products-write
+```
+
+Empty body. `201` on success; `400` if that product is already enabled.
+
+You can do this via the API or in **[application.opencard.io](https://application.opencard.io)**. Same result either way.
+
+→ [Enable payment product](/api-reference/ems/payment-products/enable-payment-product) · [Quickstart](/getting-started/quickstart#step-2-enable-a-payment-product)
+
+---
+
+## 3. Show enabled products in your marketplace
+
+When a **client** onboards, list only what you enabled:
+
+```
+GET /accounts/{accountId}/payment-products
+Scope: account-payment-products-read
+```
+
+Build a marketplace (or wizard step) where the client picks one product. Store the chosen **`id`** — that becomes `card_issuer_id` when you create the TPA.
+
+The optional [ocTPA plugin](/ems/plugins) renders the same step as product cards:
+
+<div className="oc-tpa-preview">
+  <div className="oc-tpa-card">
+    <div className="oc-tpa-card-header">
+      <div>
+        <div className="oc-tpa-card-title">Nordea Business Card</div>
+        <div className="oc-tpa-card-subtitle">Corporate Card</div>
+      </div>
+      <div className="oc-tpa-card-logo-wrap">
+        <img
+          src="/images/examples/nordea-logo.svg"
+          alt="Nordea"
+          className="oc-tpa-card-logo"
+        />
+      </div>
+    </div>
+    <p className="oc-tpa-card-desc">
+      Corporate card with real-time transaction data, digital receipts, and expense enrichment via OpenCard.
+    </p>
+    <div className="oc-tpa-card-footer">
+      <div className="oc-tpa-card-scheme-wrap">
+        <img
+          src="/images/examples/mastercard.svg"
+          alt="Mastercard"
+          className="oc-tpa-card-scheme"
+        />
+      </div>
+      <div className="oc-tpa-card-actions">
+        <span className="oc-tpa-btn-outline">Info &amp; Pricing</span>
+        <span className="oc-tpa-btn-primary">Activate</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+Fields from each enabled product:
+
+| API field | Use in UI |
+|-----------|-----------|
+| `name` | Card title |
+| `subtitle` | Subtitle (e.g. Corporate Card) |
+| `description_short` | Short description on the card |
+| `description_long` | Longer copy on confirmation |
+| `payment_program.name` | Program name on confirmation |
+| `payment_program.logo_url` | Program logo |
+| `payment_program.scheme.logo_url` | Visa / Mastercard badge |
+| `issuer.logo_url` | Bank mark when present |
+| `id` | **`card_issuer_id`** on `POST .../tpas` |
+| `card_issuer` | Stable product code — filter a subset with `allowedCardIssuerIds` in the plugin |
+
+---
+
+## Next step
+
+Once products are enabled, each client picks one in Phase 1 and you create the TPA with that `card_issuer_id`.
+
+→ [TPA flow](/ems/tpa-flow) · [Customer onboarding — Phase 1](/ems/customer-onboarding#phase-1--client-setup)

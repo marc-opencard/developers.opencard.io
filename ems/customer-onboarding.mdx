@@ -9,7 +9,7 @@ Each major step has its own guide — same pattern as [TPA flow](/ems/tpa-flow) 
 
 | Guide | When |
 |-------|------|
-| [Card issuer setup](/ems/card-issuers-setup) | Once per EMS account — enable programs before any client onboards |
+| [Payment product setup](/ems/payment-products-setup) | Once per EMS account — enable products before any client onboards |
 | [TPA flow](/ems/tpa-flow) | Per client — legal authorisation + signatories |
 | [Card holders](/ems/card-holders) | Per employee — PDPC consent or instant match |
 | [eID signing](/ems/eid-signing) | Reference for Nordic signing modes |
@@ -37,10 +37,10 @@ sequenceDiagram
     participant OC as OpenCard
 
     Note over Client,OC: EMS setup (once)
-    You->>OC: GET /cardissuers + enable on account
+    You->>OC: GET /payment-products + enable on account
     Note over Client,OC: Phase 1 — Client setup
-    Client->>You: Choose card program (marketplace)
-    You->>OC: GET account cardissuers (enabled)
+    Client->>You: Choose payment product (marketplace)
+    You->>OC: GET account payment-products (enabled)
     Client->>You: Choose products + invoice details
     You->>OC: GET publicrecords (who may sign TPA)
     Client->>You: Confirm TPA signatories + emails
@@ -65,11 +65,11 @@ sequenceDiagram
 
 ## Phase 1 — Client setup
 
-The client walks through your product: **card program → products → invoice details → TPA signatories**. You then create billing, TPA, organization, and webhook via the API (or receive the payload from the [ocTPA plugin](/ems/plugins) and POST it yourself).
+The client walks through your product: **payment product → add-ons → invoice details → TPA signatories**. You then create billing, TPA, organization, and webhook via the API (or receive the payload from the [ocTPA plugin](/ems/plugins) and POST it yourself).
 
 Complete when the TPA is signed (ideally activated), the organization exists with `billing_id` + `tpa_id`, and the webhook is active.
 
-→ [Card issuer setup](/ems/card-issuers-setup) · [TPA flow](/ems/tpa-flow) · [Billing](/ems/model/billing) · [Webhooks](/ems/webhooks/setup)
+→ [Payment product setup](/ems/payment-products-setup) · [TPA flow](/ems/tpa-flow) · [Billing](/ems/model/billing) · [Webhooks](/ems/webhooks/setup)
 
 ---
 
@@ -97,8 +97,8 @@ Do this **per client** (after your account + OAuth client exist):
 
 | # | Step | API / action | Detail guide |
 |---|------|--------------|--------------|
-| 0 | Enable card issuer(s) on account (once) | `GET /cardissuers` → `POST .../accounts/{id}/cardissuers/{id}` (or [application.opencard.io](https://application.opencard.io)) | [Card issuer setup](/ems/card-issuers-setup) |
-| 1 | Client picks card program | `GET .../accounts/{id}/cardissuers` → `card_issuer_id` on TPA | [Card issuer setup](/ems/card-issuers-setup) |
+| 0 | Enable payment product(s) on account (once) | `GET /payment-products` → `POST .../accounts/{id}/payment-products/{id}` (or [application.opencard.io](https://application.opencard.io)) | [Payment product setup](/ems/payment-products-setup) |
+| 1 | Client picks payment product | `GET .../accounts/{id}/payment-products` → `card_issuer_id` on TPA | [Payment product setup](/ems/payment-products-setup) |
 | 2 | Client picks products | Flags on billing create | [Billing](/ems/model/billing) |
 | 3 | Invoice email / reference | Part of billing create | [Billing](/ems/model/billing) |
 | 4 | Create TPA (who signs) | `GET` publicrecords — collect signatories | [TPA flow](/ems/tpa-flow) |
@@ -115,7 +115,7 @@ Do this **per client** (after your account + OAuth client exist):
 | Approach | When |
 |----------|------|
 | **API only (this guide)** | Rebuild the same steps in your own UI — recommended for production |
-| **[ocTPA plugin](/ems/plugins)** | Ready-made wizard: issuer → products → invoice → signatories; **you still POST** billing / TPA / signatories from `onDataSend` |
+| **[ocTPA plugin](/ems/plugins)** | Ready-made wizard: payment product → add-ons → invoice → signatories; **you still POST** billing / TPA / signatories from `onDataSend` |
 
 The plugin mirrors Phase 1 in the UI. Organization + webhook and card holders stay in your integration.
 
@@ -125,7 +125,7 @@ The plugin mirrors Phase 1 in the UI. Organization + webhook and card holders st
 
 | Page | What it covers |
 |------|----------------|
-| [Card issuer setup](/ems/card-issuers-setup) | Enable programs, marketplace UI, `card_issuer_id` |
+| [Payment product setup](/ems/payment-products-setup) | Enable products, marketplace UI, `card_issuer_id` |
 | [TPA flow](/ems/tpa-flow) | Create TPA, signatories, activation, signed PDF |
 | [eID signing](/ems/eid-signing) | Sign vs auth modes across Nordic countries |
 | [Card holder onboarding](/ems/card-holders) | Email vs `identity_id`, webhooks, updates |
