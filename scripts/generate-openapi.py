@@ -273,10 +273,10 @@ EX_PAYMENT_PRODUCT = {
     "description_short": "Streamline expense management with real-time card data.",
     "description_long": "Full product description shown after the client activates this card program.",
     "funding": "debit",
-    "liability": None,
+    "liability": "company",
     "payment_program": {
-        "id": None,
-        "code": None,
+        "id": 1,
+        "code": "acme_corporate_debit",
         "name": "Acme Corporate",
         "logo_url": "https://sandbox-api.opencard.io/logos?type=card_issuers&name=acme-card-logo.png",
         "scheme": {
@@ -285,11 +285,11 @@ EX_PAYMENT_PRODUCT = {
         },
     },
     "issuer": {
-        "id": None,
-        "code": None,
+        "id": 1,
+        "code": "acme_corporate_debit",
         "name": "Acme Card Issuer",
         "legal_name": "Acme Card Issuer AB",
-        "logo_url": None,
+        "logo_url": "https://sandbox-api.opencard.io/logos?type=card_issuers&name=acme-card-logo.png",
     },
 }
 
