@@ -287,9 +287,9 @@ EX_PAYMENT_PRODUCT = {
 
 op(ems_paths, "get", "/payment-products", tag="Payment Products", summary="List available payment products",
    operation_id="listPaymentProducts", scope="payment-products-read",
-   description="Platform catalog of payment products you can enable. Pick an `id`, then [enable it on your account](#tag/Payment-Products/operation/enablePaymentProduct). Optional `q` searches name, subtitle, program, and short description. Optional `funding` filters `debit` or `credit`.",
+   description="Platform catalog of payment products you can enable. Pick an `id`, then [enable it on your account](#tag/Payment-Products/operation/enablePaymentProduct). Optional `q` searches name, subtitle, and program name. Optional `funding` filters `debit` or `credit`.",
    params=[
-       {"name": "q", "in": "query", "required": False, "description": "Space-separated search tokens matched against product name, subtitle, program name, and short description", "schema": {"type": "string"}},
+       {"name": "q", "in": "query", "required": False, "description": "Space-separated search tokens matched against product name, subtitle, and program name", "schema": {"type": "string"}},
        {"name": "funding", "in": "query", "required": False, "description": "Filter by funding type", "schema": {"type": "string", "enum": ["debit", "credit"]}},
        {"name": "per_page", "in": "query", "required": False, "description": "Page size (default 15)", "schema": {"type": "integer", "default": 15}},
    ],
@@ -305,8 +305,14 @@ op(ems_paths, "get", "/payment-products", tag="Payment Products", summary="List 
 
 pp = "/accounts/{accountId}/payment-products"
 op(ems_paths, "get", pp, tag="Payment Products", summary="List enabled payment products", operation_id="listEnabledPaymentProducts",
-   scope="account-payment-products-read", params=[ACCOUNT_ID],
-   description="Payment products already enabled on your account (what clients can pick in onboarding).",
+   scope="account-payment-products-read",
+   description="Payment products already enabled on your account (what clients can pick in onboarding). Same optional filters as the catalog: `q` searches name, subtitle, and program name; `funding` filters `debit` or `credit`.",
+   params=[
+       ACCOUNT_ID,
+       {"name": "q", "in": "query", "required": False, "description": "Space-separated search tokens matched against product name, subtitle, and program name", "schema": {"type": "string"}},
+       {"name": "funding", "in": "query", "required": False, "description": "Filter by funding type", "schema": {"type": "string", "enum": ["debit", "credit"]}},
+       {"name": "per_page", "in": "query", "required": False, "description": "Page size (default 15)", "schema": {"type": "integer", "default": 15}},
+   ],
    responses=json_resp("200", "Enabled payment products",
        schema={"type": "object", "properties": {
            "current_page": {"type": "integer"},

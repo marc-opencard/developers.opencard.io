@@ -704,13 +704,13 @@
         ],
         "summary": "List available payment products",
         "operationId": "listPaymentProducts",
-        "description": "Platform catalog of payment products you can enable. Pick an `id`, then [enable it on your account](#tag/Payment-Products/operation/enablePaymentProduct). Optional `q` searches name, subtitle, program, and short description. Optional `funding` filters `debit` or `credit`.",
+        "description": "Platform catalog of payment products you can enable. Pick an `id`, then [enable it on your account](#tag/Payment-Products/operation/enablePaymentProduct). Optional `q` searches name, subtitle, and program name. Optional `funding` filters `debit` or `credit`.",
         "parameters": [
           {
             "name": "q",
             "in": "query",
             "required": false,
-            "description": "Space-separated search tokens matched against product name, subtitle, program name, and short description",
+            "description": "Space-separated search tokens matched against product name, subtitle, and program name",
             "schema": {
               "type": "string"
             }
@@ -814,7 +814,7 @@
         ],
         "summary": "List enabled payment products",
         "operationId": "listEnabledPaymentProducts",
-        "description": "Payment products already enabled on your account (what clients can pick in onboarding). Same optional filters as the catalog: `q` searches name, subtitle, program, and short description; `funding` filters `debit` or `credit`.",
+        "description": "Payment products already enabled on your account (what clients can pick in onboarding). Same optional filters as the catalog: `q` searches name, subtitle, and program name; `funding` filters `debit` or `credit`.",
         "parameters": [
           {
             "$ref": "#/components/parameters/accountId"
@@ -823,7 +823,7 @@
             "name": "q",
             "in": "query",
             "required": false,
-            "description": "Space-separated search tokens matched against product name, subtitle, program name, and short description",
+            "description": "Space-separated search tokens matched against product name, subtitle, and program name",
             "schema": {
               "type": "string"
             }
