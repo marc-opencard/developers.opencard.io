@@ -71,6 +71,14 @@ GET /accounts/{accountId}/payment-products
 Scope: account-payment-products-read
 ```
 
+Same optional query params as the catalog:
+
+| Param | What it does |
+|-------|----------------|
+| `q` | Space-separated search across product name, subtitle, program, and short description |
+| `funding` | `debit` or `credit` |
+| `per_page` | Page size (default 15) |
+
 Build a marketplace (or wizard step) where the client picks one product. Store **`card_issuer_id`** — you pass that when you create the TPA.
 
 The optional [ocTPA plugin](/ems/plugins) renders the same step as product cards:
