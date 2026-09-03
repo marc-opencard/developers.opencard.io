@@ -40,12 +40,11 @@ All endpoints live under:
 {base_url}/api/v1/issuers/{slug}/
 ```
 
-Replace `{slug}` with the value OpenCard assigns your integration (e.g. your program's short name). The boilerplate reference implementation uses this path pattern — your deployment may add or omit endpoints; confirm with OpenCard before go-live.
+Replace `{slug}` with the value OpenCard assigns your integration.
 
 | Area | Methods | Purpose |
 |------|---------|---------|
-| **Cards** | `POST` create, `DELETE` close | Register and remove cards — **all** issuer integrations |
-| **Cards** | `PUT` update, `GET` one, `GET` list | Maintain and inspect registry — **boilerplate / full** integrations only |
+| **Cards** | `POST` create, `PUT` update, `GET` one, `GET` list, `DELETE` close | Register, maintain, and inspect the card registry |
 | **Transaction states** | `POST .../transaction_states` | Deliver transaction lifecycle events |
 
 ---

@@ -631,6 +631,7 @@ receipts_spec = {
 
 ISSUER_CARD = {
     "id": "12345",
+    "payment_product": "acmebank_credit",
     "last_four": "1234",
     "bin_number": "123456",
     "liability": "corporate_with_personal_invoice",
@@ -644,6 +645,31 @@ ISSUER_CARD = {
         "name": "Test Testsson",
         "company_organization_number": "5555555555",
         "company_country_code": "SE",
+    },
+}
+
+ISSUER_CARD_LIST_ITEM = {
+    "id": "12345",
+    "payment_product": "acmebank_credit",
+    "last_four": "1234",
+    "bin_number": "123456",
+    "liability": "corporate_with_personal_invoice",
+    "funding": "credit",
+    "buyer_party": "5555555555",
+    "seller_party": "5555555551",
+    "active": True,
+    "created_at": "2026-01-15T10:00:00+00:00",
+    "updated_at": "2026-06-08T10:00:00+00:00",
+}
+
+ISSUER_CARDS_LIST = {
+    "ok": True,
+    "data": [ISSUER_CARD_LIST_ITEM],
+    "meta": {
+        "current_page": 1,
+        "last_page": 1,
+        "per_page": 15,
+        "total": 1,
     },
 }
 
@@ -696,11 +722,16 @@ issuer_spec = {
                 "tags": ["Cards"], "summary": "List cards", "operationId": "listIssuerCards",
                 "parameters": [SLUG,
                     {"name": "last_four", "in": "query", "schema": {"type": "string"}},
+                    {"name": "buyer_party", "in": "query", "schema": {"type": "string"}},
+                    {"name": "seller_party", "in": "query", "schema": {"type": "string"}},
+                    {"name": "bin_number", "in": "query", "schema": {"type": "string"}},
+                    {"name": "id", "in": "query", "description": "Filter by your card id", "schema": {"type": "string"}},
+                    {"name": "active", "in": "query", "schema": {"type": "boolean"}},
                     {"name": "per_page", "in": "query", "schema": {"type": "integer", "default": 15}},
                     {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
                 ],
                 "security": [BEARER],
-                "responses": json_resp("200", "Paginated cards", example={"ok": True, "data": [], "meta": {"total": 0}}),
+                "responses": json_resp("200", "Paginated cards", example=ISSUER_CARDS_LIST),
             },
             "post": {
                 "tags": ["Cards"], "summary": "Create card", "operationId": "createIssuerCard",
@@ -717,7 +748,7 @@ issuer_spec = {
             "get": {
                 "tags": ["Cards"], "summary": "Get card", "operationId": "getIssuerCard",
                 "parameters": [SLUG, CARD_ID], "security": [BEARER],
-                "responses": json_resp("200", "Card", example={"ok": True, "card": {"id": "12345"}}),
+                "responses": json_resp("200", "Card", example={"ok": True, "card": ISSUER_CARD_LIST_ITEM}),
             },
             "put": {
                 "tags": ["Cards"], "summary": "Update card", "operationId": "updateIssuerCard",
@@ -748,12 +779,17 @@ issuer_spec = {
         "schemas": {
             "IssuerCardCreate": {
                 "type": "object",
-                "required": ["id", "last_four", "bin_number", "liability", "scheme",
+                "required": ["id", "payment_product", "last_four", "bin_number", "liability", "scheme", "funding",
                              "issuer_organization_number", "issuer_country_code", "identity"],
                 "properties": {
                     "id": {"type": "string"},
+                    "payment_product": {
+                        "type": "string",
+                        "example": "acmebank_credit",
+                        "description": "Code for the payment product this card belongs to — the same code you receive on the TPA `initiate`. OpenCard uses it to link the card to the customer's signed TPA.",
+                    },
                     "last_four": {"type": "string", "maxLength": 4},
-                    "bin_number": {"type": "string"},
+                    "bin_number": {"type": "string", "maxLength": 12},
                     "liability": {"type": "string", "enum": ["personal", "corporate", "corporate_with_personal_invoice"]},
                     "scheme": {"type": "string"},
                     "funding": {"type": "string", "enum": ["debit", "credit"], "description": "Card funding — delivered to EMS as webhook field `card_funding`"},
@@ -764,9 +800,14 @@ issuer_spec = {
             },
             "IssuerCardUpdate": {
                 "type": "object",
-                "required": ["last_four", "bin_number", "liability", "scheme",
+                "required": ["payment_product", "last_four", "bin_number", "liability", "scheme", "funding",
                              "issuer_organization_number", "issuer_country_code", "identity"],
                 "properties": {
+                    "payment_product": {
+                        "type": "string",
+                        "example": "acmebank_credit",
+                        "description": "Code for the payment product this card belongs to — the same code you receive on the TPA `initiate`. OpenCard uses it to link the card to the customer's signed TPA.",
+                    },
                     "last_four": {"type": "string"},
                     "bin_number": {"type": "string"},
                     "liability": {"type": "string", "enum": ["personal", "corporate", "corporate_with_personal_invoice"]},

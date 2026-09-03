@@ -36,12 +36,10 @@ OAuth 2.0 client credentials → `POST /oauth/token`
 |--------|------|-------------|
 | `POST` | `/api/v1/issuers/{slug}/cards` | Create card |
 | `DELETE` | `/api/v1/issuers/{slug}/cards/{cardId}` | Delete card |
-| `PUT` | `/api/v1/issuers/{slug}/cards/{cardId}` | Update card (boilerplate) |
-| `GET` | `/api/v1/issuers/{slug}/cards/{cardId}` | Get card (boilerplate) |
-| `GET` | `/api/v1/issuers/{slug}/cards` | List cards (boilerplate) |
+| `PUT` | `/api/v1/issuers/{slug}/cards/{cardId}` | Update card |
+| `GET` | `/api/v1/issuers/{slug}/cards/{cardId}` | Get card |
+| `GET` | `/api/v1/issuers/{slug}/cards` | List cards |
 | `POST` | `/api/v1/issuers/{slug}/cards/{cardId}/transaction_states` | Create transaction state |
-
-Not every `{slug}` enables all card methods — see [Cards guide](/card-issuers/issuer-integration/cards#endpoints).
 
 ## Integration guides
 

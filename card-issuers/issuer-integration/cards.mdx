@@ -15,23 +15,13 @@ The cards endpoints maintain the set of cards enrolled in OpenCard per customer 
 
 ## Endpoints
 
-The boilerplate documents the **full** card API. OpenCard enables only the operations your integration needs — confirm which methods are live for your `{slug}` before go-live.
-
-| Method | Path | Scope (typical) | Boilerplate | Minimal integration |
-|--------|------|-----------------|-------------|---------------------|
-| `POST` | `/cards` | `issuer-{slug}-cards-write` | ✅ Create | ✅ Create |
-| `DELETE` | `/cards/{card_id}` | `issuer-{slug}-cards-delete` | ✅ Delete | ✅ Delete |
-| `PUT` | `/cards/{card_id}` | `issuer-{slug}-cards-write` | ✅ Update | — |
-| `GET` | `/cards/{card_id}` | `issuer-{slug}-cards-read` | ✅ Get one | — |
-| `GET` | `/cards` | `issuer-{slug}-cards-read` | ✅ List / filter | — |
-
-**Minimal integration** = create + delete + transaction states. Use that when you only register and close cards via API and manage changes by delete + re-create.
-
-**Full boilerplate** = all five operations above — update holder or company in place, query and inspect cards without posting again.
-
-<Note>
-  If an endpoint returns `404` or `405` on your slug, it is not enabled for your integration. The OpenAPI reference shows the full boilerplate surface; your credentials and scope list reflect what you can actually call.
-</Note>
+| Method | Path | Scope | Purpose |
+|--------|------|-------|---------|
+| `POST` | `/cards` | `issuer-{slug}-cards-write` | Create |
+| `PUT` | `/cards/{card_id}` | `issuer-{slug}-cards-write` | Update |
+| `GET` | `/cards/{card_id}` | `issuer-{slug}-cards-read` | Get one |
+| `GET` | `/cards` | `issuer-{slug}-cards-read` | List / filter |
+| `DELETE` | `/cards/{card_id}` | `issuer-{slug}-cards-delete` | Delete |
 
 ---
 
@@ -71,7 +61,7 @@ Scope: issuer-{slug}-cards-write
 | `bin_number` | ✅ | BIN, max 12 characters |
 | `liability` | ✅ | `personal`, `corporate`, or `corporate_with_personal_invoice` |
 | `scheme` | ✅ | e.g. `visa`, `mastercard` |
-| `funding` | ✅* | `debit` or `credit` — appears on EMS webhooks as `card_funding` |
+| `funding` | ✅ | `debit` or `credit` — appears on EMS webhooks as `card_funding` |
 | `issuer_organization_number` | ✅ | Your organisation number (seller party) |
 | `issuer_country_code` | ✅ | ISO 3166-1 alpha-2 |
 | `identity.ssn` | ✅ | Cardholder national id |
@@ -79,8 +69,6 @@ Scope: issuer-{slug}-cards-write
 | `identity.name` | ✅ | Cardholder display name |
 | `identity.company_organization_number` | ✅ | Customer company org number (buyer party) |
 | `identity.company_country_code` | ✅ | ISO 3166-1 alpha-2 |
-
-\*Required on integrations that expose `funding` (confirm with OpenCard for your `{slug}`).
 
 <Warning>
   `payment_product` must match a product the customer has signed a TPA for. Cards on a product without a signed TPA are stored but their transactions are **not** delivered to the EMS.
@@ -99,10 +87,6 @@ Create is **idempotent** on `id`. Re-posting the same card returns the existing 
 
 ## Update card
 
-<Note>
-  **Boilerplate only** — not all issuer slugs expose `PUT`. If you only have create + delete, close the old card and create a new one when details change.
-</Note>
-
 ```
 PUT /api/v1/issuers/{slug}/cards/{card_id}
 Scope: issuer-{slug}-cards-write
@@ -116,22 +100,35 @@ Same body shape as create (except `id` comes from the path). Supports moving a c
 
 ## Get card
 
-<Note>
-  **Boilerplate only** — optional on minimal integrations.
-</Note>
-
 ```
 GET /api/v1/issuers/{slug}/cards/{card_id}
 Scope: issuer-{slug}-cards-read
 ```
 
+**Response `200`:**
+
+```json
+{
+  "ok": true,
+  "card": {
+    "id": "12345",
+    "payment_product": "acmebank_credit",
+    "last_four": "1234",
+    "bin_number": "123456",
+    "liability": "corporate_with_personal_invoice",
+    "funding": "credit",
+    "buyer_party": "5555555555",
+    "seller_party": "5555555551",
+    "active": true,
+    "created_at": "2026-01-15T10:00:00+00:00",
+    "updated_at": "2026-06-08T10:00:00+00:00"
+  }
+}
+```
+
 ---
 
 ## List cards
-
-<Note>
-  **Boilerplate only** — optional on minimal integrations.
-</Note>
 
 ```
 GET /api/v1/issuers/{slug}/cards
@@ -139,6 +136,35 @@ Scope: issuer-{slug}-cards-read
 ```
 
 Query parameters: `last_four`, `buyer_party`, `seller_party`, `bin_number`, `id`, `active`, `per_page` (1–100, default 15), `page`.
+
+**Response `200`:**
+
+```json
+{
+  "ok": true,
+  "data": [
+    {
+      "id": "12345",
+      "payment_product": "acmebank_credit",
+      "last_four": "1234",
+      "bin_number": "123456",
+      "liability": "corporate_with_personal_invoice",
+      "funding": "credit",
+      "buyer_party": "5555555555",
+      "seller_party": "5555555551",
+      "active": true,
+      "created_at": "2026-01-15T10:00:00+00:00",
+      "updated_at": "2026-06-08T10:00:00+00:00"
+    }
+  ],
+  "meta": {
+    "current_page": 1,
+    "last_page": 1,
+    "per_page": 15,
+    "total": 1
+  }
+}
+```
 
 ---
 
