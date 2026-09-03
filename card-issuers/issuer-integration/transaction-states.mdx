@@ -72,20 +72,30 @@ Scope: issuer-{slug}-transaction-states-write
 | `rrn` | ✅ | ISO 8583 field 37 (retrieval reference number) |
 | `auth_code` | ✅ | ISO 8583 field 38 |
 
-<Note>
-  Do **not** send `pre-authorized` as a state. Use `authorized` for the initial authorization event.
-</Note>
-
 ---
 
 ## States
 
 | State | When to send |
 |-------|----------------|
-| `authorized` | Immediately after purchase authorization |
+| `authorized` | Once, when the purchase is authorized — see below |
 | `cleared` | When the transaction settles |
-| `invoiced` | When included on the cardholder's issuer invoice |
+| `invoiced` | When included on the cardholder's issuer invoice (credit products only) |
 | `deleted` | When an authorization is reversed before clearing |
+
+### `authorized` — one event per purchase
+
+Send **one** `authorized` state per purchase: the final authorization at the amount the cardholder approved. This is what EMS apps show the cardholder in real time.
+
+Do **not** send any of these as separate states:
+
+| Do not send | Why |
+|-------------|-----|
+| `pre-authorized` / pre-auth holds | Hotel and fuel holds are not purchases. Wait for the actual authorization |
+| Incremental authorizations | Amount top-ups on an open authorization — fold them into the final `authorized` or into `cleared` |
+| Authorization adjustments / reversals of a partial amount | Send `cleared` with the final amount instead. Use `deleted` only when the whole authorization is reversed |
+
+If your systems produce several authorization messages for one purchase, collapse them to a single `authorized` state with the same transaction `id`, then continue the lifecycle with `cleared`.
 
 Use the **same `id`** for all states belonging to one purchase. EMS apps upsert on OpenCard's internal id after ingestion — your `id` is the issuer reference across states.
 

@@ -45,6 +45,7 @@ Scope: issuer-{slug}-cards-write
 ```json
 {
   "id": "12345",
+  "payment_product": "acmebank_credit",
   "last_four": "1234",
   "bin_number": "123456",
   "liability": "corporate_with_personal_invoice",
@@ -65,6 +66,7 @@ Scope: issuer-{slug}-cards-write
 | Field | Required | Notes |
 |-------|----------|-------|
 | `id` | ✅ | **Your** unique card id — used as `{card_id}` in transaction URLs |
+| `payment_product` | ✅ | Code for the payment product this card belongs to — the same code you receive on the TPA `initiate`. OpenCard uses it to link the card to the customer's signed TPA |
 | `last_four` | ✅ | Last four digits |
 | `bin_number` | ✅ | BIN, max 12 characters |
 | `liability` | ✅ | `personal`, `corporate`, or `corporate_with_personal_invoice` |
@@ -79,6 +81,10 @@ Scope: issuer-{slug}-cards-write
 | `identity.company_country_code` | ✅ | ISO 3166-1 alpha-2 |
 
 \*Required on integrations that expose `funding` (confirm with OpenCard for your `{slug}`).
+
+<Warning>
+  `payment_product` must match a product the customer has signed a TPA for. Cards on a product without a signed TPA are stored but their transactions are **not** delivered to the EMS.
+</Warning>
 
 **Responses:**
 
@@ -149,9 +155,10 @@ Soft-deletes the card and marks it inactive. **Response `204`** with empty body.
 
 ## Why the registry matters
 
-OpenCard matches every transaction state to a registered card and identity. Without an up-to-date registry:
+OpenCard matches every transaction state to a registered card, its `payment_product`, and identity. Without an up-to-date registry:
 
 - Transaction posts return `card_not_found`
 - EMS apps never see data for unknown cards
+- Cards with the wrong `payment_product` are linked to the wrong TPA — or to none
 
 Keep cards in sync when issued, replaced, or closed at your end.

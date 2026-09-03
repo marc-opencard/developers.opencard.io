@@ -57,11 +57,30 @@ You give OpenCard a URL. OpenCard calls it for both **initiate** and **terminate
 
 When this endpoint receives a valid **`initiate`** event, you should:
 
-1. **Initialize** the customer for OpenCard card and transaction delivery
+1. **Initialize** the customer for OpenCard card and transaction delivery — for the `payment_product` in the payload **only**
 2. **Archive** the signed TPA PDF as legal evidence
 3. Return **`200`** when accepted/completed — otherwise a clear **`4xx`** / **`5xx`**
 
-When you receive **`terminate`**, stop card/transaction delivery for that party and archive the decision according to your process.
+When you receive **`terminate`**, stop card/transaction delivery for that party and payment product, and archive the decision according to your process.
+
+---
+
+## Payment product
+
+A TPA is signed for **one payment product** — for example your corporate credit card, or your corporate debit card. If you offer several products, the customer signs a separate TPA for each one they want connected.
+
+Every TPA event carries a `payment_product` code so you know exactly which product to enable or disable. OpenCard assigns the codes with you at onboarding, one per product you offer through OpenCard.
+
+| You offer | `payment_product` codes (example) |
+|-----------|-----------------------------------|
+| Corporate credit card | `acmebank_credit` |
+| Corporate debit card | `acmebank_debit` |
+
+<Warning>
+  On `initiate`, enable **only** the product in `payment_product`. Do not enable other products for the same customer — a TPA for one product does not authorise data for another.
+</Warning>
+
+The same code is required on every card you register → [Cards](/card-issuers/issuer-integration/cards). That is how OpenCard links a card to the TPA the customer signed.
 
 ---
 
@@ -72,6 +91,7 @@ Sent after all required signatories have signed. Includes the signed PDF as Base
 ```json
 {
   "action": "initiate",
+  "payment_product": "acmebank_credit",
   "party_information": {
     "id": 6011,
     "name": "Open API Int. AB",
@@ -105,6 +125,7 @@ Sent after all required signatories have signed. Includes the signed PDF as Base
 | Field | Meaning |
 |-------|---------|
 | `action` | Always `initiate` for a new signed TPA |
+| `payment_product` | Code for the payment product this TPA covers — enable **only** this product for the customer |
 | `party_information.id` | OpenCard party / TPA-side identifier for this customer |
 | `party_information.name` | Legal / display name of the customer company |
 | `party_information.country` | ISO country (e.g. `SE`) |
@@ -124,11 +145,12 @@ Decode `content_base64` and store the PDF.
 
 ## `terminate` — connection ended
 
-Sent when the customer ends the OpenCard connection in their EMS (or OpenCard terminates on their behalf). Same endpoint, smaller payload — **no PDF**.
+Sent when the customer ends the OpenCard connection for a payment product in their EMS (or OpenCard terminates on their behalf). Same endpoint, smaller payload — **no PDF**.
 
 ```json
 {
   "action": "terminate",
+  "payment_product": "acmebank_credit",
   "party_information": {
     "id": 6011,
     "name": "Open API Int. AB",
@@ -145,7 +167,8 @@ Sent when the customer ends the OpenCard connection in their EMS (or OpenCard te
 | Field | Meaning |
 |-------|---------|
 | `action` | Always `terminate` |
-| `party_information.*` | Same customer identity as on initiate — stop delivery for this party |
+| `payment_product` | Which product to stop — other products the customer has a TPA for are **not** affected |
+| `party_information.*` | Same customer identity as on initiate — stop delivery for this party and product |
 | `system.*` | Which EMS the customer used |
 
 ---

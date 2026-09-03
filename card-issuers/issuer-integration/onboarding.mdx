@@ -17,7 +17,7 @@ You do not run the signing flow — the EMS and OpenCard handle it.
 
 ## 2. You receive the signed TPA
 
-When signing is complete, OpenCard notifies you via **API callback** and/or **email** (configured for your integration). On API, you receive an `initiate` payload with the signed PDF — archive it, onboard the customer, then start sending cards and transactions.
+When signing is complete, OpenCard notifies you via **API callback** and/or **email** (configured for your integration). On API, you receive an `initiate` payload with the signed PDF and the `payment_product` code the customer signed for — archive the PDF, enable **only that payment product** for the customer, then start sending cards and transactions.
 
 Full contract (initiate + terminate) → [TPA delivery](/card-issuers/issuer-integration/tpa-integration)
 
@@ -35,7 +35,7 @@ flowchart TD
 
 ## 3. Register cards
 
-Create cards with `POST /api/v1/issuers/{slug}/cards` for each card that should flow through OpenCard.
+Create cards with `POST /api/v1/issuers/{slug}/cards` for each card that should flow through OpenCard. Every card carries the `payment_product` code it belongs to — OpenCard uses it to link the card to the TPA the customer signed.
 
 The card registry is the foundation for transaction routing — every `transaction_states` call references a `{card_id}` you registered earlier.
 
@@ -56,18 +56,10 @@ Send all lifecycle states for each purchase:
 
 ---
 
-## 5. TPA activation
-
-The first card you register for a buyer/seller party pair can move an associated TPA to **activated** on the OpenCard side. Until the TPA is active, EMS apps will not receive transactions for that customer — even if you send data early.
-
-Confirm activation status with OpenCard during testing if transactions do not appear at the EMS.
-
----
-
 ## Get credentials
 
 Contact **support@opencard.io** with:
 
-- Your card program name
+- Your legal name
 - Expected markets (SE, NO, DK, FI)
 - Technical contact for OAuth credentials and `{slug}` assignment

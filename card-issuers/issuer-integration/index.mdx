@@ -13,17 +13,6 @@ In addition to standard transaction data, OpenCard can attach **enriched informa
 
 ---
 
-## Before you integrate
-
-1. **Customer signs a TPA** (Transaction Processing Authorisation) via their EMS — authorising the issuer to release that company's card data to OpenCard.
-2. **OpenCard delivers your credentials** — OAuth client, scopes, and your issuer `{slug}`.
-3. **You register cards** — OpenCard needs an up-to-date card registry per customer organisation.
-4. **You push transaction states** — `authorized`, `cleared`, `invoiced`, and `deleted` for every purchase.
-
-Until cards exist and states are delivered, EMS apps connected to that customer will not receive data.
-
----
-
 ## End-to-end flow
 
 ```mermaid

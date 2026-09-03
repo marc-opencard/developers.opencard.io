@@ -123,6 +123,7 @@
               },
               "example": {
                 "id": "12345",
+                "payment_product": "acmebank_credit",
                 "last_four": "1234",
                 "bin_number": "123456",
                 "liability": "corporate_with_personal_invoice",
@@ -256,6 +257,7 @@
                 "$ref": "#/components/schemas/IssuerCardUpdate"
               },
               "example": {
+                "payment_product": "acmebank_credit",
                 "last_four": "1234",
                 "bin_number": "123456",
                 "liability": "corporate_with_personal_invoice",
@@ -429,6 +431,7 @@
         "type": "object",
         "required": [
           "id",
+          "payment_product",
           "last_four",
           "bin_number",
           "liability",
@@ -440,6 +443,11 @@
         "properties": {
           "id": {
             "type": "string"
+          },
+          "payment_product": {
+            "type": "string",
+            "example": "acmebank_credit",
+            "description": "Code for the payment product this card belongs to — the same code you receive on the TPA `initiate`. OpenCard uses it to link the card to the customer's signed TPA."
           },
           "last_four": {
             "type": "string",
@@ -465,7 +473,7 @@
               "debit",
               "credit"
             ],
-            "description": "Card funding \u2014 delivered to EMS as webhook field `card_funding`"
+            "description": "Card funding — delivered to EMS as webhook field `card_funding`"
           },
           "issuer_organization_number": {
             "type": "string"
@@ -483,6 +491,7 @@
       "IssuerCardUpdate": {
         "type": "object",
         "required": [
+          "payment_product",
           "last_four",
           "bin_number",
           "liability",
@@ -492,6 +501,11 @@
           "identity"
         ],
         "properties": {
+          "payment_product": {
+            "type": "string",
+            "example": "acmebank_credit",
+            "description": "Code for the payment product this card belongs to — the same code you receive on the TPA `initiate`. OpenCard uses it to link the card to the customer's signed TPA."
+          },
           "last_four": {
             "type": "string"
           },
