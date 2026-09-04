@@ -144,7 +144,7 @@ The transaction, receipt, VAT, and line-item samples below are **one purchase** 
 | `state` | string | `authorized`, `cleared`, `deleted`, `invoiced` |
 | `receiptable` | boolean | Expect a digital receipt? |
 | `card_issuer` | string | Card program identifier (`name_system`, e.g. `nordea`) |
-| `payment_product` | object | `{ "id": <card_issuer_id>, "name": "<product name>" }` |
+| `payment_product` | object | `{ "id": <payment_product_id>, "name": "<product name>" }` |
 | `card_issuer_reference` | string | Issuer's reference for this state (not globally unique) |
 | `card_funding` | string | `debit` or `credit` — from the registered card |
 | `card_type` | string | `private`, `corporate`, `corporate_with_private_invoice` |

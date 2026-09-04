@@ -286,6 +286,7 @@
                     {
                       "id": 42,
                       "account_id": 1,
+                      "payment_product_id": 1,
                       "card_issuer_id": 1,
                       "name": "Acme AB",
                       "country": "SE",
@@ -334,7 +335,7 @@
                 "$ref": "#/components/schemas/TpaCreate"
               },
               "example": {
-                "card_issuer_id": 1,
+                "payment_product_id": 1,
                 "name": "Acme AB",
                 "country": "SE",
                 "organization_number": "5561234567",
@@ -351,6 +352,7 @@
                 "example": {
                   "id": 42,
                   "account_id": 1,
+                  "payment_product_id": 1,
                   "card_issuer_id": 1,
                   "name": "Acme AB",
                   "country": "SE",
@@ -404,6 +406,7 @@
                 "example": {
                   "id": 42,
                   "account_id": 1,
+                  "payment_product_id": 1,
                   "card_issuer_id": 1,
                   "name": "Acme AB",
                   "country": "SE",
@@ -772,7 +775,6 @@
                   "data": [
                     {
                       "id": 1,
-                      "card_issuer_id": 1,
                       "card_issuer": "acme_card",
                       "name": "Acme Corporate Card",
                       "subtitle": "Corporate Card",
@@ -885,7 +887,6 @@
                   "data": [
                     {
                       "id": 1,
-                      "card_issuer_id": 1,
                       "card_issuer": "acme_card",
                       "name": "Acme Corporate Card",
                       "subtitle": "Corporate Card",
@@ -951,7 +952,6 @@
                 },
                 "example": {
                   "id": 1,
-                  "card_issuer_id": 1,
                   "card_issuer": "acme_card",
                   "name": "Acme Corporate Card",
                   "subtitle": "Corporate Card",
@@ -1779,14 +1779,15 @@
       "TpaCreate": {
         "type": "object",
         "required": [
-          "card_issuer_id",
+          "payment_product_id",
           "name",
           "country",
           "organization_number"
         ],
         "properties": {
-          "card_issuer_id": {
-            "type": "integer"
+          "payment_product_id": {
+            "type": "integer",
+            "description": "Payment product `id` from `GET .../accounts/{accountId}/payment-products`"
           },
           "name": {
             "type": "string"
@@ -2017,11 +2018,7 @@
         "properties": {
           "id": {
             "type": "integer",
-            "description": "Payment product ID (same as `card_issuer_id` until issuer, program and product are split)"
-          },
-          "card_issuer_id": {
-            "type": "integer",
-            "description": "Pass this as `card_issuer_id` on `POST .../tpas`."
+            "description": "Payment product ID. Pass this as `payment_product_id` on `POST .../tpas`."
           },
           "card_issuer": {
             "type": "string",

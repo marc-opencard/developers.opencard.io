@@ -19,7 +19,7 @@ flowchart TD
     C --> E[GET .../accounts/id/payment-products — enabled list]
     D --> E
     E --> F[Your marketplace — client picks one]
-    F --> G[TPA with card_issuer_id]
+    F --> G[TPA with payment_product_id]
 ```
 
 ---
@@ -79,7 +79,7 @@ Same optional query params as the catalog:
 | `funding` | `debit` or `credit` |
 | `per_page` | Page size (default 15) |
 
-Build a marketplace (or wizard step) where the client picks one product. Store **`card_issuer_id`** — you pass that when you create the TPA.
+Build a marketplace (or wizard step) where the client picks one product. Store the product **`id`** — you pass that as `payment_product_id` when you create the TPA.
 
 The optional [ocTPA plugin](/ems/plugins) renders the same step as product cards:
 
@@ -129,12 +129,12 @@ Fields from each enabled product:
 | `payment_program.logo_url` | Program logo |
 | `scheme.name` | Card scheme (`mastercard`, `visa`) |
 | `scheme.logo_url` | Visa / Mastercard badge |
-| `card_issuer_id` | Pass this as `card_issuer_id` on `POST .../tpas` |
+| `id` | Pass this as `payment_product_id` on `POST .../tpas` |
 
 ---
 
 ## Next step
 
-Once products are enabled, each client picks one in Phase 1 and you create the TPA with that `card_issuer_id`.
+Once products are enabled, each client picks one in Phase 1 and you create the TPA with that `id` as `payment_product_id`.
 
 → [TPA flow](/ems/tpa-flow) · [Customer onboarding — Phase 1](/ems/customer-onboarding#phase-1--client-setup)

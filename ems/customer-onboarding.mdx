@@ -98,7 +98,7 @@ Do this **per client** (after your account + OAuth client exist):
 | # | Step | API / action | Detail guide |
 |---|------|--------------|--------------|
 | 0 | Enable payment product(s) on account (once) | `GET /payment-products` → `POST .../accounts/{id}/payment-products/{id}` (or [application.opencard.io](https://application.opencard.io)) | [Payment product setup](/ems/payment-products-setup) |
-| 1 | Client picks payment product | `GET .../accounts/{id}/payment-products` → `card_issuer_id` on TPA | [Payment product setup](/ems/payment-products-setup) |
+| 1 | Client picks payment product | `GET .../accounts/{id}/payment-products` → `payment_product_id` on TPA | [Payment product setup](/ems/payment-products-setup) |
 | 2 | Client picks products | Flags on billing create | [Billing](/ems/model/billing) |
 | 3 | Invoice email / reference | Part of billing create | [Billing](/ems/model/billing) |
 | 4 | Create TPA (who signs) | `GET` publicrecords — collect signatories | [TPA flow](/ems/tpa-flow) |
@@ -125,7 +125,7 @@ The plugin mirrors Phase 1 in the UI. Organization + webhook and card holders st
 
 | Page | What it covers |
 |------|----------------|
-| [Payment product setup](/ems/payment-products-setup) | Enable products, marketplace UI, `card_issuer_id` |
+| [Payment product setup](/ems/payment-products-setup) | Enable products, marketplace UI, `payment_product_id` |
 | [TPA flow](/ems/tpa-flow) | Create TPA, signatories, activation, signed PDF |
 | [eID signing](/ems/eid-signing) | Sign vs auth modes across Nordic countries |
 | [Card holder onboarding](/ems/card-holders) | Email vs `identity_id`, webhooks, updates |

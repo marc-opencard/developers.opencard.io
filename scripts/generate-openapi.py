@@ -71,6 +71,7 @@ EX = {
     "tpa": {
         "id": 42,
         "account_id": 1,
+        "payment_product_id": 1,
         "card_issuer_id": 1,
         "name": "Acme AB",
         "country": "SE",
@@ -234,7 +235,7 @@ op(ems_paths, "get", tpa, tag="TPAs", summary="List TPAs", operation_id="listTpa
    responses=json_resp("200", "TPAs", example=EX["paginated"]([EX["tpa"]])))
 op(ems_paths, "post", tpa, tag="TPAs", summary="Create TPA", operation_id="createTpa", scope="account-tpas-write", params=[ACCOUNT_ID],
    description="Creates TPA, fetches registry data, generates legal text.",
-   body=json_body(ref("TpaCreate"), example={"card_issuer_id": 1, "name": "Acme AB", "country": "SE", "organization_number": "5561234567", "language": "sv"}),
+   body=json_body(ref("TpaCreate"), example={"payment_product_id": 1, "name": "Acme AB", "country": "SE", "organization_number": "5561234567", "language": "sv"}),
    responses=json_resp("201", "TPA created", example=EX["tpa"]))
 op(ems_paths, "get", f"{tpa}/{{tpaId}}", tag="TPAs", summary="Get TPA", operation_id="getTpa", scope="account-tpas-read",
    params=[ACCOUNT_ID, path_param("tpaId", "TPA ID")], responses=json_resp("200", "TPA", example=EX["tpa"]))
@@ -267,7 +268,6 @@ op(ems_paths, "post", bill, tag="Billings", summary="Create billing profile", op
 # Payment products — catalog then enable on account
 EX_PAYMENT_PRODUCT = {
     "id": 1,
-    "card_issuer_id": 1,
     "card_issuer": "acme_card",
     "name": "Acme Corporate Card",
     "subtitle": "Corporate Card",
@@ -451,8 +451,8 @@ ems_spec = {
             "organizationId": path_param("organizationId", "Organization ID"),
         },
         "schemas": {
-            "TpaCreate": {"type": "object", "required": ["card_issuer_id", "name", "country", "organization_number"],
-                "properties": {"card_issuer_id": {"type": "integer"}, "name": {"type": "string"}, "country": {"type": "string", "enum": ["SE", "DK", "NO", "FI"]},
+            "TpaCreate": {"type": "object", "required": ["payment_product_id", "name", "country", "organization_number"],
+                "properties": {"payment_product_id": {"type": "integer", "description": "Payment product `id` from `GET .../accounts/{accountId}/payment-products`"}, "name": {"type": "string"}, "country": {"type": "string", "enum": ["SE", "DK", "NO", "FI"]},
                     "organization_number": {"type": "string"}, "language": {"type": "string", "enum": ["sv", "no", "da", "en", "fi"]}}},
             "TpaSignatoryCreate": {"type": "object", "required": ["email"], "properties": {"email": {"type": "string"}, "name": {"type": "string"}}},
             "OrganizationCreate": {"type": "object", "required": ["reference_id", "tpa_id"],
@@ -499,8 +499,7 @@ ems_spec = {
             "PaymentProduct": {"type": "object",
                 "description": "A card product clients can activate — debit or credit under a payment program.",
                 "properties": {
-                    "id": {"type": "integer", "description": "Payment product ID (same as `card_issuer_id` until issuer, program and product are split)"},
-                    "card_issuer_id": {"type": "integer", "description": "Pass this as `card_issuer_id` on `POST .../tpas`."},
+                    "id": {"type": "integer", "description": "Payment product ID. Pass this as `payment_product_id` on `POST .../tpas`."},
                     "card_issuer": {"type": "string", "nullable": True, "description": "Legacy system name (e.g. `foretagarna`)"},
                     "name": {"type": "string", "nullable": True, "description": "Product title"},
                     "subtitle": {"type": "string", "nullable": True, "description": "Product subtitle"},
