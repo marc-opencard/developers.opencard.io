@@ -33,7 +33,8 @@ new ocTPA({
   accountId: 1,
   orgNumber: '5561234567',
   country: 'SE',
-  allowedCardIssuerIds: [], // optional: product codes (`card_issuer`) to show
+  allowedPaymentProductIds: [], // optional: payment product `id`s to show (default: all enabled on the account)
+  infoAndPriceMapping: { 1: 'https://your-site/pricing/product-1' }, // optional: "Info & Pricing" URL per payment product id
   onDataSend: async function(data) {
     // YOU call the APIs — plugin does not write to OpenCard:
     // 1. POST /billings (data.billing) — includes product_* flags
