@@ -1,9 +1,9 @@
 ---
 title: Digital Receipts
-description: How OpenCard matches card transactions against merchant digital receipt networks and which webhooks deliver receipt, VAT, and line item data to your EMS.
+description: How OpenCard delivers digital receipts from Receipt provider partners — and which webhooks send receipt, VAT, and line item data to your EMS.
 ---
 
-When `receiptable: true` on a transaction, OpenCard tries to match it against merchant digital receipt networks.
+When `receiptable: true` on a transaction, a digital receipt exists for that purchase at one of OpenCard's Receipt provider partners. OpenCard fetches it and delivers receipt, VAT, and line-item data to your EMS via webhooks.
 
 ---
 
@@ -42,6 +42,6 @@ Sample file: [Coop receipt (109.38 SEK)](https://api.opencard.io/files/receipts/
 
 ---
 
-## When no receipt comes
+## When there is no digital receipt
 
-Not all merchants are in the receipt network. If `receiptable: true` but no `receipt.fetched` within reasonable time → no match found. Your users can still upload photo receipts via your UI or use [Receipt Scanner](/ems/receipt-scanner).
+If `receiptable: false`, no Receipt provider partner has a receipt for this transaction — don't wait for `receipt.fetched`. Your users can still upload photo receipts via your UI or use [Receipt Scanner](/ems/receipt-scanner).

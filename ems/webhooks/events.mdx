@@ -142,7 +142,7 @@ The transaction, receipt, VAT, and line-item samples below are **one purchase** 
 |-------|------|-------------|
 | `id` | string | Unique transaction ID. **Use this as your primary key.** |
 | `state` | string | `authorized`, `cleared`, `deleted`, `invoiced` |
-| `receiptable` | boolean | Expect a digital receipt? |
+| `receiptable` | boolean | `true` if a digital receipt exists at an OpenCard Receipt provider partner |
 | `card_issuer` | string | Card program identifier (`name_system`, e.g. `nordea`) |
 | `payment_product` | object | `{ "id": <payment_product_id>, "name": "<product name>" }` |
 | `card_issuer_reference` | string | Issuer's reference for this state (not globally unique) |

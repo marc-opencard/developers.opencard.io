@@ -94,7 +94,7 @@ Full guidance → [Current card issuer integration](/ems/current-card-issuer-int
 { "receiptable": true }
 ```
 
-If `true`, a digital receipt may arrive later via `receipt.fetched`. If `false`, don't wait for one.
+If `true`, a digital receipt exists for this transaction at one of OpenCard's Receipt provider partners — expect `receipt.fetched` (and often TrueVAT / line items) shortly after. If `false`, don't wait for a digital receipt.
 
 Subscribe to `receipt_fetched`, `transaction_true_vat`, and `transaction_line_items` separately — they come as independent events after the transaction.
 
