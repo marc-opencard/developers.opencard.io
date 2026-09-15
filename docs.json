@@ -119,6 +119,22 @@
         "tab": "Expense Management System",
         "groups": [
           {
+            "group": "EMS Integration",
+            "pages": [
+              "ems/index"
+            ]
+          },
+          {
+            "group": "Customer onboarding",
+            "pages": [
+              "ems/customer-onboarding",
+              "ems/payment-products-setup",
+              "ems/tpa-flow",
+              "ems/eid-signing",
+              "ems/card-holders"
+            ]
+          },
+          {
             "group": "Model",
             "pages": [
               "ems/model/billing",
@@ -132,16 +148,6 @@
             "pages": [
               "ems/current-card-issuer-integration",
               "ems/error-handling"
-            ]
-          },
-          {
-            "group": "Customer onboarding",
-            "pages": [
-              "ems/customer-onboarding",
-              "ems/payment-products-setup",
-              "ems/tpa-flow",
-              "ems/eid-signing",
-              "ems/card-holders"
             ]
           },
           {
