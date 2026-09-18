@@ -80,7 +80,7 @@ Steps 0 is once per account. Steps 1–8 are repeated **per client**.
 
     **If skipped:** the organization has no `billing_id`, and creating a webhook with transaction or receipt events fails — the webhook is validated against the billing's product flags.
 
-    → [Model: Billing](/ems/model/billing) · API: [Create billing profile](/api-reference/ems/billings/create-billing-profile)
+    → [Organization setup](/ems/organization-setup) · [Model: Billing](/ems/model/billing) · API: [Create billing profile](/api-reference/ems/billings/create-billing-profile)
   </Step>
 
   <Step title="Look up who may sign (recommended)">
@@ -120,7 +120,7 @@ Steps 0 is once per account. Steps 1–8 are repeated **per client**.
 
     **If `billing_id` is skipped:** webhook creation with transaction events fails (see step 1).
 
-    → [Model: Organization](/ems/model/organization) · API: [Create organization](/api-reference/ems/organizations/create-organization)
+    → [Organization setup](/ems/organization-setup) · [Model: Organization](/ems/model/organization) · API: [Create organization](/api-reference/ems/organizations/create-organization)
   </Step>
 
   <Step title="Create the webhook">
@@ -132,7 +132,7 @@ Steps 0 is once per account. Steps 1–8 are repeated **per client**.
 
     **If skipped:** card holder lifecycle and PDPC signing write events to the organization's webhook — without one, PDPC signing cannot complete. This is the single most common onboarding mistake.
 
-    → [Webhook setup](/ems/webhooks/setup) · [Events](/ems/webhooks/events) · API: [Create webhook](/api-reference/ems/webhooks/create-webhook)
+    → [Organization setup](/ems/organization-setup) · [Webhook setup](/ems/webhooks/setup) · [Events](/ems/webhooks/events) · API: [Create webhook](/api-reference/ems/webhooks/create-webhook)
   </Step>
 
   <Step title="Wait for tpa.signed">
@@ -191,6 +191,7 @@ Then, and only then: card holders.
 |------|----------------|
 | [Payment product setup](/ems/payment-products-setup) | Enable products, marketplace UI, `payment_product_id` |
 | [TPA flow](/ems/tpa-flow) | Create TPA, signatories, activation, signed PDF |
+| [Organization setup](/ems/organization-setup) | Billing, organization, webhook — the three calls every client needs before card holders |
 | [eID signing](/ems/eid-signing) | Sign vs auth modes across Nordic countries |
 | [Card holder onboarding](/ems/card-holders) | Email vs `identity_id`, webhooks, updates |
 

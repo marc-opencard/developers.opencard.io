@@ -130,6 +130,7 @@
               "ems/customer-onboarding",
               "ems/payment-products-setup",
               "ems/tpa-flow",
+              "ems/organization-setup",
               "ems/eid-signing",
               "ems/card-holders"
             ]

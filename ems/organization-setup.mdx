@@ -1,0 +1,192 @@
+---
+title: Organization Setup — Billing, Organization, Webhook
+description: Set up one EMS client in OpenCard — create the billing profile, the organization that links TPA and billing, and the webhook that receives events. The three calls every client needs before card holders.
+---
+
+The TPA is the legal side of a client. **This guide is the operational side**: the three objects that make a client actually work in OpenCard.
+
+```
+billing  →  organization (tpa_id + billing_id)  →  webhook
+```
+
+Do this **per client**, right after you have created the TPA and added signatories. You do not need to wait for the TPA to be signed — in fact you want the webhook in place *before* it is signed so `tpa.signed` lands in your app.
+
+<Tip>
+  Where this fits: [Customer onboarding](/ems/customer-onboarding#step-by-step) steps 1, 5 and 6. The TPA itself is covered in [TPA flow](/ems/tpa-flow).
+</Tip>
+
+---
+
+## What each object does
+
+| Object | Role | Produces |
+|--------|------|----------|
+| **Billing** | Invoice profile for the client + the `product_*` switches that decide which events the client may receive | `billing_id` |
+| **Organization** | Runtime container. Links `tpa_id` (legal) and `billing_id` (products). Carries your `reference_id` into every webhook | `organization_id` |
+| **Webhook** | Your endpoint for this organization's events. Verified by a challenge before anything is delivered | `webhook_id`, `secret` |
+
+None of them is optional. See [Common mistakes](#common-mistakes) for what breaks without each.
+
+---
+
+## 1. Create the billing profile
+
+```
+POST /accounts/{accountId}/billings
+Scope: billings-write
+```
+
+```json
+{
+  "name_display": "Acme AB",
+  "name_legal": "Acme AB",
+  "organization_number": "5561234567",
+  "country": "SE",
+  "address_street": "Storgatan 1",
+  "address_zip": "111 22",
+  "address_city": "Stockholm",
+  "email_invoice": "finance@acme.se",
+  "your_reference_invoice": "PO-12345",
+  "product_transaction": true,
+  "product_digital_receipt": false,
+  "product_aland_index": false
+}
+```
+
+| Field | Notes |
+|-------|-------|
+| `name_display`, `name_legal`, `organization_number`, `country` | Required. `country` is `SE`, `DK`, `NO` or `FI` |
+| `email_invoice`, `your_reference_invoice` | Where the OpenCard invoice goes and what reference it carries |
+| `product_transaction` | **Set `true` for every normal client.** Unlocks `card_transaction_*` events on the webhook |
+| `product_digital_receipt` | Unlocks `receipt_fetched` and `transaction_true_vat` |
+| `product_aland_index` | Unlocks `aland_index` |
+
+Response → save `id` as **`billing_id`**.
+
+<Note>
+  One billing profile can be shared by several organizations. Every organization with the same `billing_id` becomes **one line** on your OpenCard invoice. Use that when a client has multiple legal entities or departments but one finance function. → [Model: Billing](/ems/model/billing)
+</Note>
+
+API reference → [Create billing profile](/api-reference/ems/billings/create-billing-profile)
+
+---
+
+## 2. Create the organization
+
+```
+POST /accounts/{accountId}/organizations
+Scope: organizations-write
+```
+
+```json
+{
+  "reference_id": "client_acme_001",
+  "tpa_id": 42,
+  "billing_id": 1,
+  "name": "Acme AB"
+}
+```
+
+| Field | Notes |
+|-------|-------|
+| `reference_id` | **Your** internal client ID. Unique per account. Echoed as `organization.reference_id` in every webhook payload — this is how you route events back to the right client in your system |
+| `tpa_id` | From [TPA flow](/ems/tpa-flow). The TPA does not need to be signed yet |
+| `billing_id` | From step 1 |
+| `name` | Display name |
+
+Response → save `id` as **`organization_id`**.
+
+### Already created an organization without `billing_id`?
+
+Fix it with a `PUT` — no need to delete and recreate:
+
+```
+PUT /accounts/{accountId}/organizations/{organizationId}
+```
+
+```json
+{ "billing_id": 1 }
+```
+
+### One client, several organizations?
+
+Usually one client = one organization. Split only when the client needs **separate webhook endpoints**, separate event subscriptions, or separate card-holder groups. All of them can point at the same `tpa_id` and `billing_id`.
+
+API reference → [Create organization](/api-reference/ems/organizations/create-organization) · [Model: Organization](/ems/model/organization)
+
+---
+
+## 3. Create the webhook
+
+```
+POST /accounts/{accountId}/organizations/{organizationId}/webhooks
+Scope: webhooks-write
+```
+
+```json
+{
+  "url": "https://your-app.com/hooks/opencard",
+  "enabled": true,
+  "tpa_signed": true,
+  "card_holder_created": true,
+  "card_holder_identified": true,
+  "card_holder_signed_pdpc": true,
+  "card_holder_deleted": true,
+  "card_transaction_authorized": true,
+  "card_transaction_cleared": true,
+  "card_transaction_deleted": true
+}
+```
+
+Response includes `secret` — **save it**, you need it to answer the challenge.
+
+OpenCard immediately sends `GET {url}?challenge=…` with `X-Event: challenge`. Your endpoint answers with `X-Verify-Token: HMAC-SHA256(challenge, secret)`. When that passes, the webhook is `active` and events start flowing.
+
+**Verify:**
+
+```
+GET /accounts/{accountId}/organizations/{organizationId}/webhooks
+```
+
+→ `active: true`. If it is `false`, the challenge failed — see [Webhook setup](/ems/webhooks/setup#challenge-handshake-) for the handshake in detail, authentication headers and the test endpoint.
+
+<Warning>
+  Event flags are validated against the billing. Requesting `card_transaction_*` when the organization's billing has `product_transaction: false` — or when the organization has **no `billing_id`** — is rejected. Fix the billing (or the `billing_id`) first, then create the webhook.
+</Warning>
+
+API reference → [Create webhook](/api-reference/ems/webhooks/create-webhook) · Full guide → [Webhook setup](/ems/webhooks/setup) · [Event reference](/ems/webhooks/events)
+
+---
+
+## Done — what you should have
+
+| Stored | From | Used by |
+|--------|------|---------|
+| `billing_id` | step 1 | organization |
+| `organization_id` | step 2 | webhook, card holders |
+| webhook `secret` | step 3 | challenge, signature verification |
+
+And on the OpenCard side:
+
+- [ ] `GET .../organizations/{organizationId}` shows `tpa_id` and `billing_id` set
+- [ ] `GET .../organizations/{organizationId}/webhooks` shows one webhook with `active: true`
+
+Now you can add employees → [Card holder onboarding](/ems/card-holders). When the TPA is signed you will see it arrive as `tpa.signed` on the webhook you just created.
+
+---
+
+## Common mistakes
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Webhook create fails when `card_transaction_*` is `true` | Organization has no `billing_id`, or billing has `product_transaction: false` | Create billing, `PUT` `billing_id` on the organization, retry |
+| Employee signs PDPC with eID and gets an error page; no `card_holder.identified` | Organization has **no webhook** | Create the webhook, then create a new card holder (the signed PDPC is stored, but the flow could not complete) |
+| Webhook stays `active: false` | Challenge not answered correctly | Check `X-Verify-Token` = HMAC-SHA256 of the challenge string with the webhook `secret` |
+| Events arrive but you can't tell which client | `reference_id` on the organization is not your client ID | Set `reference_id` to your internal id when creating the organization |
+| No `tpa.signed` received | Webhook was created after the TPA was signed, or `tpa_signed: false` | Poll `GET .../tpas/{tpaId}` for `signed`; enable `tpa_signed` for future clients |
+
+---
+
+## Using the ocTPA plugin?
+
+The plugin hands you `billing`, `tpa` and `tpa_signatories` in `onDataSend`. It does **not** create the organization or the webhook. Do steps 2 and 3 in your `onDataSend` handler right after the billing and TPA calls. → [Plugins](/ems/plugins)
