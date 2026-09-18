@@ -95,6 +95,7 @@ EX = {
         "id": 3,
         "reference_id": "client_acme_001",
         "tpa_id": 42,
+        "billing_id": 1,
         "account_id": 1,
         "name": "Acme AB",
     },
@@ -262,8 +263,10 @@ op(ems_paths, "get", f"{tpa}/{{tpaId}}/identities", tag="Identities", summary="L
 bill = "/accounts/{accountId}/billings"
 op(ems_paths, "post", bill, tag="Billings", summary="Create billing profile", operation_id="createBilling",
    scope="billings-write", params=[ACCOUNT_ID],
-   body=json_body(ref("BillingCreate"), example={"name_display": "Acme AB", "name_legal": "Acme AB", "organization_number": "5561234567", "country": "SE"}),
-   responses=json_resp("201", "Billing created", example={"id": 1, "name_display": "Acme AB"}))
+   body=json_body(ref("BillingCreate"), example={"name_display": "Acme AB", "name_legal": "Acme AB", "organization_number": "5561234567", "country": "SE",
+                                                 "email_invoice": "finance@acme.se", "your_reference_invoice": "PO-12345",
+                                                 "product_transaction": True, "product_digital_receipt": False, "product_aland_index": False}),
+   responses=json_resp("201", "Billing created — store `id` as `billing_id` for the organization", example={"id": 1, "name_display": "Acme AB", "product_transaction": True}))
 
 # Payment products — catalog then enable on account
 EX_PAYMENT_PRODUCT = {
@@ -343,7 +346,7 @@ op(ems_paths, "get", org, tag="Organizations", summary="List organizations", ope
    responses=json_resp("200", "Organizations", example=EX["paginated"]([EX["organization"]])))
 op(ems_paths, "post", org, tag="Organizations", summary="Create organization", operation_id="createOrganization",
    scope="organizations-write", params=[ACCOUNT_ID],
-   body=json_body(ref("OrganizationCreate"), example={"reference_id": "client_acme_001", "tpa_id": 42, "name": "Acme AB"}),
+   body=json_body(ref("OrganizationCreate"), example={"reference_id": "client_acme_001", "tpa_id": 42, "billing_id": 1, "name": "Acme AB"}),
    responses=json_resp("201", "Organization created", example=EX["organization"]))
 op(ems_paths, "get", f"{org}/{{organizationId}}", tag="Organizations", summary="Get organization", operation_id="getOrganization",
    scope="organizations-read", params=[ACCOUNT_ID, ORG_ID], responses=json_resp("200", "Organization", example=EX["organization"]))
@@ -455,8 +458,12 @@ ems_spec = {
                 "properties": {"payment_product_id": {"type": "integer", "description": "Payment product `id` from `GET .../accounts/{accountId}/payment-products`"}, "name": {"type": "string"}, "country": {"type": "string", "enum": ["SE", "DK", "NO", "FI"]},
                     "organization_number": {"type": "string"}, "language": {"type": "string", "enum": ["sv", "no", "da", "en", "fi"]}}},
             "TpaSignatoryCreate": {"type": "object", "required": ["email"], "properties": {"email": {"type": "string"}, "name": {"type": "string"}}},
-            "OrganizationCreate": {"type": "object", "required": ["reference_id", "tpa_id"],
-                "properties": {"reference_id": {"type": "string"}, "tpa_id": {"type": "integer"}, "name": {"type": "string"}}},
+            "OrganizationCreate": {"type": "object", "required": ["reference_id", "tpa_id", "billing_id"],
+                "properties": {
+                    "reference_id": {"type": "string", "description": "Your internal client ID — echoed in every webhook for this organization"},
+                    "tpa_id": {"type": "integer", "description": "TPA `id` from `POST .../tpas`"},
+                    "billing_id": {"type": "integer", "description": "Billing profile `id` from `POST .../billings`. Required for webhooks with transaction, receipt or Åland index events — the webhook is validated against the billing's `product_*` flags."},
+                    "name": {"type": "string"}}},
             "CardHolderCreate": {"type": "object", "required": ["reference_id"],
                 "properties": {"reference_id": {"type": "string"}, "email": {"type": "string"}, "identity_id": {"type": "integer"},
                     "skip_pdpc_email": {"type": "boolean"}, "language": {"type": "string"}}},
@@ -495,7 +502,15 @@ ems_spec = {
                     "identity": ref("CardHolderIdentity"),
                 }},
             "BillingCreate": {"type": "object", "required": ["name_display", "name_legal", "organization_number", "country"],
-                "properties": {"name_display": {"type": "string"}, "name_legal": {"type": "string"}, "organization_number": {"type": "string"}, "country": {"type": "string"}}},
+                "properties": {
+                    "name_display": {"type": "string"}, "name_legal": {"type": "string"},
+                    "organization_number": {"type": "string"}, "country": {"type": "string", "enum": ["SE", "DK", "NO", "FI"]},
+                    "address_street": {"type": "string"}, "address_city": {"type": "string"}, "address_zip": {"type": "string"},
+                    "email_invoice": {"type": "string", "description": "Where the OpenCard invoice is sent"},
+                    "your_reference_invoice": {"type": "string", "description": "Your reference printed on the invoice"},
+                    "product_transaction": {"type": "boolean", "description": "Enables `card_transaction_*` webhook events on organizations linked to this billing"},
+                    "product_digital_receipt": {"type": "boolean", "description": "Enables `receipt_fetched` and `transaction_true_vat` webhook events"},
+                    "product_aland_index": {"type": "boolean", "description": "Enables the `aland_index` webhook event"}}},
             "PaymentProduct": {"type": "object",
                 "description": "A card product clients can activate — debit or credit under a payment program.",
                 "properties": {

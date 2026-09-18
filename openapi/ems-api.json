@@ -673,19 +673,25 @@
                 "name_display": "Acme AB",
                 "name_legal": "Acme AB",
                 "organization_number": "5561234567",
-                "country": "SE"
+                "country": "SE",
+                "email_invoice": "finance@acme.se",
+                "your_reference_invoice": "PO-12345",
+                "product_transaction": true,
+                "product_digital_receipt": false,
+                "product_aland_index": false
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Billing created",
+            "description": "Billing created \u2014 store `id` as `billing_id` for the organization",
             "content": {
               "application/json": {
                 "example": {
                   "id": 1,
-                  "name_display": "Acme AB"
+                  "name_display": "Acme AB",
+                  "product_transaction": true
                 }
               }
             }
@@ -1088,6 +1094,7 @@
                       "id": 3,
                       "reference_id": "client_acme_001",
                       "tpa_id": 42,
+                      "billing_id": 1,
                       "account_id": 1,
                       "name": "Acme AB"
                     }
@@ -1129,6 +1136,7 @@
               "example": {
                 "reference_id": "client_acme_001",
                 "tpa_id": 42,
+                "billing_id": 1,
                 "name": "Acme AB"
               }
             }
@@ -1143,6 +1151,7 @@
                   "id": 3,
                   "reference_id": "client_acme_001",
                   "tpa_id": 42,
+                  "billing_id": 1,
                   "account_id": 1,
                   "name": "Acme AB"
                 }
@@ -1183,6 +1192,7 @@
                   "id": 3,
                   "reference_id": "client_acme_001",
                   "tpa_id": 42,
+                  "billing_id": 1,
                   "account_id": 1,
                   "name": "Acme AB"
                 }
@@ -1834,14 +1844,21 @@
         "type": "object",
         "required": [
           "reference_id",
-          "tpa_id"
+          "tpa_id",
+          "billing_id"
         ],
         "properties": {
           "reference_id": {
-            "type": "string"
+            "type": "string",
+            "description": "Your internal client ID \u2014 echoed in every webhook for this organization"
           },
           "tpa_id": {
-            "type": "integer"
+            "type": "integer",
+            "description": "TPA `id` from `POST .../tpas`"
+          },
+          "billing_id": {
+            "type": "integer",
+            "description": "Billing profile `id` from `POST .../billings`. Required for webhooks with transaction, receipt or \u00c5land index events \u2014 the webhook is validated against the billing's `product_*` flags."
           },
           "name": {
             "type": "string"
@@ -2008,7 +2025,42 @@
             "type": "string"
           },
           "country": {
+            "type": "string",
+            "enum": [
+              "SE",
+              "DK",
+              "NO",
+              "FI"
+            ]
+          },
+          "address_street": {
             "type": "string"
+          },
+          "address_city": {
+            "type": "string"
+          },
+          "address_zip": {
+            "type": "string"
+          },
+          "email_invoice": {
+            "type": "string",
+            "description": "Where the OpenCard invoice is sent"
+          },
+          "your_reference_invoice": {
+            "type": "string",
+            "description": "Your reference printed on the invoice"
+          },
+          "product_transaction": {
+            "type": "boolean",
+            "description": "Enables `card_transaction_*` webhook events on organizations linked to this billing"
+          },
+          "product_digital_receipt": {
+            "type": "boolean",
+            "description": "Enables `receipt_fetched` and `transaction_true_vat` webhook events"
+          },
+          "product_aland_index": {
+            "type": "boolean",
+            "description": "Enables the `aland_index` webhook event"
           }
         }
       },

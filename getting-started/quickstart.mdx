@@ -1,9 +1,15 @@
 ---
 title: Quickstart — Zero to First Webhook
-description: End-to-end OpenCard EMS quickstart — register a sandbox account, sign a TPA, create an organization, onboard a card holder, and receive your first webhook.
+description: End-to-end OpenCard EMS quickstart in the right order — register, billing, TPA, organization, webhook, TPA signed, card holder, first transaction.
 ---
 
-This is the full path: register → TPA signed → org live → cardholder consented → webhook firing.
+This is the full path for **one test client**, in the order the API expects it:
+
+```
+account → payment product → billing → TPA + signatories → organization → webhook → tpa.signed → card holder → transaction
+```
+
+Every step produces an **id** that the next step needs. Don't skip ahead — the two most common integration failures are an organization without `billing_id` and card holders created before the webhook exists. Both are avoided by simply following the order below.
 
 Grab coffee. ☕ Let's go.
 
@@ -19,20 +25,19 @@ Your `accountId` is in the dashboard URL or API responses.
 
 ---
 
-## Step 1: Create an account_client
+## Step 1: Create an account_client and get a token
 
 ```bash
 # Dashboard: Account → OAuth Clients → Create
 # This is an account_client — machine-to-machine credential for your EMS integration.
 
-# Then get a token:
 curl -X POST https://sandbox-api.opencard.io/oauth/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -H "Accept: application/json" \
   -d "grant_type=client_credentials" \
   -d "client_id=YOUR_CLIENT_ID" \
   -d "client_secret=YOUR_CLIENT_SECRET" \
-  -d "scope=account-tpas-write account-tpas-read account-tpa-signatories-write organizations-write organizations-read card-holders-write webhooks-write webhooks-read public-records-read payment-products-read account-payment-products-read account-payment-products-write"
+  -d "scope=billings-write account-tpas-write account-tpas-read account-tpa-signatories-write organizations-write organizations-read card-holders-write webhooks-write webhooks-read public-records-read payment-products-read account-payment-products-read account-payment-products-write"
 ```
 
 Save the `access_token`. All subsequent calls:
@@ -46,9 +51,11 @@ Accept: application/json
   Scopes are space-separated. Request only what you need. Full list in [Authentication](/getting-started/authentication). Always send `Accept: application/json` so error responses stay JSON (not an HTML login page).
 </Note>
 
+**Verify:** `GET /api/v1/application/payment-products` returns `200`. Auth works.
+
 ---
 
-## Step 2: Enable a payment product
+## Step 2: Enable a payment product (once per account)
 
 ```bash
 # List available payment products
@@ -62,11 +69,49 @@ curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUN
   -H "Accept: application/json"
 ```
 
+Save `payment_product_id`. You need it for the TPA in step 4.
+
+→ [Payment product setup](/ems/payment-products-setup)
+
 ---
 
-## Step 3: Lookup company (optional but smart)
+## Step 3: Create a billing profile 🧾
 
-Before creating a TPA, check the public registry for signing combinations:
+The billing profile is the client's invoice profile **and** the switch that turns on products. The `product_*` flags decide which webhook events the client is allowed to subscribe to — so this must exist before the organization and the webhook.
+
+```bash
+curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/billings \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "name_display": "Acme AB",
+    "name_legal": "Acme AB",
+    "organization_number": "5561234567",
+    "country": "SE",
+    "email_invoice": "finance@acme.se",
+    "your_reference_invoice": "PO-12345",
+    "product_transaction": true,
+    "product_digital_receipt": false,
+    "product_aland_index": false
+  }'
+```
+
+Response → save `id` as **`billing_id`**.
+
+<Warning>
+  `product_transaction: true` is what allows `card_transaction_*` events on the webhook later. Creating a webhook with transaction events for an organization whose billing lacks this flag (or that has no `billing_id` at all) fails.
+</Warning>
+
+→ [Model: Billing](/ems/model/billing)
+
+---
+
+## Step 4: Create the TPA 📜
+
+TPA = Transaction Processing Authorisation. Legal permission for the client's transaction data to flow.
+
+First, check who may sign for the company (optional, but saves a round-trip with the client):
 
 ```bash
 curl "https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/publicrecords?country=SE&organization_number=5561234567" \
@@ -74,13 +119,9 @@ curl "https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/pu
   -H "Accept: application/json"
 ```
 
-Response includes `signature_combinations` — who can legally sign for this company. You'll add those people as TPA signatories next.
+Response includes `signature_combinations` — the people you'll add as signatories in step 5.
 
----
-
-## Step 4: Create TPA
-
-TPA = Transaction Processing Authorization. Legal permission for transaction data to flow.
+Then create the TPA:
 
 ```bash
 curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/tpas \
@@ -96,13 +137,6 @@ curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUN
   }'
 ```
 
-**What happens server-side:**
-
-1. Looks up company in the public registry (sandbox returns test data)
-2. Overrides `name` with registry name when found
-3. Creates the TPA record
-4. Snapshots legal text from the latest `tpa` template in the requested language
-
 **Org number formats:**
 
 | Country | Format | Example |
@@ -112,13 +146,13 @@ curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUN
 | 🇩🇰 DK | 8 digits | `12345678` |
 | 🇫🇮 FI | `XXXXXXX-X` | `1234567-8` |
 
-Response → save `tpaId`.
+Response → save `id` as **`tpa_id`**.
+
+→ [TPA flow](/ems/tpa-flow)
 
 ---
 
 ## Step 5: Add signatories → email goes out 📧
-
-Each signatory = someone authorized to sign for the company.
 
 ```bash
 curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/tpas/$TPA_ID/signatories \
@@ -131,40 +165,19 @@ curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUN
   }'
 ```
 
-**What happens:**
-1. Server generates a 40-char `token` for this signatory
-2. **Email is queued immediately** with subject: `Authorise TPA for Acme AB`
-3. Email contains signing link:
-
-```
-https://sandbox-api.opencard.io/accounts/{accountId}/tpas/{tpaId}/sign/{token}
-```
-
-4. Signatory clicks link → sees TPA legal text → signs with eID
-
-Repeat for each required signatory (check `signature_combinations` from step 3).
+The email is queued immediately with a signing link. Repeat for each signatory required by `signature_combinations`.
 
 <Warning>
   Signatories can only be updated/deleted while `signed=false`. Once signed, they're locked.
 </Warning>
 
-Full signing details → [TPA Flow](/ems/tpa-flow) and [eID Signing](/ems/eid-signing).
+Don't wait for the signature here — continue with steps 6 and 7 right away so the webhook is in place when `tpa.signed` fires.
 
 ---
 
-## Step 6: Wait for TPA to be signed ✍️
+## Step 6: Create the organization 🏢
 
-When all signatories have signed, OpenCard verifies signing rights and marks the TPA as signed.
-
-Then:
-- Signed PDF generated and stored
-- `tpa.signed` webhook fires (if subscribed)
-- TPA status → `pending-activation` (waiting for TPA to be confirmed)
-- Each signatory gets email with signed PDF attached
-
----
-
-## Step 7: Create organization
+The organization is the runtime container for the client. It links the TPA (legal) and the billing (products) together.
 
 ```bash
 curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/organizations \
@@ -174,17 +187,20 @@ curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUN
   -d '{
     "reference_id": "client_acme_001",
     "tpa_id": '"$TPA_ID"',
+    "billing_id": '"$BILLING_ID"',
     "name": "Acme AB"
   }'
 ```
 
 `reference_id` = **your** internal client ID. It comes back in every webhook.
 
-Save `organizationId`.
+Response → save `id` as **`organization_id`**.
+
+→ [Model: Organization](/ems/model/organization)
 
 ---
 
-## Step 8: Configure webhook 🔔
+## Step 7: Create the webhook 🔔
 
 ```bash
 curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/organizations/$ORG_ID/webhooks \
@@ -194,14 +210,13 @@ curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUN
   -d '{
     "url": "https://your-app.com/webhooks/opencard",
     "enabled": true,
+    "tpa_signed": true,
+    "card_holder_created": true,
+    "card_holder_identified": true,
+    "card_holder_signed_pdpc": true,
     "card_transaction_authorized": true,
     "card_transaction_cleared": true,
-    "card_transaction_deleted": true,
-    "card_holder_created": true,
-    "card_holder_signed_pdpc": true,
-    "receipt_fetched": true,
-    "transaction_true_vat": true,
-    "tpa_signed": true
+    "card_transaction_deleted": true
   }'
 ```
 
@@ -218,15 +233,33 @@ Your endpoint must respond with header:
 X-Verify-Token: HMAC-SHA256(challenge, webhook_secret)
 ```
 
-Until challenge passes, `active=false` and no events are delivered.
+**Verify:** `GET .../organizations/$ORG_ID/webhooks` shows `active: true`. Until then no events are delivered.
 
-Full webhook setup → [Webhook Setup](/ems/webhooks/setup)
+<Warning>
+  The webhook is not optional. Card holder lifecycle and PDPC signing write events to it — an organization without a webhook cannot complete PDPC signing. Create it now, before any card holder.
+</Warning>
+
+→ [Webhook setup](/ems/webhooks/setup)
+
+---
+
+## Step 8: TPA gets signed → your first webhook ✍️
+
+The signatory clicks the link from step 5, reads the TPA and signs with eID. When every required signatory has signed:
+
+- Signed PDF is generated and stored
+- **`tpa.signed` is POSTed to your webhook** — this is your first real event
+- TPA status → `pending-activation`, then `activated` once confirmed
+
+**Verify:** you received `X-Event: tpa.signed` with `organization.reference_id = client_acme_001`.
+
+→ [eID signing](/ems/eid-signing) · [Event reference](/ems/webhooks/events)
 
 ---
 
 ## Step 9: Create card holders 👤
 
-Two paths — pick one. Full guide → [Card Holder Onboarding](/ems/card-holders).
+Two paths — pick one. Full guide → [Card holder onboarding](/ems/card-holders).
 
 ### Path A: Email + eID (new employee)
 
@@ -237,12 +270,15 @@ curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUN
   -H "Accept: application/json" \
   -d '{
     "reference_id": "employee_john_42",
-    "email": "john@acme.se",
-    "language": "sv"
+    "email": "john@acme.se"
   }'
 ```
 
-John gets email → signs PDPC with eID → `card_holder.identified` → transactions flow.
+John gets an email → signs the PDPC with eID → `card_holder.identified` → transactions flow.
+
+<Note>
+  `language` is optional. If omitted, OpenCard picks the PDPC language from the TPA country and falls back to English where no translation exists.
+</Note>
 
 ### Path B: `identity_id` (instant — person already in OpenCard)
 
@@ -264,13 +300,15 @@ curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUN
   }'
 ```
 
-`card_holder.identified` fires instantly + retroactive transaction webhooks replay. No waiting for user action. ⚡
+`card_holder.identified` fires instantly + retroactive transaction webhooks replay. ⚡
+
+**Verify:** you received `X-Event: card_holder.identified`.
 
 ---
 
 ## Step 10: Receive your first transaction 🎉
 
-Once the issuer delivers transaction states and the cardholder has signed PDPC:
+Once the issuer delivers transaction states for an identified card holder:
 
 ```json
 // POST to your webhook URL
@@ -295,12 +333,30 @@ Once the issuer delivers transaction states and the cardholder has signed PDPC:
 }
 ```
 
+Nothing arriving yet? Fire a test event: `POST .../webhooks/{webhookId}/test/card.transaction.authorized`.
+
 **You did it.** From zero to live transaction data.
+
+---
+
+## Recap — what you stored
+
+| Variable | From step | Used in |
+|----------|-----------|---------|
+| `ACCOUNT_ID` | 0 | everything |
+| `TOKEN` | 1 | everything |
+| `payment_product_id` | 2 | TPA |
+| `BILLING_ID` | 3 | organization |
+| `TPA_ID` | 4 | signatories, organization |
+| `ORG_ID` | 6 | webhook, card holders |
+
+Repeat steps 3–9 for every new client. Steps 0–2 are once per account.
 
 ---
 
 ## What's next?
 
+- [Customer onboarding](/ems/customer-onboarding) — the same flow as a production integration guide, with API reference links
 - [Transaction states](/ems/webhooks/transactions) — how to handle authorized vs cleared vs deleted
 - [All webhook events](/ems/webhooks/events) — full payload reference
 - [Receipt enrichment](/ems/receipts) — digital receipts + true VAT

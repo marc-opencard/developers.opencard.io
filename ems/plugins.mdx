@@ -11,7 +11,7 @@ These are **optional UI helpers**. For the full API path (billing → TPA → or
 
 ## ocTPA — TPA onboarding wizard
 
-Self-service wizard that mirrors [customer onboarding Phase 1](/ems/customer-onboarding#phase-1--client-setup):
+Self-service wizard that mirrors [customer onboarding steps 1–4](/ems/customer-onboarding#step-by-step):
 
 1. Pick payment product (`GET .../payment-products` on the account)
 2. Pick add-ons (transactions + optional enrichment)
@@ -40,11 +40,17 @@ new ocTPA({
     // 1. POST /billings (data.billing) — includes product_* flags
     // 2. POST /tpas (data.tpa)
     // 3. POST /tpas/{id}/signatories for each in data.tpa_signatories
-    // Then: organization + webhook (your app), then card holders
+    // 4. POST /organizations (tpa_id + billing_id from steps 1–2)
+    // 5. POST /organizations/{id}/webhooks — REQUIRED before any card holder
+    // Then: card holders
     return true; // or error string
   }
 });
 ```
+
+<Warning>
+**The plugin stops at the TPA.** It never creates the organization or the webhook — there is nothing in the `onDataSend` payload for them, because the webhook URL is *your* endpoint, not client input. You must create both in your `onDataSend` handler (or immediately after) using the ids returned from the billing and TPA calls. A client with a TPA but no webhook will fail at PDPC signing. See [The order matters](/ems/customer-onboarding#the-order-matters).
+</Warning>
 
 ### `onDataSend` payload
 
