@@ -102,15 +102,15 @@ Sent after all required signatories have signed. Includes the signed PDF as Base
       "authorized": "When they occur",
       "cleared": "Not invoiced yet - First not invoiced transaction",
       "invoiced": "Invoiced - Next ordinary invoice date"
-    }
-  },
-  "system": {
-    "name_legal": "KwickExpense AB",
-    "name_system": "KwickExpense",
+    },
     "signatories": [
       { "name": "Magne, Johan Olof" },
       { "name": "McKenzie, Marc Andreas" }
     ]
+  },
+  "system": {
+    "name_legal": "KwickExpense AB",
+    "name_system": "KwickExpense"
   },
   "document": {
     "file_name": "TPA_20260414_OpenAPIInt.AB.pdf",
@@ -132,9 +132,9 @@ Sent after all required signatories have signed. Includes the signed PDF as Base
 | `party_information.organization_number` | Company registration number |
 | `party_information.validate_signatures` | Whether OpenCard expects you to treat signature validation as required on your side |
 | `party_information.processing_setup` | How transaction states should be produced for this customer (`authorized` / `cleared` / `invoiced`) |
+| `party_information.signatories` | People who signed the TPA for this customer |
 | `system.name_legal` | Legal name of the EMS that onboarded the customer |
 | `system.name_system` | System / brand name of that EMS |
-| `system.signatories` | People who signed the TPA |
 | `document.file_name` | Suggested filename for the archived PDF |
 | `document.mime_type` | Always `application/pdf` |
 | `document.content_base64` | Full signed TPA PDF, Base64-encoded |
