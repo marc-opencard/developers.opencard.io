@@ -114,9 +114,11 @@ Steps 0 is once per account. Steps 1–8 are repeated **per client**.
   <Step title="Create the organization">
     The runtime container for the client. Links the TPA (legal) and the billing (products) together, and carries your `reference_id` into every webhook.
 
-    `POST /accounts/{accountId}/organizations` with `reference_id`, `tpa_id`, `billing_id`
+    `POST /accounts/{accountId}/organizations` with `reference_id`, `tpa_id`, `billing_id`, and all three `process_card_type_*` flags set to `true`
 
     **Store:** `id` as `organization_id`.
+
+    **If the card type flags are left off:** they default to `false`, and no transactions are delivered for that organization.
 
     **If `billing_id` is skipped:** webhook creation with transaction events fails (see step 1).
 

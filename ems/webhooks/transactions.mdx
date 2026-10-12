@@ -104,9 +104,9 @@ Subscribe to `receipt_fetched`, `transaction_true_vat`, and `transaction_line_it
 
 | `card_type` | Meaning |
 |-------------|---------|
-| `corporate` | Company card, company pays |
-| `private` | Personal card |
-| `corporate_with_private_invoice` | Company card, employee reimbursed privately |
+| `corporate` | Corporate card with invoice to the company |
+| `corporate_with_private_invoice` | Corporate card with invoice to the card holder |
+| `private` | Private card with invoice to the card holder |
 
 ## Card funding
 
@@ -117,7 +117,7 @@ Subscribe to `receipt_fetched`, `transaction_true_vat`, and `transaction_line_it
 
 Present on **all** `card.transaction.*` states — same value for a given card across authorized / cleared / deleted / invoiced.
 
-Verify with your client which card types to include. Common setup: corporate only.
+Which of these you receive is set on the organization with `process_card_type_*`. Enable all three when you create the organization, then turn a type off if you do not want those transactions. → [Organization setup — card types](/ems/organization-setup#card-types)
 
 ---
 

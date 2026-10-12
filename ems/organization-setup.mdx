@@ -83,7 +83,10 @@ Scope: organizations-write
   "reference_id": "client_acme_001",
   "tpa_id": 42,
   "billing_id": 1,
-  "name": "Acme AB"
+  "name": "Acme AB",
+  "process_card_type_corporate": true,
+  "process_card_type_corporate_with_private_invoice": true,
+  "process_card_type_private": true
 }
 ```
 
@@ -93,8 +96,35 @@ Scope: organizations-write
 | `tpa_id` | From [TPA flow](/ems/tpa-flow). The TPA does not need to be signed yet |
 | `billing_id` | From step 1 |
 | `name` | Display name |
+| `process_card_type_corporate` | Corporate card with invoice to the company. Default `false` |
+| `process_card_type_corporate_with_private_invoice` | Corporate card with invoice to the card holder. Default `false` |
+| `process_card_type_private` | Private card with invoice to the card holder. Default `false` |
 
 Response → save `id` as **`organization_id`**.
+
+### Card types
+
+OpenCard sends transaction events only for the card types you turn on for this organization. A card of a type left at `false` produces no `card.transaction.*` events, and no enrichment on that transaction (receipts, true VAT, line items, Åland Index). Card holder events and `tpa.signed` are not filtered this way.
+
+| Flag | Card type |
+|------|-----------|
+| `process_card_type_corporate` | Corporate card with invoice to the company |
+| `process_card_type_corporate_with_private_invoice` | Corporate card with invoice to the card holder |
+| `process_card_type_private` | Private card with invoice to the card holder |
+
+All three default to `false`. **Set all three to `true` when you create the organization** so transactions start arriving. Turn a type off later with `PUT` if that client should not receive it.
+
+```
+PUT /accounts/{accountId}/organizations/{organizationId}
+```
+
+```json
+{
+  "process_card_type_corporate": true,
+  "process_card_type_corporate_with_private_invoice": false,
+  "process_card_type_private": false
+}
+```
 
 ### Already created an organization without `billing_id`?
 
@@ -168,7 +198,7 @@ API reference → [Create webhook](/api-reference/ems/webhooks/create-webhook) �
 
 And on the OpenCard side:
 
-- [ ] `GET .../organizations/{organizationId}` shows `tpa_id` and `billing_id` set
+- [ ] `GET .../organizations/{organizationId}` shows `tpa_id`, `billing_id`, and the card types you want as `true`
 - [ ] `GET .../organizations/{organizationId}/webhooks` shows one webhook with `active: true`
 
 Now you can add employees → [Card holder onboarding](/ems/card-holders). When the TPA is signed you will see it arrive as `tpa.signed` on the webhook you just created.
@@ -184,6 +214,7 @@ Now you can add employees → [Card holder onboarding](/ems/card-holders). When 
 | Webhook stays `active: false` | Challenge not answered correctly | Check `X-Verify-Token` = HMAC-SHA256 of the challenge string with the webhook `secret` |
 | Events arrive but you can't tell which client | `reference_id` on the organization is not your client ID | Set `reference_id` to your internal id when creating the organization |
 | No `tpa.signed` received | Webhook was created after the TPA was signed, or `tpa_signed: false` | Poll `GET .../tpas/{tpaId}` for `signed`; enable `tpa_signed` for future clients |
+| Webhook is `active` but no transactions arrive | The card's `process_card_type_*` flag is `false` — that is the default for all three | `PUT` the organization with the types you want. Start with all three `true` |
 
 ---
 

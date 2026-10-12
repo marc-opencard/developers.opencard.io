@@ -48,6 +48,9 @@ Organization
 | `tpa_id` | TPA on your account (signed and activated for live data) |
 | `billing_id` | Invoice line roll-up — see [Billing](/ems/model/billing) |
 | `name` | Display name |
+| `process_card_type_corporate` | Deliver transactions for corporate cards invoiced to the company. Default `false` |
+| `process_card_type_corporate_with_private_invoice` | Deliver transactions for corporate cards invoiced to the card holder. Default `false` |
+| `process_card_type_private` | Deliver transactions for private cards invoiced to the card holder. Default `false` |
 
 ---
 
@@ -63,9 +66,14 @@ Scope: organizations-write
   "reference_id": "client_acme_001",
   "tpa_id": 42,
   "billing_id": 1,
-  "name": "Acme AB"
+  "name": "Acme AB",
+  "process_card_type_corporate": true,
+  "process_card_type_corporate_with_private_invoice": true,
+  "process_card_type_private": true
 }
 ```
+
+Set all three `process_card_type_*` flags to `true` so transactions are delivered, then turn a type off if the client should not receive it. OpenCard only sends transaction events for the types that are on. → [Organization setup — card types](/ems/organization-setup#card-types)
 
 ```
 GET / PUT / DELETE .../organizations/{organizationId}
