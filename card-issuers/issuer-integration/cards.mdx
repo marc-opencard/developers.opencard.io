@@ -48,7 +48,8 @@ Scope: issuer-{slug}-cards-write
     "ssn_country_code": "SE",
     "name": "Test Testsson",
     "company_organization_number": "5555555555",
-    "company_country_code": "SE"
+    "company_country_code": "SE",
+    "employee_id": "001"
   }
 }
 ```
@@ -69,6 +70,7 @@ Scope: issuer-{slug}-cards-write
 | `identity.name` | ✅ | Cardholder display name |
 | `identity.company_organization_number` | ✅ | Customer company org number (buyer party) |
 | `identity.company_country_code` | ✅ | ISO 3166-1 alpha-2 |
+| `identity.employee_id` | | Optional employee number or id at the customer company |
 
 <Warning>
   `payment_product` must match a product the customer has signed a TPA for. Cards on a product without a signed TPA are stored but their transactions are **not** delivered to the EMS.

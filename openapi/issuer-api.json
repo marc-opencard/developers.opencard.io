@@ -189,7 +189,8 @@
                   "ssn_country_code": "SE",
                   "name": "Test Testsson",
                   "company_organization_number": "5555555555",
-                  "company_country_code": "SE"
+                  "company_country_code": "SE",
+                  "employee_id": "001"
                 }
               }
             }
@@ -333,7 +334,8 @@
                   "ssn_country_code": "SE",
                   "name": "Test Testsson",
                   "company_organization_number": "5555555555",
-                  "company_country_code": "SE"
+                  "company_country_code": "SE",
+                  "employee_id": "001"
                 }
               }
             }
@@ -631,6 +633,10 @@
           },
           "company_country_code": {
             "type": "string"
+          },
+          "employee_id": {
+            "type": "string",
+            "description": "Optional employee number or id at the customer company."
           }
         }
       },

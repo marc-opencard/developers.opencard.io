@@ -659,6 +659,7 @@ ISSUER_CARD = {
         "name": "Test Testsson",
         "company_organization_number": "5555555555",
         "company_country_code": "SE",
+        "employee_id": "001",
     },
 }
 
@@ -841,6 +842,10 @@ issuer_spec = {
                     "name": {"type": "string"},
                     "company_organization_number": {"type": "string"},
                     "company_country_code": {"type": "string"},
+                    "employee_id": {
+                        "type": "string",
+                        "description": "Optional employee number or id at the customer company.",
+                    },
                 },
             },
             "IssuerTransactionStateCreate": {
