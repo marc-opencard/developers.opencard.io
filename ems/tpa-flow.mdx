@@ -53,7 +53,7 @@ Scope: account-tpas-write
 | `name` | ✅ | Overwritten by registry name if found |
 | `country` | ✅ | `SE`, `DK`, `NO`, or `FI` only |
 | `organization_number` | ✅ | Format depends on country (see below) |
-| `language` | ❌ | `sv`, `no`, `da`, `en`, `fi`. Defaults from country |
+| `language` | ❌ | `sv` or `en`. If omitted, Sweden defaults to `sv`; Norway, Denmark, and Finland default to `en` |
 
 **Response `201`:**
 
@@ -148,7 +148,7 @@ Only `email` is required. `phone_number` is stored but not returned in API respo
    - **Subject:** `Authorise TPA for {tpaName}`
    - **Template:** TPA signing invitation
    - **Link:** `https://{env}/accounts/{accountId}/tpas/{tpaId}/sign/{token}`
-   - **Language:** English (hardcoded for signatory emails)
+   - **Language:** Swedish when the TPA country is Sweden, English otherwise
 
 The signatory does **not** need an OpenCard account. The token in the URL is their auth.
 

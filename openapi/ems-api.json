@@ -588,7 +588,7 @@
         ],
         "summary": "List identities on TPA",
         "operationId": "listTpaIdentities",
-        "description": "Physical persons linked to this TPA. Use `id` as `identity_id` for instant card holder onboarding.",
+        "description": "Physical persons already identified on this TPA.",
         "parameters": [
           {
             "$ref": "#/components/parameters/accountId"
@@ -1301,7 +1301,7 @@
         ],
         "summary": "Create card holder",
         "operationId": "createCardHolder",
-        "description": "Path A: `email` \u2192 PDPC email + eID. Path B: `identity_id` \u2192 instant, transactions flow immediately.",
+        "description": "Create a card holder with `email`. OpenCard sends a PDPC link. Transactions start after the person signs with eID (`card_holder.identified`).",
         "parameters": [
           {
             "$ref": "#/components/parameters/accountId"
@@ -1816,12 +1816,10 @@
           },
           "language": {
             "type": "string",
+            "description": "TPA legal text language. `sv` or `en`. If omitted, Sweden defaults to `sv`; other countries default to `en`.",
             "enum": [
               "sv",
-              "no",
-              "da",
-              "en",
-              "fi"
+              "en"
             ]
           }
         }
@@ -1868,17 +1866,16 @@
       "CardHolderCreate": {
         "type": "object",
         "required": [
-          "reference_id"
+          "reference_id",
+          "email"
         ],
         "properties": {
           "reference_id": {
             "type": "string"
           },
           "email": {
-            "type": "string"
-          },
-          "identity_id": {
-            "type": "integer"
+            "type": "string",
+            "description": "Where the PDPC signing link is sent"
           },
           "skip_pdpc_email": {
             "type": "boolean"

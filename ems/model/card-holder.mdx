@@ -16,8 +16,8 @@ You create the record via API. OpenCard links it to a real person (identity) and
 | **Who** | An employee or card user at your client's company |
 | **`reference_id`** | Your string ID for that person — in every webhook |
 | **`organization_id`** | Which client they belong to |
-| **`identity_id`** | Link to the person in OpenCard (after eID, or immediately on instant onboard) |
-| **PDPC** | Individual GDPR consent — required unless onboarded via `identity_id` |
+| **`identity_id`** | Link to the person in OpenCard, set after they sign with eID |
+| **PDPC** | Individual GDPR consent the person signs by email |
 
 A card holder is not the physical card. Cards are managed by the [card issuer](/ems/model/tpa) and appear on the identity once the TPA is activated.
 
@@ -25,10 +25,9 @@ A card holder is not the physical card. Cards are managed by the [card issuer](/
 
 ## When transactions start
 
-| Path | How | Transactions begin |
-|------|-----|-------------------|
-| 🅰️ Email + eID | You send `email`, user signs PDPC | After `card_holder.identified` |
-| 🅱️ `identity_id` | Person already known to OpenCard | Immediately on create |
+| How | Transactions begin |
+|-----|-------------------|
+| You send `email`, the person signs the PDPC with eID | After `card_holder.identified` |
 
 On identification, OpenCard replays transaction states since the latest card invoice for that person's cards, then continues in real time.
 
@@ -43,8 +42,8 @@ On identification, OpenCard replays transaction states since the latest card inv
 | `id` | OpenCard card holder ID |
 | `reference_id` | **Your** user ID (required, unique per organization) |
 | `organization_id` | Parent organization |
-| `identity_id` | Linked person (null until eID on Path 🅰️) |
-| `email` | For PDPC signing link (Path 🅰️) |
+| `identity_id` | Linked person (null until eID sign) |
+| `email` | Where the PDPC signing link is sent |
 | `meta.signed`, `meta.pdpc_url` | PDPC status and signing URL |
 
 ---
@@ -58,4 +57,4 @@ POST /accounts/{accountId}/organizations/{organizationId}/cardholders
 Scope: card-holders-write
 ```
 
-→ [Card holder onboarding — paths and API](/ems/card-holders) · [Current card issuer integration](/ems/current-card-issuer-integration)
+→ [Card holder onboarding](/ems/card-holders) · [Current card issuer integration](/ems/current-card-issuer-integration)

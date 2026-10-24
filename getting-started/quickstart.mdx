@@ -259,9 +259,7 @@ The signatory clicks the link from step 5, reads the TPA and signs with eID. Whe
 
 ## Step 9: Create card holders 👤
 
-Two paths — pick one. Full guide → [Card holder onboarding](/ems/card-holders).
-
-### Path A: Email + eID (new employee)
+One card holder per employee. Full guide → [Card holder onboarding](/ems/card-holders).
 
 ```bash
 curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/organizations/$ORG_ID/cardholders \
@@ -279,28 +277,6 @@ John gets an email → signs the PDPC with eID → `card_holder.identified` → 
 <Note>
   `language` is optional. If omitted, OpenCard picks the PDPC language from the TPA country and falls back to English where no translation exists.
 </Note>
-
-### Path B: `identity_id` (instant — person already in OpenCard)
-
-```bash
-# 1. List identities on the TPA (people who already have cards)
-curl "https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/tpas/$TPA_ID/identities?is_card_holder=false" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Accept: application/json"
-
-# 2. Create card holder with identity_id — transactions start immediately
-curl -X POST https://sandbox-api.opencard.io/api/v1/application/accounts/$ACCOUNT_ID/organizations/$ORG_ID/cardholders \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -H "Accept: application/json" \
-  -d '{
-    "reference_id": "employee_anna_07",
-    "identity_id": 123,
-    "skip_pdpc_email": true
-  }'
-```
-
-`card_holder.identified` fires instantly + retroactive transaction webhooks replay. ⚡
 
 **Verify:** you received `X-Event: card_holder.identified`.
 

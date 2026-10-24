@@ -146,13 +146,13 @@ Steps 0 is once per account. Steps 1–8 are repeated **per client**.
   </Step>
 
   <Step title="Create card holders">
-    One per employee. **Email path** sends a PDPC consent + eID; **instant path** links an existing `identity_id` with no user action.
+    One per employee. OpenCard emails a PDPC consent link; the person signs with eID.
 
     `POST /accounts/{accountId}/organizations/{organizationId}/cardholders`
 
     **Verify:** `card_holder.identified` arrives on your webhook. That is the signal that transactions are coming (including a retroactive batch).
 
-    → [Card holder onboarding](/ems/card-holders) · [Model: Card holder](/ems/model/card-holder) · API: [Create card holder](/api-reference/ems/card-holders/create-card-holder) · [List identities on TPA](/api-reference/ems/identities/list-identities-on-tpa)
+    → [Card holder onboarding](/ems/card-holders) · [Model: Card holder](/ems/model/card-holder) · API: [Create card holder](/api-reference/ems/card-holders/create-card-holder)
   </Step>
 </Steps>
 
@@ -195,6 +195,6 @@ Then, and only then: card holders.
 | [TPA flow](/ems/tpa-flow) | Create TPA, signatories, activation, signed PDF |
 | [Organization setup](/ems/organization-setup) | Billing, organization, webhook — the three calls every client needs before card holders |
 | [eID signing](/ems/eid-signing) | Sign vs auth modes across Nordic countries |
-| [Card holder onboarding](/ems/card-holders) | Email vs `identity_id`, webhooks, updates |
+| [Card holder onboarding](/ems/card-holders) | Email + eID, webhooks, updates |
 
 **Models:** [Billing](/ems/model/billing) · [Organization](/ems/model/organization) · [TPA](/ems/model/tpa) · [Card holder](/ems/model/card-holder)

@@ -1,29 +1,15 @@
 ---
 title: Card Holder Onboarding
-description: Onboard card holders to your EMS via two paths — email plus eID PDPC signing, or instant creation with identity_id for people already known to OpenCard.
+description: Onboard card holders to your EMS with email and eID PDPC signing. Transactions start after the person is identified.
 ---
 
 A **card holder** = one person in one organization whose card transactions you want in your EMS.
 
-There are **two ways** to create them. This is one of the most important decisions in your integration — pick based on whether the person already exists in OpenCard or not.
+Create the card holder with an email. OpenCard sends a PDPC link, the person signs with eID, and transactions start when identification completes.
 
 <Tip>
   Card holders come **after** client setup (billing, TPA, organization, webhook). See the [full onboarding flow](/ems/customer-onboarding) if you have not finished Phase 1 yet.
 </Tip>
-
----
-
-## At a glance
-
-| | 🅰️ Email + eID | 🅱️ `identity_id` (instant) |
-|---|----------------|---------------------------|
-| **Best for** | New employees, self-service | Person already known to OpenCard |
-| **You provide** | `email` | `identity_id` (from identities API) |
-| **User action** | Click email → sign PDPC with eID | None — instant |
-| **Transactions start** | After user completes eID | **Immediately** on create |
-| **Retroactive txs** | Yes, after eID sign | Yes, dispatched on create |
-| **Typical UX** | "Check your email to activate" | Bulk import from employee list |
-| **Client already has issuer feed?** | → [Current card issuer integration](/ems/current-card-issuer-integration) | Same |
 
 ```mermaid
 sequenceDiagram
@@ -38,25 +24,15 @@ sequenceDiagram
     OC->>You: card.transaction.*
 ```
 
-```mermaid
-sequenceDiagram
-    participant You as Your EMS
-    participant OC as OpenCard
-
-    You->>OC: GET .../tpas/{id}/identities
-    You->>OC: POST cardholder (identity_id)
-    OC->>You: card_holder.identified
-    OC->>You: Retroactive card.transaction.*
-    OC->>You: Ongoing card.transaction.*
-```
+<Note>
+  Client already receives transactions from the issuer another way? See [Current card issuer integration](/ems/current-card-issuer-integration).
+</Note>
 
 ---
 
-## Path 🅰️ — Email + eID (self-service)
+## Create
 
-Use when the person **doesn't exist in OpenCard yet** — typical for new employees joining a client.
-
-### Create
+Use this for every employee whose card spend should appear in your EMS.
 
 ```
 POST /accounts/{accountId}/organizations/{organizationId}/cardholders
@@ -73,8 +49,8 @@ Scope: card-holders-write
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| `reference_id` | ✅ | Your internal user ID |
-| `email` | ✅ | Where PDPC signing link is sent |
+| `reference_id` | ✅ | Your internal user ID. Unique within the organization |
+| `email` | ✅ | Where the PDPC signing link is sent |
 | `language` | ❌ | PDPC legal text: `sv`, `no`, `da`, `en`, `fi` |
 | `skip_pdpc_email` | ❌ | Default `false` — email is sent |
 
@@ -104,137 +80,14 @@ Full eID details → [eID Signing](/ems/eid-signing)
 
 ---
 
-## Path 🅱️ — `identity_id` (instant)
-
-Use when the person **already exists in OpenCard** on this TPA — e.g. they have corporate cards from the issuer, or were onboarded to another organization under the same TPA.
-
-An **identity** = a physical person (SSN-linked via eID). They may already have cards attached. You skip the email entirely and link directly.
-
-### Step 1: List identities on the TPA
-
-```
-GET /accounts/{accountId}/tpas/{tpaId}/identities
-Scope: account-tpa-identities-read
-```
-
-**Filter to people not yet in your org:**
-
-```
-GET .../identities?is_card_holder=false
-```
-
-| Query param | Values | Meaning |
-|-------------|--------|---------|
-| `is_card_holder` | `true` | Only identities that already have card holders |
-| `is_card_holder` | `false` | Only identities **without** card holders — good for finding who you still need to onboard |
-| *(omit)* | — | All identities on this TPA |
-
-**Response (per identity):**
-
-```json
-{
-  "id": 123,
-  "name": "Anna Andersson",
-  "employee_id": "001",
-  "cards": [
-    {
-      "id": 10,
-      "last_four": "1234",
-      "token": "ext-card-id-abc",
-      "type": "corporate"
-    }
-  ],
-  "card_holders": [
-    {
-      "id": 22,
-      "reference_id": "anna_other_org",
-      "organizations": { "id": 3, "name": "Acme Corp" }
-    }
-  ]
-}
-```
-
-| Field | What it tells you |
-|-------|-------------------|
-| `id` | **Use this as `identity_id`** when creating card holder |
-| `name` | Person's name from eID |
-| `employee_id` | Employee ID at client (if set) |
-| `cards` | Cards already linked to this person on this TPA |
-| `card_holders` | Existing card holder records (maybe in other orgs) |
-
-### Step 2: Create card holder with `identity_id`
-
-```json
-{
-  "reference_id": "employee_anna_07",
-  "identity_id": 123,
-  "skip_pdpc_email": true
-}
-```
-
-| Field | Required | Notes |
-|-------|----------|-------|
-| `reference_id` | ✅ | Your internal user ID |
-| `identity_id` | ✅ | From identities list. Must belong to same client as TPA. |
-| `email` | ❌ | Not needed when `identity_id` is set |
-| `skip_pdpc_email` | recommended `true` | Person already identified — no need for another email |
-
-### What happens
-
-1. Card holder created
-2. **Immediately linked** to existing identity → `identify()` called
-3. 🔔 `card_holder.identified` webhook fires **right away**
-4. 🚀 `SendRetroactiveWebhookEventsJob` dispatched — **all historical transaction states** for their cards on this TPA are replayed to your webhook
-5. New transactions flow in real time from this point
-
-### Timeline
-
-```
-You:  GET identities ──► POST cardholder with identity_id ──► txs flow ⚡ (same second)
-```
-
-<Warning>
-  The retroactive burst can be **large** — all transaction states since last invoice replay as webhooks. Make sure your handler can upsert by transaction `id` and handle the volume.
-</Warning>
-
-### Validation rules
-
-- `identity_id` must exist
-- Identity must belong to a **client linked to this TPA** — you can't use identities from a different client's TPA
-- Either `email` or `identity_id` required (not both required, but one must be present)
-- `reference_id` must be unique within the organization (create and update)
-
----
-
-## Which path should I use?
-
-Two ways to link a person in your EMS to card spend in OpenCard:
-
-| | 🅱️ Match on employee number | 🅰️ Email + eID |
-|--|------------------------------|----------------|
-| **How** | Map the issuer’s employee number to yours → create with `identity_id` | Create with `email` + your `reference_id` |
-| **User action** | None | Opens OpenCard email and identifies with **eID** |
-| **You need** | An up-to-date employee register in **both** places (issuer + your EMS) | A working email address for the person |
-| **Transactions** | Start as soon as you create the card holder | Start only **after** they complete eID |
-
-**Choose 🅱️** when you can reliably match people across systems — bulk onboard, no inbox friction, but the two registers must stay in sync.
-
-**Choose 🅰️** when you want the person to prove who they are before you receive their transactions — self-service activate flows, new hires without a shared employee id, or when you don’t maintain dual registers.
-
----
-
-<Note>
-  Client already receives transactions from the issuer another way? See [Current card issuer integration](/ems/current-card-issuer-integration).
-</Note>
-
 ## Webhooks to handle
 
-| Event | Path 🅰️ | Path 🅱️ |
-|-------|---------|---------|
-| `card_holder.created` | ✅ on create | ✅ on create |
-| `card_holder.identified` | ✅ after eID sign | ✅ **immediately** on create |
-| `card_holder.signed.pdpc` | ✅ after eID sign | May not fire (already identified) |
-| `card.transaction.*` | After identified | **Immediately** (+ retroactive batch) |
+| Event | When |
+|-------|------|
+| `card_holder.created` | On create |
+| `card_holder.identified` | After eID sign — transactions start, including the retroactive batch |
+| `card_holder.signed.pdpc` | After eID sign |
+| `card.transaction.*` | After identified |
 
 **Your integration should key off `card_holder.identified`** as the moment transactions are expected.
 
@@ -251,7 +104,7 @@ Scope: card-holders-write (PUT), card-holders-delete (DELETE)
 
 ### Update
 
-`reference_id` is **required**. `email` is **optional** — omit it to keep the current value (including `null` for identity-linked holders without email).
+`reference_id` is **required**. `email` is **optional** — omit it to keep the current value.
 
 **Change reference ID only** (no PDPC email if already identified / no email on record):
 
@@ -291,7 +144,7 @@ GET /accounts/{accountId}/organizations/{organizationId}/cardholders
 Scope: card-holders-read
 ```
 
-Supports the same filters as before (`q`, `reference_id`, `where_ssn_set`, `where_signed_pdpc`, `where_email_delivered`).
+Supports filters `q`, `reference_id`, `where_ssn_set`, `where_signed_pdpc`, `where_email_delivered`.
 
 **Response (per item):**
 
@@ -322,13 +175,13 @@ Supports the same filters as before (`q`, `reference_id`, `where_ssn_set`, `wher
 
 | Field | What it tells you |
 |-------|-------------------|
-| `identity_id` | OpenCard identity ID when linked (null before eID sign on Path 🅰️) |
+| `identity_id` | OpenCard identity ID when linked (null before eID sign) |
 | `identity.name` | Person name from eID — use for display in your UI |
 | `identity.employee_id` | Employee ID on the TPA client (if set on `client_identity`) |
 | `identity` | `null` when not yet linked to an identity |
 
 <Tip>
-  You no longer need a separate `GET .../tpas/{tpaId}/identities` call just to show names in a card holder list — read `identity` from this endpoint. Keep the identities endpoint for Path 🅱️ onboarding (finding `identity_id` to create with).
+  Names for a card holder list come from this endpoint — read `identity`. You do not need a separate `GET .../tpas/{tpaId}/identities` call for that.
 </Tip>
 
 ---
