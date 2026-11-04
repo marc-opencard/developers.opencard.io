@@ -16,15 +16,16 @@ This API is for **EMS integrators**. You manage clients, legal signing, card hol
 
 | Area | Endpoints |
 |------|-----------|
-| Account | Get/update your account |
-| OAuth Clients | Create API credentials |
+| Account | Get and update your account |
+| OAuth Clients | Create, list, get, update, and regenerate the secret |
 | Public Records | Company lookup before TPA |
+| Billings | Create, list, get, and update billing profiles |
 | Payment Products | Catalog of cards → enable on your account |
-| TPAs + Signatories | Legal authorization flow |
+| TPAs + Signatories | Create, list, get, delete, download the signed PDF, add, update, and remove signatories |
 | Identities | People already identified on a TPA |
-| Organizations | Your end-clients |
-| Card Holders | List (with `identity.name` / `employee_id`), onboard employees with email and eID |
-| Webhooks | Receive transaction events |
+| Organizations | List, get, create, update, and delete your end-clients |
+| Card Holders | List (with `identity.name` / `employee_id`), onboard employees with email and eID, update, and delete |
+| Webhooks | Create, update, custom headers, buyer-party groups, test events, and the delivery log |
 | Receipt Scanner | OCR photo receipts |
 
 ## What's NOT here

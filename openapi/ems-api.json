@@ -201,6 +201,180 @@
         ]
       }
     },
+    "/accounts/{accountId}/oauthclients/{oauthClientId}": {
+      "get": {
+        "tags": [
+          "OAuth Clients"
+        ],
+        "summary": "Get OAuth client",
+        "operationId": "getOAuthClient",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "oauthClientId",
+            "in": "path",
+            "required": true,
+            "description": "OAuth client ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OAuth client. `secret` is null \u2014 the plaintext secret is only returned on create and regenerate.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 2,
+                  "name": "Production EMS",
+                  "organization_id": null,
+                  "revoked": false,
+                  "scopes": [
+                    {
+                      "id": 10,
+                      "scope": "organizations-read"
+                    }
+                  ],
+                  "secret": null
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "oauth-clients-read"
+            ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "OAuth Clients"
+        ],
+        "summary": "Update OAuth client",
+        "operationId": "updateOAuthClient",
+        "description": "Update `name` and replace `scopes`. `organization_id` and `secret` cannot be changed here \u2014 regenerate the secret with the dedicated endpoint.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "oauthClientId",
+            "in": "path",
+            "required": true,
+            "description": "OAuth client ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OAuthClientUpdate"
+              },
+              "example": {
+                "name": "Production EMS",
+                "scopes": [
+                  "organizations-read",
+                  "organizations-write",
+                  "webhooks-write"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated OAuth client",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 2,
+                  "name": "Production EMS",
+                  "organization_id": null,
+                  "revoked": false,
+                  "scopes": [
+                    {
+                      "id": 10,
+                      "scope": "organizations-read"
+                    }
+                  ],
+                  "secret": null
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "oauth-clients-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/oauthclients/{oauthClientId}/regenerate-secret": {
+      "post": {
+        "tags": [
+          "OAuth Clients"
+        ],
+        "summary": "Regenerate OAuth client secret",
+        "operationId": "regenerateOAuthClientSecret",
+        "description": "Returns a new plaintext `secret` once. The previous secret stops working immediately.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "oauthClientId",
+            "in": "path",
+            "required": true,
+            "description": "OAuth client ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "New secret",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 2,
+                  "name": "Production EMS",
+                  "organization_id": null,
+                  "revoked": false,
+                  "scopes": [
+                    {
+                      "id": 10,
+                      "scope": "organizations-read"
+                    }
+                  ],
+                  "secret": "plain-text-secret-shown-once"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "oauth-clients-write"
+            ]
+          }
+        ]
+      }
+    },
     "/accounts/{accountId}/publicrecords": {
       "get": {
         "tags": [
@@ -467,6 +641,53 @@
         ]
       }
     },
+    "/accounts/{accountId}/tpas/{tpaId}/signeddocuments": {
+      "get": {
+        "tags": [
+          "TPAs"
+        ],
+        "summary": "Download signed TPA PDF",
+        "operationId": "getTpaSignedDocument",
+        "description": "The signed PDF generated after all required signatories have signed.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "tpaId",
+            "in": "path",
+            "required": true,
+            "description": "TPA ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signed PDF",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "TPA or signed document not found"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpas-read"
+            ]
+          }
+        ]
+      }
+    },
     "/accounts/{accountId}/tpas/{tpaId}/signatories": {
       "get": {
         "tags": [
@@ -576,6 +797,130 @@
           {
             "opencard_auth": [
               "account-tpa-signatories-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/tpas/{tpaId}/signatories/{tpaSignatoryId}": {
+      "put": {
+        "tags": [
+          "TPA Signatories"
+        ],
+        "summary": "Update signatory",
+        "operationId": "updateTpaSignatory",
+        "description": "Only while `signed` is false. Changing the signatory resends the signing email.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "tpaId",
+            "in": "path",
+            "required": true,
+            "description": "TPA ID",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "tpaSignatoryId",
+            "in": "path",
+            "required": true,
+            "description": "Signatory ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TpaSignatoryCreate"
+              },
+              "example": {
+                "email": "ceo@acme.se",
+                "name": "Anna Andersson"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Updated signatory. Signing email resent.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 7,
+                  "email": "ceo@acme.se",
+                  "name": "Anna Andersson",
+                  "tpa_id": 42,
+                  "signed": false,
+                  "signed_at": null
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Signatory has already signed",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Signatory has already signed"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpa-signatories-write"
+            ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "TPA Signatories"
+        ],
+        "summary": "Delete signatory",
+        "operationId": "deleteTpaSignatory",
+        "description": "Only an unsigned signatory can be removed.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "tpaId",
+            "in": "path",
+            "required": true,
+            "description": "TPA ID",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "tpaSignatoryId",
+            "in": "path",
+            "required": true,
+            "description": "Signatory ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "account-tpa-signatories-delete"
             ]
           }
         ]
@@ -692,6 +1037,191 @@
                   "id": 1,
                   "name_display": "Acme AB",
                   "product_transaction": true
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "billings-write"
+            ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Billings"
+        ],
+        "summary": "List billing profiles",
+        "operationId": "listBillings",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Billing profiles",
+            "content": {
+              "application/json": {
+                "example": {
+                  "current_page": 1,
+                  "data": [
+                    {
+                      "id": 1,
+                      "name_display": "Acme AB",
+                      "name_legal": "Acme AB",
+                      "organization_number": "5561234567",
+                      "country": "SE",
+                      "address_street": "Storgatan 1",
+                      "address_city": "Stockholm",
+                      "address_zip": "111 22",
+                      "email_invoice": "finance@acme.se",
+                      "your_reference_invoice": "PO-12345",
+                      "product_transaction": true,
+                      "product_digital_receipt": false,
+                      "product_aland_index": false
+                    }
+                  ],
+                  "per_page": 15,
+                  "total": 1,
+                  "last_page": 1
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "billings-read"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/billings/{billingId}": {
+      "get": {
+        "tags": [
+          "Billings"
+        ],
+        "summary": "Get billing profile",
+        "operationId": "getBilling",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "billingId",
+            "in": "path",
+            "required": true,
+            "description": "Billing profile ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Billing profile",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 1,
+                  "name_display": "Acme AB",
+                  "name_legal": "Acme AB",
+                  "organization_number": "5561234567",
+                  "country": "SE",
+                  "address_street": "Storgatan 1",
+                  "address_city": "Stockholm",
+                  "address_zip": "111 22",
+                  "email_invoice": "finance@acme.se",
+                  "your_reference_invoice": "PO-12345",
+                  "product_transaction": true,
+                  "product_digital_receipt": false,
+                  "product_aland_index": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "billings-read"
+            ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Billings"
+        ],
+        "summary": "Update billing profile",
+        "operationId": "updateBilling",
+        "description": "Same fields as create. Turning a product flag off returns 400 when an organization on this billing still has a webhook that needs it: `product_transaction` for `card_transaction_*`, `product_digital_receipt` for `receipt_fetched` and `transaction_true_vat`, `product_aland_index` for `aland_index`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "name": "billingId",
+            "in": "path",
+            "required": true,
+            "description": "Billing profile ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BillingUpdate"
+              },
+              "example": {
+                "email_invoice": "finance@acme.se",
+                "product_transaction": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated billing profile",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 1,
+                  "name_display": "Acme AB",
+                  "name_legal": "Acme AB",
+                  "organization_number": "5561234567",
+                  "country": "SE",
+                  "address_street": "Storgatan 1",
+                  "address_city": "Stockholm",
+                  "address_zip": "111 22",
+                  "email_invoice": "finance@acme.se",
+                  "your_reference_invoice": "PO-12345",
+                  "product_transaction": true,
+                  "product_digital_receipt": false,
+                  "product_aland_index": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A product flag is still required by a linked organization's webhook",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Billing product transaction is required in one or more organizations"
                 }
               }
             }
@@ -1207,6 +1737,92 @@
             ]
           }
         ]
+      },
+      "put": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "Update organization",
+        "operationId": "updateOrganization",
+        "description": "Update `reference_id`, `name`, `tpa_id`, `billing_id`, or the card-type flags. The response does not include `billing_id` \u2014 read it back with GET.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrganizationUpdate"
+              },
+              "example": {
+                "billing_id": 1,
+                "process_card_type_corporate": true,
+                "process_card_type_corporate_with_private_invoice": false,
+                "process_card_type_private": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated organization",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 3,
+                  "reference_id": "client_acme_001",
+                  "tpa_id": 42,
+                  "account_id": 1,
+                  "name": "Acme AB",
+                  "process_card_type_corporate": true,
+                  "process_card_type_corporate_with_private_invoice": false,
+                  "process_card_type_private": false
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "organizations-write"
+            ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "Delete organization",
+        "operationId": "deleteOrganization",
+        "description": "Deletes the organization and cascades its webhooks and card holders.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "organizations-delete"
+            ]
+          }
+        ]
       }
     },
     "/accounts/{accountId}/organizations/{organizationId}/cardholders": {
@@ -1602,6 +2218,625 @@
         ]
       }
     },
+    "/accounts/{accountId}/organizations/{organizationId}/webhooks/{webhookId}": {
+      "get": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Get webhook",
+        "operationId": "getWebhook",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 5,
+                  "organization_id": 3,
+                  "url": "https://your-app.com/hooks/opencard",
+                  "active": true,
+                  "enabled": true,
+                  "card_transaction_authorized": true,
+                  "card_transaction_cleared": true,
+                  "card_transaction_deleted": true,
+                  "receipt_fetched": true
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhooks-read"
+            ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Update webhook",
+        "operationId": "updateWebhook",
+        "description": "Same body as create. Changing `url` runs the challenge handshake again.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookCreate"
+              },
+              "example": {
+                "url": "https://your-app.com/hooks/opencard",
+                "card_transaction_cleared": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Updated webhook",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 5,
+                  "organization_id": 3,
+                  "url": "https://your-app.com/hooks/opencard",
+                  "active": true,
+                  "enabled": true,
+                  "card_transaction_authorized": true,
+                  "card_transaction_cleared": true,
+                  "card_transaction_deleted": true,
+                  "receipt_fetched": true
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhooks-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations/{organizationId}/webhooks/{webhookId}/test/{event}": {
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Send a test event",
+        "operationId": "testWebhook",
+        "description": "Posts a sample payload for `event` to the webhook URL. The webhook must already be `active`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "event",
+            "in": "path",
+            "required": true,
+            "description": "Event name, for example `card.transaction.authorized`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test event queued"
+          },
+          "400": {
+            "description": "Webhook is not active, or the event name is unknown"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhooks-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations/{organizationId}/webhooks/{webhookId}/headers": {
+      "get": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "List webhook headers",
+        "operationId": "listWebhookHeaders",
+        "description": "Extra headers OpenCard sends on every delivery to this webhook.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Headers",
+            "content": {
+              "application/json": {
+                "example": {
+                  "current_page": 1,
+                  "data": [
+                    {
+                      "id": 9,
+                      "webhook_id": 5,
+                      "key": "X-My-App-Id",
+                      "value": "ems-prod-001"
+                    }
+                  ],
+                  "per_page": 15,
+                  "total": 1,
+                  "last_page": 1
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhook-headers-read"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Add webhook header",
+        "operationId": "createWebhookHeader",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookHeaderWrite"
+              },
+              "example": {
+                "key": "X-My-App-Id",
+                "value": "ems-prod-001"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Header created",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 9,
+                  "webhook_id": 5,
+                  "key": "X-My-App-Id",
+                  "value": "ems-prod-001"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhook-headers-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations/{organizationId}/webhooks/{webhookId}/headers/{headerId}": {
+      "get": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Get webhook header",
+        "operationId": "getWebhookHeader",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "headerId",
+            "in": "path",
+            "required": true,
+            "description": "Header ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Header",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 9,
+                  "webhook_id": 5,
+                  "key": "X-My-App-Id",
+                  "value": "ems-prod-001"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhook-headers-read"
+            ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Update webhook header",
+        "operationId": "updateWebhookHeader",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "headerId",
+            "in": "path",
+            "required": true,
+            "description": "Header ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookHeaderWrite"
+              },
+              "example": {
+                "key": "X-My-App-Id",
+                "value": "ems-prod-001"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated header",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 9,
+                  "webhook_id": 5,
+                  "key": "X-My-App-Id",
+                  "value": "ems-prod-001"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhook-headers-write"
+            ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Delete webhook header",
+        "operationId": "deleteWebhookHeader",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "headerId",
+            "in": "path",
+            "required": true,
+            "description": "Header ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhook-headers-delete"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations/{organizationId}/webhooks/{webhookId}/groups": {
+      "get": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "List webhook groups",
+        "operationId": "listWebhookGroups",
+        "description": "Buyer-party filters. When groups exist, only matching transactions are delivered to this webhook.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Groups",
+            "content": {
+              "application/json": {
+                "example": {
+                  "current_page": 1,
+                  "data": [
+                    {
+                      "id": 4,
+                      "webhook_id": 5,
+                      "buyer_party_sub_id": "5561234567"
+                    }
+                  ],
+                  "per_page": 15,
+                  "total": 1,
+                  "last_page": 1
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhook-groups-read"
+            ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Add webhook group",
+        "operationId": "createWebhookGroup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookGroupCreate"
+              },
+              "example": {
+                "buyer_party_sub_id": "5561234567"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Group created",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 4,
+                  "webhook_id": 5,
+                  "buyer_party_sub_id": "5561234567"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhook-groups-write"
+            ]
+          }
+        ]
+      }
+    },
+    "/accounts/{accountId}/organizations/{organizationId}/webhooks/{webhookId}/groups/{groupId}": {
+      "delete": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Delete webhook group",
+        "operationId": "deleteWebhookGroup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/accountId"
+          },
+          {
+            "$ref": "#/components/parameters/organizationId"
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "description": "Webhook ID",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "description": "Group ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          }
+        },
+        "security": [
+          {
+            "opencard_auth": [
+              "webhook-groups-delete"
+            ]
+          }
+        ]
+      }
+    },
     "/accounts/{accountId}/organizations/{organizationId}/webhooks/{webhookId}/events": {
       "get": {
         "tags": [
@@ -1739,26 +2974,35 @@
               "accounts-read": "Read your account",
               "accounts-write": "Update your account",
               "oauth-clients-read": "Read OAuth clients",
-              "oauth-clients-write": "Create OAuth clients",
+              "oauth-clients-write": "Create and update OAuth clients",
               "public-records-read": "Company registry lookup",
               "account-tpas-read": "Read TPAs",
               "account-tpas-write": "Create TPAs",
               "account-tpas-delete": "Delete TPAs",
               "account-tpa-signatories-read": "Read TPA signatories",
               "account-tpa-signatories-write": "Add TPA signatories",
+              "account-tpa-signatories-delete": "Delete TPA signatories",
               "account-tpa-identities-read": "List identities on TPA",
-              "billings-write": "Create billing profiles",
+              "billings-read": "Read billing profiles",
+              "billings-write": "Create and update billing profiles",
               "payment-products-read": "List available payment products (catalog)",
               "account-payment-products-read": "List enabled payment products",
               "account-payment-products-write": "Enable and disable payment products",
               "organizations-read": "Read organizations",
-              "organizations-write": "Create organizations",
+              "organizations-write": "Create and update organizations",
+              "organizations-delete": "Delete organizations",
               "card-holders-read": "Read card holders",
               "card-holders-write": "Create and update card holders",
               "card-holders-delete": "Delete card holders",
               "webhooks-read": "Read webhooks",
-              "webhooks-write": "Create webhooks",
+              "webhooks-write": "Create and update webhooks",
               "webhook-events-read": "Read webhook delivery log",
+              "webhook-headers-read": "Read custom webhook headers",
+              "webhook-headers-write": "Create and update custom webhook headers",
+              "webhook-headers-delete": "Delete custom webhook headers",
+              "webhook-groups-read": "Read webhook buyer-party filters",
+              "webhook-groups-write": "Create webhook buyer-party filters",
+              "webhook-groups-delete": "Delete webhook buyer-party filters",
               "receipts-write": "Scan receipts (OCR)"
             }
           }
@@ -2161,6 +3405,131 @@
           },
           "transaction_true_vat": {
             "type": "boolean"
+          }
+        }
+      },
+      "BillingUpdate": {
+        "type": "object",
+        "description": "Fields to change. Omit a field to leave it unchanged.",
+        "properties": {
+          "name_display": {
+            "type": "string"
+          },
+          "name_legal": {
+            "type": "string"
+          },
+          "organization_number": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string",
+            "enum": [
+              "SE",
+              "DK",
+              "NO",
+              "FI"
+            ]
+          },
+          "address_street": {
+            "type": "string"
+          },
+          "address_city": {
+            "type": "string"
+          },
+          "address_zip": {
+            "type": "string"
+          },
+          "email_invoice": {
+            "type": "string",
+            "description": "Where the OpenCard invoice is sent"
+          },
+          "your_reference_invoice": {
+            "type": "string",
+            "description": "Your reference printed on the invoice"
+          },
+          "product_transaction": {
+            "type": "boolean",
+            "description": "Enables `card_transaction_*` webhook events on organizations linked to this billing"
+          },
+          "product_digital_receipt": {
+            "type": "boolean",
+            "description": "Enables `receipt_fetched` and `transaction_true_vat` webhook events"
+          },
+          "product_aland_index": {
+            "type": "boolean",
+            "description": "Enables the `aland_index` webhook event"
+          }
+        }
+      },
+      "OrganizationUpdate": {
+        "type": "object",
+        "description": "Fields to change. Omit a field to leave it unchanged.",
+        "properties": {
+          "reference_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "tpa_id": {
+            "type": "integer"
+          },
+          "billing_id": {
+            "type": "integer"
+          },
+          "process_card_type_corporate": {
+            "type": "boolean",
+            "description": "Deliver transactions for corporate cards invoiced to the company"
+          },
+          "process_card_type_corporate_with_private_invoice": {
+            "type": "boolean",
+            "description": "Deliver transactions for corporate cards invoiced to the card holder"
+          },
+          "process_card_type_private": {
+            "type": "boolean",
+            "description": "Deliver transactions for private cards invoiced to the card holder"
+          }
+        }
+      },
+      "OAuthClientUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Replaces the client's scopes when present"
+          }
+        }
+      },
+      "WebhookHeaderWrite": {
+        "type": "object",
+        "required": [
+          "key",
+          "value"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
+      "WebhookGroupCreate": {
+        "type": "object",
+        "required": [
+          "buyer_party_sub_id"
+        ],
+        "properties": {
+          "buyer_party_sub_id": {
+            "type": "string",
+            "description": "Buyer party (organization number) this webhook should receive transactions for"
           }
         }
       }
