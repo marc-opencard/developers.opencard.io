@@ -13,15 +13,58 @@ Scope: receipts-write
 ```json
 {
   "receipt": "base64_encoded_image_here",
-  "include": "line_items,environmental_impact"
+  "include": "line_items,vat_rates,environmental_impact"
 }
 ```
 
 | Field | Notes |
 |-------|-------|
 | `receipt` | Base64 image. Recommended width ~800px. |
-| `include` | Optional. Comma-separated string, not an array: `line_items`, `environmental_impact` |
+| `include` | Optional. Comma-separated string, not an array: `line_items`, `vat_rates`, `environmental_impact` |
 
-Returns structured OCR data — merchant, amounts, dates, line items, optional CO₂ estimate.
+Returns structured OCR data — merchant, amounts, date, and the extras you asked for in `include`.
+
+```json
+{
+  "total_amount": 109.38,
+  "net_amount": 97.66,
+  "total_vat_amount": 11.72,
+  "currency": "SEK",
+  "purchase_merchant": "ICA",
+  "purchase_date": "2026-11-10",
+  "line_items": [
+    {
+      "description": "Coffee",
+      "quantity": 1,
+      "amount": 109.38,
+      "total_amount": 109.38,
+      "currency": "SEK"
+    }
+  ],
+  "vat_rates": [
+    {
+      "vat_amount": 11.72,
+      "taxable_amount": 97.66,
+      "total_amount": 109.38,
+      "percentage": 12,
+      "currency": "SEK"
+    }
+  ],
+  "environmental_impact": {
+    "provider": "aland_index",
+    "merchant_category_code": "5411",
+    "carbon_emission_in_grams": 0.66,
+    "carbon_social_cost_amount": 2.1,
+    "carbon_social_cost_currency": "SEK"
+  }
+}
+```
+
+| Field | Notes |
+|-------|-------|
+| `total_amount`, `net_amount`, `total_vat_amount`, `currency`, `purchase_merchant`, `purchase_date` | Always returned. `null` when the value could not be read from the receipt. |
+| `line_items` | Only with `include=line_items`. `null` when no lines were found. |
+| `vat_rates` | Only with `include=vat_rates`. One entry per VAT rate on the receipt. `null` when none were found. |
+| `environmental_impact` | Only with `include=environmental_impact`. Left out when the merchant category could not be determined. |
 
 Use case: employee uploads photo of paper receipt in your expense app → you call this API → get structured data back instantly. 📸

@@ -398,9 +398,14 @@ op(ems_paths, "get", f"{wh}/{{webhookId}}/events", tag="Webhooks", summary="Deli
 # Receipt scan
 op(ems_paths, "post", "/accounts/{accountId}/receipts/scan", tag="Receipt Scanner", summary="OCR scan receipt",
    operation_id="scanReceipt", scope="receipts-write", params=[ACCOUNT_ID],
-   body=json_body({"type": "object", "required": ["receipt"], "properties": {"receipt": {"type": "string"}, "include": {"type": "string", "description": "Comma-separated list of extras to include: line_items, environmental_impact"}}},
-                  example={"receipt": "base64-image...", "include": "line_items"}),
-   responses=json_resp("200", "OCR result", example={"merchant": "ICA", "total_amount": 109.38, "currency": "SEK", "line_items": [{"description": "Coffee", "amount": 45}]}))
+   body=json_body({"type": "object", "required": ["receipt"], "properties": {"receipt": {"type": "string"}, "include": {"type": "string", "description": "Comma-separated list of extras to include: line_items, vat_rates, environmental_impact"}}},
+                  example={"receipt": "base64-image...", "include": "line_items,vat_rates"}),
+   responses=json_resp("200", "OCR result", example={
+       "total_amount": 109.38, "net_amount": 97.66, "total_vat_amount": 11.72, "currency": "SEK",
+       "purchase_merchant": "ICA", "purchase_date": "2026-11-10",
+       "line_items": [{"description": "Coffee", "quantity": 1, "amount": 109.38, "total_amount": 109.38, "currency": "SEK"}],
+       "vat_rates": [{"vat_amount": 11.72, "taxable_amount": 97.66, "total_amount": 109.38, "percentage": 12, "currency": "SEK"}],
+   }))
 
 EMS_SCOPES = {
     "accounts-read": "Read your account",

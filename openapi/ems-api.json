@@ -2918,13 +2918,13 @@
                   },
                   "include": {
                     "type": "string",
-                    "description": "Comma-separated list of extras to include: line_items, environmental_impact"
+                    "description": "Comma-separated list of extras to include: line_items, vat_rates, environmental_impact"
                   }
                 }
               },
               "example": {
                 "receipt": "base64-image...",
-                "include": "line_items"
+                "include": "line_items,vat_rates"
               }
             }
           }
@@ -2935,13 +2935,28 @@
             "content": {
               "application/json": {
                 "example": {
-                  "merchant": "ICA",
                   "total_amount": 109.38,
+                  "net_amount": 97.66,
+                  "total_vat_amount": 11.72,
                   "currency": "SEK",
+                  "purchase_merchant": "ICA",
+                  "purchase_date": "2026-11-10",
                   "line_items": [
                     {
                       "description": "Coffee",
-                      "amount": 45
+                      "quantity": 1,
+                      "amount": 109.38,
+                      "total_amount": 109.38,
+                      "currency": "SEK"
+                    }
+                  ],
+                  "vat_rates": [
+                    {
+                      "vat_amount": 11.72,
+                      "taxable_amount": 97.66,
+                      "total_amount": 109.38,
+                      "percentage": 12,
+                      "currency": "SEK"
                     }
                   ]
                 }
