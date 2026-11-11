@@ -13,14 +13,14 @@ Scope: receipts-write
 ```json
 {
   "receipt": "base64_encoded_image_here",
-  "include": ["line_items", "environmental_impact"]
+  "include": "line_items,environmental_impact"
 }
 ```
 
 | Field | Notes |
 |-------|-------|
 | `receipt` | Base64 image. Recommended width ~800px. |
-| `include` | Optional: `line_items`, `environmental_impact` |
+| `include` | Optional. Comma-separated string, not an array: `line_items`, `environmental_impact` |
 
 Returns structured OCR data — merchant, amounts, dates, line items, optional CO₂ estimate.
 

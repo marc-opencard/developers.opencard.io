@@ -398,8 +398,8 @@ op(ems_paths, "get", f"{wh}/{{webhookId}}/events", tag="Webhooks", summary="Deli
 # Receipt scan
 op(ems_paths, "post", "/accounts/{accountId}/receipts/scan", tag="Receipt Scanner", summary="OCR scan receipt",
    operation_id="scanReceipt", scope="receipts-write", params=[ACCOUNT_ID],
-   body=json_body({"type": "object", "required": ["receipt"], "properties": {"receipt": {"type": "string"}, "include": {"type": "array", "items": {"type": "string"}}}},
-                  example={"receipt": "base64-image...", "include": ["line_items"]}),
+   body=json_body({"type": "object", "required": ["receipt"], "properties": {"receipt": {"type": "string"}, "include": {"type": "string", "description": "Comma-separated list of extras to include: line_items, environmental_impact"}}},
+                  example={"receipt": "base64-image...", "include": "line_items"}),
    responses=json_resp("200", "OCR result", example={"merchant": "ICA", "total_amount": 109.38, "currency": "SEK", "line_items": [{"description": "Coffee", "amount": 45}]}))
 
 EMS_SCOPES = {

@@ -2917,18 +2917,14 @@
                     "type": "string"
                   },
                   "include": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    "type": "string",
+                    "description": "Comma-separated list of extras to include: line_items, environmental_impact"
                   }
                 }
               },
               "example": {
                 "receipt": "base64-image...",
-                "include": [
-                  "line_items"
-                ]
+                "include": "line_items"
               }
             }
           }
