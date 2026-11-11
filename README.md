@@ -23,21 +23,14 @@ receipt-providers/     # Receipt provider guides
 api-reference/
   ems/                 # EMS API (api.opencard.io/application)
   receipts/            # Digital Receipts API (receipts.opencard.io) — card issuers
-openapi/               # Generated OpenAPI specs (ems, oauth, receipts, callback)
-scripts/
-  generate-openapi.py  # Generate specs from code inventory
-  sync-openapi.sh      # Wrapper script
+openapi/               # OpenAPI specs (ems, oauth, issuer, receipts, callback)
 ```
 
-## Regenerate OpenAPI specs
+## OpenAPI specs
 
-Specs are generated from `service.opencard.api` route inventory — **not** from legacy swagger annotations.
+The files in `openapi/` are the source of the API reference pages and are edited by hand — they are **not** generated from the swagger annotations in `service.opencard.api`.
 
-```bash
-npm run sync-openapi
-```
-
-When the API changes, update endpoint definitions in `scripts/generate-openapi.py` and regenerate.
+When the API changes, update the matching spec in `openapi/` and the guide page that describes the endpoint.
 
 ## Deploy
 

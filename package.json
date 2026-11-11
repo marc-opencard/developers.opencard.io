@@ -5,8 +5,7 @@
   "description": "OpenCard developer documentation (Mintlify)",
   "scripts": {
     "dev": "mintlify dev",
-    "build": "mintlify build",
-    "sync-openapi": "bash scripts/sync-openapi.sh"
+    "build": "mintlify build"
   },
   "devDependencies": {
     "mintlify": "latest"
