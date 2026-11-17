@@ -445,7 +445,7 @@
                 "accounting_amount": 109.38,
                 "accounting_currency": "SEK",
                 "exchange_rate": 1.0,
-                "vat_rate": 0.25,
+                "vat_rate": 25,
                 "vat_amount": 21.88,
                 "vat_currency": "SEK",
                 "purchase_merchant": "Coop Vasagatan",

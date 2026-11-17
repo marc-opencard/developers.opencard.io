@@ -152,6 +152,9 @@ The transaction, receipt, VAT, and line-item samples below are **one purchase** 
 | `original_currency` | string | ISO 4217 |
 | `accounting_amount` | float | Amount in customer's home currency |
 | `accounting_currency` | string | ISO 4217 |
+| `vat_rate` | float | VAT rate in percent, as sent by the issuer. Can have decimals, e.g. `25.5` |
+| `vat_amount` | float | VAT amount, as sent by the issuer |
+| `vat_currency` | string | ISO 4217 |
 | `purchase_merchant` | string | Full merchant name |
 | `purchase_merchant_common` | string | Normalized merchant name |
 | `mcc_code` | string | Merchant Category Code |
@@ -227,6 +230,8 @@ VAT bands from the Coop receipt (12% + 25%):
   ]
 }
 ```
+
+`percentage` is the VAT rate in percent and can have decimals, e.g. `25.5`.
 
 ### `transaction.line.items`
 

@@ -64,7 +64,7 @@ Returns structured OCR data — merchant, amounts, date, and the extras you aske
 |-------|-------|
 | `total_amount`, `net_amount`, `total_vat_amount`, `currency`, `purchase_merchant`, `purchase_date` | Always returned. `null` when the value could not be read from the receipt. |
 | `line_items` | Only with `include=line_items`. `null` when no lines were found. |
-| `vat_rates` | Only with `include=vat_rates`. One entry per VAT rate on the receipt. `null` when none were found. |
+| `vat_rates` | Only with `include=vat_rates`. One entry per VAT rate on the receipt. `percentage` can have decimals, e.g. `25.5`. `null` when none were found. |
 | `environmental_impact` | Only with `include=environmental_impact`. Left out when the merchant category could not be determined. |
 
 Use case: employee uploads photo of paper receipt in your expense app → you call this API → get structured data back instantly. 📸

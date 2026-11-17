@@ -29,7 +29,7 @@ Scope: issuer-{slug}-transaction-states-write
   "accounting_amount": 109.38,
   "accounting_currency": "SEK",
   "exchange_rate": 1.0,
-  "vat_rate": 0.25,
+  "vat_rate": 25,
   "vat_amount": 21.88,
   "vat_currency": "SEK",
   "purchase_merchant": "Coop Vasagatan",
@@ -59,7 +59,7 @@ Scope: issuer-{slug}-transaction-states-write
 | `accounting_amount` | ✅ | Amount in cardholder billing currency |
 | `accounting_currency` | ✅ | ISO 4217 (3 letters) |
 | `exchange_rate` | ✅ | Rate between original and accounting amounts |
-| `vat_rate` | ❌ | VAT rate at merchant |
+| `vat_rate` | ❌ | VAT rate at merchant in percent, e.g. `25` or `25.5` |
 | `vat_amount` | ❌ | VAT amount |
 | `vat_currency` | ❌ | ISO 4217 for VAT |
 | `purchase_merchant` | ✅ | Merchant name |
