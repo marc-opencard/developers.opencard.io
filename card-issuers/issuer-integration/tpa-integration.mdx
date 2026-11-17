@@ -61,6 +61,13 @@ When this endpoint receives a valid **`initiate`** event, you should:
 2. **Archive** the signed TPA PDF as legal evidence
 3. Return **`200`** when accepted/completed — otherwise a clear **`4xx`** / **`5xx`**
 
+<Info>
+  **A new TPA starts retroactively.** As soon as you receive it, register **all** of the customer's cards on the payment product and send the transactions that already exist:
+
+  - **Credit:** all transactions that are **not yet invoiced**
+  - **Debit:** all transactions from the **last 30 days**
+</Info>
+
 When you receive **`terminate`**, stop card/transaction delivery for that party and payment product, and archive the decision according to your process.
 
 ---
